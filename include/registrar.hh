@@ -17,6 +17,7 @@
 #ifndef _REGISTRAR_HH_
 #define _REGISTRAR_HH_
 
+#include <csetjmp>
 #include <cstdio>
 
 /**
@@ -41,23 +42,70 @@
  * @endcode
  */
 #define TEST(suite_name, test_name)                                    \
-  void TESTFUNCTION__##suite_name##test_name();                        \
+  void TESTFUNCTION__##suite_name##test_name(                          \
+      ::xtest::TestRegistry* test_registry,                            \
+      ::xtest::TestRegistrar* current_test);                           \
   namespace {                                                          \
   ::xtest::TestRegistrar TESTREGISTRAR__##suite_name##test_name(       \
       #suite_name, #test_name, TESTFUNCTION__##suite_name##test_name); \
   }                                                                    \
-  void TESTFUNCTION__##suite_name##test_name()
+  void TESTFUNCTION__##suite_name##test_name(                          \
+      ::xtest::TestRegistry* test_registry,                            \
+      ::xtest::TestRegistrar* current_test)
 
 namespace xtest {
+namespace impl {
 /**
- * @brief Pointer to a void function type that takes in no parameters.
+ * @brief Calls std::longjmp() with m_jump_out_of_test instance as its first
+ * argument.
+ *
+ * This function calls the std::longjmp() function with the std::jmp_buf
+ * instance m_jump_out_of_test as its first argument when the SIGABRT is raised
+ * inside of the function run_registered_test() that runs the registered test
+ * suites.
+ *
+ * @todo Give a description to param.
+ *
+ * @param param Have no idea what this is for :D.
+ */
+void signal_handler(int param);
+}  // namespace impl
+
+struct TestRegistrar;
+struct TestRegistry;
+
+/**
+ * @brief Pointer to a void function type.
  *
  * This typedef is required to pass the test suite to TestRegistrar constructor
  * to register as a test suite entry for automatic test execution.
+ *
+ * This function also takes in a pointer to the TestRegistry structure which is
+ * a container for the pointer that points to the head of the test suites linked
+ * list and a pointer to the current test i.e., TestRegistrar instance.
+ *
+ * @param test_registry Pointer to the structure containing test suites.
+ * @param current_test The current test.
  */
-typedef void (*TestFunction)();
+typedef void (*TestFunction)(TestRegistry* test_registry,
+                             TestRegistrar* current_test);
+
+enum class TestResult { UNKNOWN, PASSED, FAILED };
+
+/**
+ * @brief Converts a TestResult instance to its string representation form.
+ *
+ * This function takes in a TestResult instance and returns a string that is
+ * equal either of: UNKNOWN PASSED FAILED
+ *
+ * @param result TestResult instance to convert to its string representation
+ * form.
+ * @return const char* to the string representing test result.
+ */
+const char* test_result_str(TestResult result);
 
 struct TestRegistrar {
+ public:
   /**
    * @brief Construct a new TestRegistrar object.
    *
@@ -91,14 +139,13 @@ struct TestRegistrar {
    */
   ~TestRegistrar();
 
-  /** @brief Test suite name. */
-  const char* m_suite_name;
-  /** @brief Test name. */
-  const char* m_test_name;
-  /** @brief Test function to execute. */
-  TestFunction m_test_fn;
-  /** @brief Pointer to the next test suite or TestRegistrar object. */
-  TestRegistrar* m_next;
+ public:
+  const char* m_suite_name;  // Test suite name
+  const char* m_test_name;   // Test name
+  TestFunction m_test_fn;    // Test function to execute
+  TestRegistrar* m_next;  // Pointer to the next TestRegistrar object i.e., to
+                          // the next test suite
+  TestResult m_result;    // Result of the test suite
 };
 
 /**
@@ -106,10 +153,20 @@ struct TestRegistrar {
  *
  * This structure contains a pointer to the test suites linked list to later
  * traverse the entire linked list to execute each test suite.
+ *
+ * This structure also contains an instance of std::jmp_buf that stores the
+ * environment information for the function xtest::run_registered_tests().
  */
 struct TestRegistry {
-  /** @brief Pointer to the head of the test suite linked list. */
+ public:
+  /* Pointer to the head of the test suite linked list. */
   TestRegistrar* m_first_test;
+
+  /* m_jump_out_of_test instance stores the environment information for function
+   * run_registered_tests() to later make a long jump using function
+   * std::longjmp to register the test result as TestResult::FAILED.
+   */
+  std::jmp_buf m_jump_out_of_test;
 };
 
 /**
@@ -123,7 +180,19 @@ struct TestRegistry {
  */
 void debug_list_registered_tests(const char* indent, FILE* file);
 
-/** @brief TestRegistry instance that links nodes of different test suites. */
+/**
+ * @brief Runs all the registered test suites.
+ *
+ * This function runs all the registered test suites in the
+ * xtest::test_registry.m_first_test instance while also handling the abort
+ * signals raised by ASSERT_* assertions.
+ *
+ * In case an assertion fails then this function marks that test suite as
+ * FAILED while silently continuing executing rest of the test suites.
+ */
+void run_registered_tests();
+
+/* TestRegistry instance that links nodes of different test suites. */
 extern TestRegistry test_registry;
 }  // namespace xtest
 

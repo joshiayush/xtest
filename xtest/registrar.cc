@@ -16,11 +16,53 @@
 
 #include "registrar.hh"
 
-#include <cstdio>
+#include <csetjmp>
+#include <csignal>
+#include <iostream>
 
 namespace xtest {
-/** @brief TestRegistry instance that links nodes of different test suites. */
+/* TestRegistry instance that links nodes of different test suites. */
 TestRegistry test_registry = {0};
+
+namespace impl {
+/**
+ * @brief Calls std::longjmp() with m_jump_out_of_test instance as its first
+ * argument.
+ *
+ * This function calls the std::longjmp() function with the std::jmp_buf
+ * instance m_jump_out_of_test as its first argument when the SIGABRT is raised
+ * inside of the function run_registered_test() that runs the registered test
+ * suites.
+ *
+ * @todo Give a description to param.
+ *
+ * @param param Have no idea what this is for :D.
+ */
+void signal_handler(int param) {
+  std::longjmp(test_registry.m_jump_out_of_test, 1);
+}
+}  // namespace impl
+
+/**
+ * @brief Converts a TestResult instance to its string representation form.
+ *
+ * This function takes in a TestResult instance and returns a string that is
+ * equal either of: UNKNOWN PASSED FAILED
+ *
+ * @param result TestResult instance to convert to its string representation
+ * form.
+ * @return const char* to the string representing test result.
+ */
+const char* test_result_str(TestResult result) {
+  switch (result) {
+    case TestResult::UNKNOWN:
+      return "UNKNOWN";
+    case TestResult::PASSED:
+      return "PASSED";
+    case TestResult::FAILED:
+      return "FAILED";
+  }
+}
 
 /**
  * @brief Construct a new TestRegistrar object.
@@ -44,12 +86,8 @@ TestRegistry test_registry = {0};
  */
 TestRegistrar::TestRegistrar(const char* suite_name, const char* test_name,
                              TestFunction test_fn)
-    : m_suite_name{suite_name},
-      m_test_name{test_name},
-      m_test_fn{test_fn},
-      m_next{nullptr} {
-  fprintf(stdout, "Test being registered: %s.%s %p\n", suite_name, test_name,
-          test_fn);
+    : m_suite_name{suite_name}, m_test_name{test_name}, m_test_fn{test_fn},
+      m_next{nullptr}, m_result{TestResult::UNKNOWN} {
   TestRegistrar** link = &test_registry.m_first_test;
   while (*link)
     link = &((*link)->m_next);
@@ -65,8 +103,9 @@ TestRegistrar::TestRegistrar(const char* suite_name, const char* test_name,
  * destructor.
  */
 TestRegistrar::~TestRegistrar() {
-  fprintf(stdout, "Test being un-registered: %s.%s %p\n", m_suite_name,
-          m_test_name, m_test_fn);
+  /**
+   * @brief No ideas for now.
+   */
 }
 
 /**
@@ -78,12 +117,49 @@ TestRegistrar::~TestRegistrar() {
  * @param[in] indent Indent to add before debugging message.
  * @param[in] file File to redirect the debugging message.
  */
-void debug_list_registered_tests(const char* indent, FILE* file) {
+void debug_list_registered_tests(const char* indent, std::ostream& stream) {
   TestRegistrar* node = test_registry.m_first_test;
   while (node) {
-    fprintf(file, "%stest %s.%s -> %p\n", indent, node->m_suite_name,
-            node->m_test_name, node->m_test_fn);
+    stream << indent << "test " << node->m_suite_name << '.'
+           << node->m_test_name << "-> " << node->m_test_fn << ": "
+           << test_result_str(node->m_result) << std::endl;
     node = node->m_next;
   }
+}
+
+/**
+ * @brief Runs all the registered test suites.
+ *
+ * This function runs all the registered test suites in the
+ * xtest::test_registry.m_first_test instance while also handling the abort
+ * signals raised by ASSERT_* assertions.
+ *
+ * In case an assertion fails then this function marks that test suite as
+ * FAILED while silently continuing executing rest of the test suites.
+ */
+void run_registered_tests() {
+  TestRegistrar* node = test_registry.m_first_test;
+
+  void (*saved_signal_handler)(int);
+  saved_signal_handler = std::signal(SIGABRT, impl::signal_handler);
+
+  while (node) {
+    if (node->m_test_fn) {
+      /* We are setting a jump here to later mark the test result as FAILED in
+       * case the node->m_test_fn raised an abort signal result of an ASSERT_*
+       * assertion.
+       */
+      if (setjmp(test_registry.m_jump_out_of_test)) {
+        node->m_result = TestResult::FAILED;
+      } else {
+        node->m_test_fn(&test_registry, node);
+        if (node->m_result == TestResult::UNKNOWN)
+          node->m_result = TestResult::PASSED;
+      }
+    }
+    node = node->m_next;
+  }
+
+  std::signal(SIGABRT, saved_signal_handler);
 }
 }  // namespace xtest
