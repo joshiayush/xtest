@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU General Public License along with
 // this program. If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef _XTEST_HH_
-#define _XTEST_HH_
+#ifndef XTEST_INCLUDE_XTEST_HH_
+#define XTEST_INCLUDE_XTEST_HH_
 
 #include <cinttypes>
 
@@ -29,4 +29,4 @@ namespace xtest {
 extern uint64_t G_n_testFailures;
 }  // namespace xtest
 
-#endif
+#endif  // XTEST_INCLUDE_XTEST_HH_

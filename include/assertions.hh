@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU General Public License along with
 // this program. If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef _ASSERTIONS_HH_
-#define _ASSERTIONS_HH_
+#ifndef XTEST_INCLUDE_ASSERTIONS_HH_
+#define XTEST_INCLUDE_ASSERTIONS_HH_
 
 #include <cstdlib>
 #include <iostream>
@@ -139,4 +139,4 @@
 #define EXPECT_FALSE(actual) IMPL__TEST_FALSE(actual, false)
 #define ASSERT_FALSE(actual) IMPL__TEST_FALSE(actual, true)
 
-#endif
+#endif  // XTEST_INCLUDE_ASSERTIONS_HH_

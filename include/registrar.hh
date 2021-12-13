@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU General Public License along with
 // this program. If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef _REGISTRAR_HH_
-#define _REGISTRAR_HH_
+#ifndef XTEST_INCLUDE_REGISTRAR_HH_
+#define XTEST_INCLUDE_REGISTRAR_HH_
 
 #include <csetjmp>
 
@@ -161,4 +161,4 @@ void RunRegisteredTests();
 extern TestRegistry GTestRegistryInst;
 }  // namespace xtest
 
-#endif
+#endif  // XTEST_INCLUDE_REGISTRAR_HH_
