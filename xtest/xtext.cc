@@ -19,11 +19,9 @@
 #include "xtest.hh"
 
 namespace xtest {
-/**
- * @brief Global counter for non-fatal test failures.
- *
- * This global counter is defined in the object file xtest.cc and incremented
- * every time a non-fatal test assertion fails.
- */
-uint64_t g_n_test_failures = 0;
+// @brief Global counter for non-fatal test failures.
+//
+// This global counter is defined in the object file xtest.cc and incremented
+// every time a non-fatal test assertion fails.
+uint64_t G_n_testFailures = 0;
 }  // namespace xtest

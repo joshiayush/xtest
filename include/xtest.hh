@@ -22,13 +22,11 @@
 #include "assertions.hh"
 
 namespace xtest {
-/**
- * @brief Global counter for non-fatal test failures.
- *
- * This global counter is defined in the object file xtest.cc and incremented
- * every time a non-fatal test assertion fails.
- */
-extern uint64_t g_n_test_failures;
+// @brief Global counter for non-fatal test failures.
+//
+// This global counter is defined in the object file xtest.cc and incremented
+// every time a non-fatal test assertion fails.
+extern uint64_t G_n_testFailures;
 }  // namespace xtest
 
 #endif
