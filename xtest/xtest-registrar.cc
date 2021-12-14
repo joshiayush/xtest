@@ -33,6 +33,8 @@
 #include <csignal>
 #include <iostream>
 
+#include "internal/xtest-port.hh"
+
 namespace xtest {
 // TestRegistry instance that links nodes of different test suites.
 TestRegistry GTestRegistryInst = {0};
@@ -101,9 +103,9 @@ TestRegistrar::TestRegistrar(const char* suiteName, const char* testName,
 void _DebugListRegisteredTests(std::ostream& stream) {
   TestRegistrar* node = GTestRegistryInst.M_head;
   while (node) {
-    stream << "test " << node->M_suiteName << '.' << node->M_testName << "-> "
-           << node->M_testFunc << ": " << GetTestResultStr(node->M_testResult)
-           << std::endl;
+    XTEST_LOG_(INFO) << "test " << node->M_suiteName << '.' << node->M_testName
+                     << "-> " << node->M_testFunc << ": "
+                     << GetTestResultStr(node->M_testResult) << std::endl;
     node = node->M_nextTestSuite;
   }
 }

@@ -96,9 +96,9 @@ enum class TestResult { UNKNOWN, PASSED, FAILED };
 // @return const char* to the string representing test result.
 const char* GetTestResultStr(TestResult result);
 
-struct TestRegistrar {
+class TestRegistrar {
  public:
-  // @brief Construct a new TestRegistrar object.
+  // Construct a new TestRegistrar object.
   //
   // This constructor appends a new entry of test suite to testRegistry list.
   // We link the comming test suite to the TestRegistrar* type variable
