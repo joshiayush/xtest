@@ -1,20 +1,33 @@
-// Copyright (C) 2021  Ayush Joshi
+// Copyright 2021, xtest Inc.
+// All rights reserved.
 //
-// This program is free software: you can redistribute it and/or modify it under
-// the terms of the GNU General Public License as published by the Free Software
-// Foundation, either version 3 of the License, or (at your option) any later
-// version.
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met:
 //
-// This program is distributed in the hope that it will be useful, but WITHOUT
-// ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-// FOR A PARTICULAR PURPOSE.
+//     * Redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer.
+//     * Redistributions in binary form must reproduce the above
+// copyright notice, this list of conditions and the following disclaimer
+// in the documentation and/or other materials provided with the
+// distribution.
+//     * Neither the name of xtest Inc. nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
 //
-// See the GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License along with
-// this program. If not, see <https://www.gnu.org/licenses/>.
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "registrar.hh"
+#include "xtest-registrar.hh"
 
 #include <csetjmp>
 #include <csignal>
@@ -25,23 +38,19 @@ namespace xtest {
 TestRegistry GTestRegistryInst = {0};
 
 namespace impl {
-// @brief Calls std::longjmp() with M_jumpOutOfTest instance as its first
+// Calls std::longjmp() with M_jumpOutOfTest instance as its first
 // argument.
 //
 // This function calls the std::longjmp() function with the std::jmp_buf
 // instance M_jumpOutOfTest as its first argument when the SIGABRT is raised
 // inside of the function run_registered_test() that runs the registered test
 // suites.
-//
-// @todo Give a description to param.
-//
-// @param param Have no idea what this is for :D.
 void SignalHandler(int param) {
   std::longjmp(GTestRegistryInst.M_jumpOutOfTest, 1);
 }
 }  // namespace impl
 
-// @brief Converts a TestResult instance to its string representation form.
+// Converts a TestResult instance to its string representation form.
 //
 // This function takes in a TestResult instance and returns a string that is
 // equal either of: UNKNOWN PASSED FAILED
@@ -60,16 +69,16 @@ const char* GetTestResultStr(TestResult result) {
   }
 }
 
-// @brief Construct a new TestRegistrar object.
+// Construct a new TestRegistrar object.
 //
 // This constructor appends a new entry of test suite to GTestRegistryInst list.
 // We link the comming test suite to the TestRegistrar* type variable
 // M_head linked list declared inside of the struct TestRegistry to
 // later traverse through this list to execute each test suite.
 //
-// @param[in] suiteName Test suite name.
-// @param[in] testName Test name.
-// @param[in] testFunc Test function to execute.
+// @param suiteName Test suite name.
+// @param testName Test name.
+// @param testFunc Test function to execute.
 TestRegistrar::TestRegistrar(const char* suiteName, const char* testName,
                              TestFunction testFunc)
     : M_suiteName{suiteName},
@@ -83,24 +92,12 @@ TestRegistrar::TestRegistrar(const char* suiteName, const char* testName,
   *link = this;
 }
 
-// @brief Destroys a TestRegistrar object.
-//
-// For now there is no certain code to destroy a TestRegistrar object.
-//
-// @note Not marking as virtual because not sure if needed a v-table for
-// destructor.
-TestRegistrar::~TestRegistrar() {
-  /**
-   * @brief No ideas for now.
-   */
-}
-
-// @brief Prints out debugging information of the registered test suites.
+// Prints out debugging information of the registered test suites.
 //
 // This function reads the TestRegistry::m_firt_test linked list and writes that
 // information down to the given file stream.
 //
-// @param[in] file File to redirect the debugging message.
+// @param file File to redirect the debugging message.
 void _DebugListRegisteredTests(std::ostream& stream) {
   TestRegistrar* node = GTestRegistryInst.M_head;
   while (node) {
@@ -111,7 +108,7 @@ void _DebugListRegisteredTests(std::ostream& stream) {
   }
 }
 
-// @brief Runs all the registered test suites.
+// Runs all the registered test suites.
 //
 // This function runs all the registered test suites in the
 // xtest::GTestRegistryInst.M_head instance while also handling the abort

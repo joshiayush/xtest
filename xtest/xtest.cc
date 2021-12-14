@@ -27,19 +27,14 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef XTEST_INCLUDE_XTEST_HH_
-#define XTEST_INCLUDE_XTEST_HH_
-
 #include <cinttypes>
 
-#include "xtest-assertions.hh"
+#include "xtest.hh"
 
 namespace xtest {
 // @brief Global counter for non-fatal test failures.
 //
 // This global counter is defined in the object file xtest.cc and incremented
 // every time a non-fatal test assertion fails.
-extern uint64_t G_n_testFailures;
+uint64_t G_n_testFailures = 0;
 }  // namespace xtest
-
-#endif  // XTEST_INCLUDE_XTEST_HH_
