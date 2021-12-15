@@ -49,12 +49,12 @@
 //
 // fatal can be anything that evaluates to true when used in a if clause
 // so make sure that you provide a valid boolean value to this macro.
-#define IMPL__TEST_FAILED(fatal)                          \
-  do {                                                    \
-    current_test->m_result = ::xtest::TestResult::FAILED; \
-    ++::xtest::G_n_testFailures;                          \
-    if (fatal)                                            \
-      abort();                                            \
+#define IMPL__TEST_FAILED(fatal)                             \
+  do {                                                       \
+    currentTest->M_testResult = ::xtest::TestResult::FAILED; \
+    ++::xtest::G_n_testFailures;                             \
+    if (fatal)                                               \
+      abort();                                               \
   } while (false)
 
 // Does a equality check between the actual and the expected value.
@@ -67,7 +67,7 @@
 // the stderr file stream and calls the operations defined in IMPL__TEST_FAILED
 // macro to decide whether to abort the current process or just simply increment
 // xtest::g_n_test_failures.
-#define IMPL__TEST_EQ(actual, expected, format, fatal)                    \
+#define IMPL__TEST_EQ(actual, expected, fatal)                            \
   do {                                                                    \
     if ((actual) != (expected)) {                                         \
       std::cerr << __FILE__ << ':' << __LINE__ << ": FAIL: expected "     \
@@ -91,7 +91,7 @@
 // stderr file stream and calls the operations defined in IMPL__TEST_FAILED
 // macro to decide whether to abort the current process or just simply increment
 // xtest::g_n_test_failures.
-#define IMPL__TEST_NE(actual, expected, format, fatal)                    \
+#define IMPL__TEST_NE(actual, expected, fatal)                            \
   do {                                                                    \
     if ((actual) != (expected)) {                                         \
       std::cerr << __FILE__ << ':' << __LINE__ << ": FAIL: expected "     \
@@ -139,7 +139,7 @@
 // In case the value given does not evaluates to false, this macro calls the
 // operations defined in the IMPL__TEST_FAILED macro to decide whether to abort
 // the current process or just simply increment xtest::g_n_test_failures.
-#define IMPL__TEST_FALSE(actual, fatal)                                \
+#define IMPL__TEST_FALSE(actual, fatal)                               \
   do {                                                                \
     if (!(actual)) {                                                  \
       std::cerr << __FILE__ << ':' << __LINE__ << ": FAIL: expected " \
