@@ -33,7 +33,7 @@
 #include <cstdlib>
 #include <iostream>
 
-// @brief Aborts the current process if fatal is true.
+// Aborts the current process if fatal is true.
 //
 // This implementation detail macro IMPL__TEST_FAILED aborts the current
 // process if the fatal is true, otherwise increments the global variable
@@ -57,7 +57,7 @@
       abort();                                            \
   } while (false)
 
-// @brief Does a equality check between the actual and the expected value.
+// Does a equality check between the actual and the expected value.
 //
 // This implementation detail macro IMPL__TEST_EQ does a equality check between
 // the value actual and expected provided that both of the operands must have a
@@ -80,7 +80,7 @@
 #define EXPECT_EQ(actual, expected) IMPL__TEST_EQ(actual, expected, false)
 #define ASSERT_EQ(actual, expected) IMPL__TEST_EQ(actual, expected, true)
 
-// @brief Does a non-equality check between the actual and the expected value.
+// Does a non-equality check between the actual and the expected value.
 //
 // This implementation detail macro IMPL__TEST_NE does a non-equality check
 // between the value actual and expected provided that both of the operands must
@@ -91,7 +91,7 @@
 // stderr file stream and calls the operations defined in IMPL__TEST_FAILED
 // macro to decide whether to abort the current process or just simply increment
 // xtest::g_n_test_failures.
-#define IMPL__TEST_EQ(actual, expected, format, fatal)                    \
+#define IMPL__TEST_NE(actual, expected, format, fatal)                    \
   do {                                                                    \
     if ((actual) != (expected)) {                                         \
       std::cerr << __FILE__ << ':' << __LINE__ << ": FAIL: expected "     \
@@ -104,7 +104,7 @@
 #define EXPECT_NE(actual, expected) IMPL__TEST_NE(actual, expected, false)
 #define ASSERT_NE(actual, expected) IMPL__TEST_NE(actual, expected, true)
 
-// @brief Checks if the given value evaluates to true or not.
+// Checks if the given value evaluates to true or not.
 //
 // This implementation detail macro IMPL__TEST_TRUE checks if the given value
 // i.e., actual evaluates to true or not.
@@ -128,7 +128,7 @@
 #define EXPECT_TRUE(actual) IMPL__TEST_TRUE(actual, false)
 #define ASSERT_TRUE(actual) IMPL__TEST_TRUE(actual, true)
 
-// @brief Checks if the given value evaluates to false or not.
+// Checks if the given value evaluates to false or not.
 //
 // This implementation detail macro IMPL__TEST_FALSE checks if the given value
 // i.e., actual evaluates to false or not.
@@ -139,7 +139,7 @@
 // In case the value given does not evaluates to false, this macro calls the
 // operations defined in the IMPL__TEST_FAILED macro to decide whether to abort
 // the current process or just simply increment xtest::g_n_test_failures.
-#define IMPL__TEST_TRUE(actual, fatal)                                \
+#define IMPL__TEST_FALSE(actual, fatal)                                \
   do {                                                                \
     if (!(actual)) {                                                  \
       std::cerr << __FILE__ << ':' << __LINE__ << ": FAIL: expected " \
