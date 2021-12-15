@@ -34,8 +34,20 @@
 #include <string>
 
 #include "xtest-assertions.hh"
+#include "xtest-registrar.hh"
 
 namespace xtest {
+namespace impl {
+// Calls std::longjmp() with M_jumpOutOfTest instance as its first
+// argument.
+//
+// This function calls the std::longjmp() function with the std::jmp_buf
+// instance M_jumpOutOfTest as its first argument when the SIGABRT is raised
+// inside of the function run_registered_test() that runs the registered test
+// suites.
+void SignalHandler(int param);
+}  // namespace impl
+
 // Global counter for non-fatal test failures.
 //
 // This global counter is defined in the object file xtest.cc and incremented
@@ -116,6 +128,20 @@ std::string GetStringAlignedTo(
 //  1 FAILED TEST
 // ```
 void SummarizeTestResults();
+
+// Runs all the registered test suites and returns the failure count.
+//
+// This function runs all the registered test suites in the
+// xtest::GTestRegistryInst.M_head instance while also handling the abort
+// signals raised by ASSERT_* assertions.
+//
+// In case an assertion fails then this function marks that test suite as
+// FAILED while silently continuing executing rest of the test suites.
+uint64_t RunRegisteredTests();
+
+#define RUN_ALL_TESTS() ::xtest::RunRegisteredTests()
+
+void InitXtest();
 }  // namespace xtest
 
 #endif  // XTEST_INCLUDE_XTEST_HH_

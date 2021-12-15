@@ -31,6 +31,8 @@
 #define XTEST_INCLUDE_XTEST_REGISTRAR_HH_
 
 #include <csetjmp>
+#include <cstdint>
+#include <iostream>
 
 // Creates a test suite and register it using TestRegistrar.
 //
@@ -41,9 +43,6 @@
 // Note: For the best usage of this macro avoid giving same suitName and
 // testName to different test suites, otherwise compiler will complain
 // regarding the multiple definitions and declarations of the same function.
-//
-// @param suitName Test suite name.
-// @param testName Test name.
 #define TEST(suitName, testName)                                               \
   void TESTFUNCTION__##suitName##testName(                                     \
       ::xtest::TestRegistry* testRegistry,                                     \
@@ -56,17 +55,6 @@
                                           ::xtest::TestRegistrar* currentTest)
 
 namespace xtest {
-namespace impl {
-// Calls std::longjmp() with M_jumpOutOfTest instance as its first
-// argument.
-//
-// This function calls the std::longjmp() function with the std::jmp_buf
-// instance M_jumpOutOfTest as its first argument when the SIGABRT is raised
-// inside of the function run_registered_test() that runs the registered test
-// suites.
-void SignalHandler(int param);
-}  // namespace impl
-
 struct TestRegistrar;
 struct TestRegistry;
 
@@ -78,22 +66,15 @@ struct TestRegistry;
 // This function also takes in a pointer to the TestRegistry structure which is
 // a container for the pointer that points to the head of the test suites linked
 // list and a pointer to the current test i.e., TestRegistrar instance.
-//
-// @param testRegistry Pointer to the structure containing test suites.
-// @param currentTest The current test.
 typedef void (*TestFunction)(TestRegistry* testRegistry,
                              TestRegistrar* currentTest);
 
 enum class TestResult { UNKNOWN, PASSED, FAILED };
 
-// @brief Converts a TestResult instance to its string representation form.
+// Converts a TestResult instance to its string representation form.
 //
 // This function takes in a TestResult instance and returns a string that is
 // equal either of: UNKNOWN PASSED FAILED
-//
-// @param result TestResult instance to convert to its string representation
-// form.
-// @return const char* to the string representing test result.
 const char* GetTestResultStr(TestResult result);
 
 class TestRegistrar {
@@ -104,10 +85,6 @@ class TestRegistrar {
   // We link the comming test suite to the TestRegistrar* type variable
   // M_head linked list declared inside of the struct TestRegistry to
   // later traverse through this list to execute each test suite.
-  //
-  // @param suitName Test suite name.
-  // @param testName Test name.
-  // @param testFunc Test function to execute.
   TestRegistrar(const char* suiteName, const char* testName,
                 TestFunction testFunc);
 
@@ -151,20 +128,7 @@ struct TestRegistry {
 //
 // This function reads the TestRegistry::m_firt_test linked list and writes that
 // information down to the given file stream.
-//
-// @param indent Indent to add before debugging message.
-// @param file File to redirect the debugging message.
 void _DebugListRegisteredTests(std::ostream& stream);
-
-// Runs all the registered test suites.
-//
-// This function runs all the registered test suites in the
-// xtest::testRegistry.M_head instance while also handling the abort
-// signals raised by ASSERT_* assertions.
-//
-// In case an assertion fails then this function marks that test suite as
-// FAILED while silently continuing executing rest of the test suites.
-void RunRegisteredTests();
 
 // TestRegistry instance that links nodes of different test suites.
 extern TestRegistry GTestRegistryInst;

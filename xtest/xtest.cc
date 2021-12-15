@@ -30,12 +30,30 @@
 #include "xtest.hh"
 
 #include <cinttypes>
+#include <csetjmp>
+#include <csignal>
+#include <iomanip>
+#include <iostream>
+#include <limits>
 #include <sstream>
 #include <string>
 
+#include "internal/xtest-port.hh"
 #include "xtest-message.hh"
 
 namespace xtest {
+namespace impl {
+// Calls std::longjmp() with M_jumpOutOfTest instance as its first
+// argument.
+//
+// This function calls the std::longjmp() function with the std::jmp_buf
+// instance M_jumpOutOfTest as its first argument when the SIGABRT is raised
+// inside of the function run_registered_test() that runs the registered test
+// suites.
+void SignalHandler(int param) {
+  std::longjmp(GTestRegistryInst.M_jumpOutOfTest, 1);
+}
+}  // namespace impl
 // Global counter for non-fatal test failures.
 //
 // This global counter is defined in the object file xtest.cc and incremented
@@ -111,6 +129,18 @@ std::string GetStringAlignedTo(const ::std::string& str,
   return sstream.str();
 }
 
+// Constructs an empty Message.
+//
+// We allocate the stringstream separately because otherwise each use of
+// ASSERT_* or EXPECT_* in a procedure adds over 200 bytes to the procedure's
+// stack frame leading to huge stack frames in some cases; gcc does not reuse
+// the stack space.
+Message::Message() : _M_sstream(new ::std::stringstream) {
+  // By default, we want there to be enough precision when printing a double to
+  // a Message.
+  *_M_sstream << std::setprecision(std::numeric_limits<double>::digits10 + 2);
+}
+
 // Gets the text streamed to this object so far as an std::string.  Each '\0'
 // character in the buffer is replaced with "\\0".
 //
@@ -131,4 +161,41 @@ std::string GetStringAlignedTo(const ::std::string& str,
 
   return result;
 }
+
+// Runs all the registered test suites and returns the failure count.
+//
+// This function runs all the registered test suites in the
+// xtest::GTestRegistryInst.M_head instance while also handling the abort
+// signals raised by ASSERT_* assertions.
+//
+// In case an assertion fails then this function marks that test suite as
+// FAILED while silently continuing executing rest of the test suites.
+uint64_t RunRegisteredTests() {
+  TestRegistrar* node = GTestRegistryInst.M_head;
+
+  void (*SavedSignalHandler)(int);
+  SavedSignalHandler = std::signal(SIGABRT, impl::SignalHandler);
+
+  while (node) {
+    if (node->M_testFunc) {
+      // We are setting a jump here to later mark the test result as FAILED in
+      // case the node->M_testFunc raised an abort signal result of an ASSERT_*
+      // assertion.
+      if (setjmp(GTestRegistryInst.M_jumpOutOfTest)) {
+        node->M_testResult = TestResult::FAILED;
+      } else {
+        node->M_testFunc(&GTestRegistryInst, node);
+        if (node->M_testResult == TestResult::UNKNOWN)
+          node->M_testResult = TestResult::PASSED;
+      }
+    }
+    node = node->M_nextTestSuite;
+  }
+
+  std::signal(SIGABRT, SavedSignalHandler);
+
+  return G_n_testFailures;
+}
+
+void InitXtest() { _DebugListRegisteredTests(::std::cout); }
 }  // namespace xtest
