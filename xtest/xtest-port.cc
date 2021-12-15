@@ -55,8 +55,7 @@ XTestLog::XTestLog(const XTestLogSeverity& severity, const char* file,
                              : severity == XTEST_WARNING ? "[WARNING]"
                              : severity == XTEST_ERROR   ? "[ ERROR ]"
                                                          : "[ FATAL ]";
-  GetStream() << ::std::endl
-              << marker << " " << FormatFileLocation(file, line) << ": ";
+  GetStream() << marker << " " << FormatFileLocation(file, line) << ": ";
 }
 
 // Flushes the buffers and, if severity is XTEST_FATAL, aborts the program.
