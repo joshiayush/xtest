@@ -82,21 +82,6 @@ class Message {
   // Streams a non-pointer value to this object.
   template <typename T>
   inline Message& operator<<(const T& val) {
-    // Some libraries overload << for STL containers.  These overloads are
-    // defined in the global namespace instead of ::std.
-    //
-    // C++'s symbol lookup rule (i.e. Koenig lookup) says that these overloads
-    // are visible in either the std namespace or the global namespace, but not
-    // other namespaces, including the xtest namespace which xtest Test's
-    // Message class is in.
-    //
-    // To allow STL containers (and other types that has a << operator defined
-    // in the global namespace) to be used in xtest Test assertions,
-    // xtest::Message must access the custom << operator from the global
-    // namespace.  With this using declaration, overloads of << defined in the
-    // global namespace and those visible via Koenig lookup are both exposed in
-    // this function.
-    using ::operator<<;
     *_M_sstream << val;
     return *this;
   }
