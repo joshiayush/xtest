@@ -31,15 +31,91 @@
 #define XTEST_INCLUDE_XTEST_HH_
 
 #include <cinttypes>
+#include <string>
 
 #include "xtest-assertions.hh"
 
 namespace xtest {
-// @brief Global counter for non-fatal test failures.
+// Global counter for non-fatal test failures.
 //
 // This global counter is defined in the object file xtest.cc and incremented
 // every time a non-fatal test assertion fails.
 extern uint64_t G_n_testFailures;
+
+// New string width for the aligned string returned by the function
+// `GetStringAlignedTo()`.
+#define XTEST_DEFAULT_SUMMARY_STATUS_STR_WIDTH_ 10
+
+// Returns a string of length `width` all filled with the character `chr`.
+//
+// This function is mainly used to decorate the box used in the test summary
+// like show below where we are filling the boxes with either `-` or `=`
+// character,
+//
+// ```shell
+// [‑‑‑‑‑‑‑‑‑‑] Global test environment tear‑down
+// [==========] 2 tests from 1 test case ran. (10 ms total)
+// [  PASSED  ] 1 test.
+// [  FAILED  ] 1 test, listed below:
+// [  FAILED  ] SquareRootTest.PositiveNos
+//
+//  1 FAILED TEST
+// ```
+std::string GetStrFilledWith(
+    const char& chr,
+    ::std::size_t width = XTEST_DEFAULT_SUMMARY_STATUS_STR_WIDTH_);
+
+enum StringAlignValues { ALIGN_RIGHT, ALIGN_LEFT, ALIGN_CENTER };
+
+// Align the original string to the given alignment inside of the new sized
+// buffer.
+//
+// This function is mainly used to print out nice visual representation of the
+// test results like the following,
+//
+// ```shell
+// [  FAILED  ] SquareRootTest.PositiveNos
+// ```
+//
+// In order to align the letter `FAILED` to the center we use this function with
+// a 'alignSide' of 'ALIGN_CENTER'.
+//
+// If not given this function will use the default values for `newStrWidth` and
+// `alignSide` i.e., `XTEST_DEFAULT_SUMMARY_STATUS_STR_WIDTH_` and
+// `ALIGN_CENTER` respectively.
+std::string GetStringAlignedTo(
+    const ::std::string& str,
+    const ::std::size_t& newStrWidth = XTEST_DEFAULT_SUMMARY_STATUS_STR_WIDTH_,
+    const StringAlignValues& alignSide = ALIGN_CENTER);
+
+// Summarize test results.
+//
+// This function produces a nice colored output on the screen like the
+// following starting from "Global test environment tear‑down",
+//
+// ```shell
+// Running main() from user_main.cpp
+// [==========] Running 2 tests from 1 test case.
+// [‑‑‑‑‑‑‑‑‑‑] Global test environment set‑up.
+// [‑‑‑‑‑‑‑‑‑‑] 2 tests from SquareRootTest
+// [ RUN      ] SquareRootTest.PositiveNos
+// /C/project/test/user_sqrt.cpp(6862): error: Value of: sqrt (2533.310224)
+//   Actual: 50.332
+// Expected: 50.3321
+// [  FAILED  ] SquareRootTest.PositiveNos (9 ms)
+// [ RUN      ] SquareRootTest.ZeroAndNegativeNos
+// [       OK ] SquareRootTest.ZeroAndNegativeNos (0 ms)
+// [‑‑‑‑‑‑‑‑‑‑] 2 tests from SquareRootTest (0 ms total)
+//
+// [‑‑‑‑‑‑‑‑‑‑] Global test environment tear‑down
+// [==========] 2 tests from 1 test case ran. (10 ms total)
+// [  PASSED  ] 1 test.
+// [  FAILED  ] 1 test, listed below:
+// [  FAILED  ] SquareRootTest.PositiveNos
+//
+//  1 FAILED TEST
+// ```
+void SummarizeTestResults();
 }  // namespace xtest
 
 #endif  // XTEST_INCLUDE_XTEST_HH_
