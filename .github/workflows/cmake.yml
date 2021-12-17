@@ -27,15 +27,41 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-name: cpplint
+name: CMake
 
-on: [push, pull_request]
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+env:
+  BUILD_TYPE: Release
 
 jobs:
-  cpplint:
+  build:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v1
-      - uses: actions/setup-python@v1
-      - run: pip install cpplint
-      - run: cpplint --recursive --root=.. --extensions=hh,cc .
+      - uses: actions/checkout@v2
+
+      - name: Configure CMake
+        run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+
+      - name: Build xtest
+        working-directory: ${{github.workspace}}/build
+        run: |
+          cmake -B . -S ${{github.workspace}}
+          make install
+
+      - name: Build Samples
+        working-directory: ${{github.workspace}}/build
+        run: |
+          cmake -B . -S ${{github.workspace}} -DBUILD_SAMPLES:BOOL=ON
+          make install
+          make factorial
+          make isprime
+
+      - name: Test
+        working-directory: ${{github.workspace}}/build
+        run: ctest -C ${{env.BUILD_TYPE}}
