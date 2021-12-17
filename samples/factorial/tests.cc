@@ -44,8 +44,7 @@ TEST(TestFactorial, TestWithInvalidExpectedResult) {
   EXPECT_EQ(Factorial(10), 36288);  // Doomed to be failed!
 }
 
-int main() {
-  ::xtest::InitXtest();  // This does not do anything for now except for
-                         // printing debugging information on the console
+int32_t main(int32_t argc, char** argv) {
+  ::xtest::InitXTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

@@ -32,11 +32,13 @@
 #include <cinttypes>
 #include <csetjmp>
 #include <csignal>
+#include <cstring>
 #include <iomanip>
 #include <iostream>
 #include <limits>
 #include <sstream>
 #include <string>
+#include <vector>
 
 #include "internal/xtest-port.hh"
 #include "xtest-message.hh"
@@ -54,11 +56,28 @@ void SignalHandler(int param) {
   std::longjmp(GTestRegistryInst.M_jumpOutOfTest, 1);
 }
 }  // namespace impl
+
+// Filled with true if user provides '--help' flag over the command line.
+bool FLAG_xtest_help = false;
+// Filled with true if user provides '--debug' over the command line.
+bool FLAG_xtest_debug = false;
+
+#define XTEST_FLAG_GET(flagName) FLAG_xtest_##flagName
+#define XTEST_FLAG_SET(flagName, value) (void)(XTEST_FLAG_GET(flagName) = value)
+
 // Global counter for non-fatal test failures.
 //
 // This global counter is defined in the object file xtest.cc and incremented
 // every time a non-fatal test assertion fails.
 uint64_t G_n_testFailures = 0;
+
+// A copy of all command line arguments.  Set by InitXTest().
+static ::std::vector<::std::string> G_argvs;
+
+// XTestIsInitialized() returns true if and only if the user has initialized
+// xtest.  Useful for catching the user mistake of not initializing xtest before
+// calling RUN_ALL_TESTS().
+static bool XTestIsInitialized() { return G_argvs.size() > 0; }
 
 // Returns a string of length `width` all filled with the character `chr`.
 //
@@ -197,5 +216,123 @@ uint64_t RunRegisteredTests() {
   return G_n_testFailures;
 }
 
-void InitXtest() { _DebugListRegisteredTests(::std::cout); }
+// Checks if the string given is preffixed by valid characters or not.
+//
+// This function is maily used to validate command line flags given to the main
+// executable.
+static uint8_t ValidFlagPreffixLength(const char* flag) {
+  if (::std::strncmp(flag, "--", 2) == 0)
+    return 2;
+  if (::std::strncmp(flag, "-", 1) == 0)
+    return 1;
+  return 0;
+}
+
+// Returns the value of the xtest command line flag.
+//
+// Parses the value after '=' character over the command line.  If `defOptional`
+// is given then the flag value is treated as a boolen true and returend.
+static const ::std::string ParseFlagValue(const char* const flag,
+                                          const char* flagName,
+                                          bool defOptional) {
+  if (flag == nullptr || flagName == nullptr)
+    return ::std::string();
+
+  uint8_t preffixLen = ValidFlagPreffixLength(flag);
+  if (preffixLen == 0)
+    return ::std::string();
+
+  const char* flagEnd = flag + (preffixLen + ::std::strlen(flagName) + 1);
+  if (defOptional && *flagEnd == '\0')
+    return "true";
+
+  if (*flagEnd != '=')
+    return ::std::string();
+
+  return ++flagEnd;
+}
+
+// Parses the given flag i.e., `flagName` from the command line argument string
+// i.e., `flag`.
+//
+// Parses the given `flagName` from the string `flag` and sets the value in the
+// address `value`.
+//
+// Note: This function is just an overload for the boolean type command line
+// flags like `--help`, `--debug`, etc in this case the address that the `value`
+// is holding will have a bool value set at the end of parsing.
+static bool ParseFlag(const char* const flag, const char* const flagName,
+                      bool* value) {
+  const ::std::string valueStr = ParseFlagValue(flag, flagName, true);
+  const char* valueCStr = valueStr.c_str();
+  if (valueCStr == nullptr)
+    return false;
+  *value = ::std::strcmp(valueCStr, "true") == 0;
+  return true;
+}
+
+// Parses a single xtest command line flag at a time.
+//
+// This function parses value of a command line flag and sets the value of the
+// global variable that represents that flag with the required type.
+static void ParseXTestFlag(const char* const flag) {
+#define XTEST_INTERNAL_PARSE_FLAG(flagName)   \
+  do {                                        \
+    auto value = XTEST_FLAG_GET(flagName);    \
+    if (ParseFlag(flag, #flagName, &value)) { \
+      XTEST_FLAG_SET(flagName, value);        \
+    }                                         \
+  } while (false)
+
+  XTEST_INTERNAL_PARSE_FLAG(help);
+  XTEST_INTERNAL_PARSE_FLAG(debug);
+}
+
+// Parses all the xtest command line flags.
+//
+// Note: This function should be called only at the initialization step.
+void ParseXTestFlags(int32_t* argc, char** argv) {
+  for (int32_t i = 1; i < *argc; ++i) {
+    const ::std::string argString = internal::StreamableToString(argv[i]);
+    ParseXTestFlag(argString.c_str());
+  }
+}
+
+// Invokes functions corresponding to the command line flags given.
+//
+// Note: This function should be called after the ParseXTestFlags() function.
+void PostFlagParsing() {
+  if (XTEST_FLAG_GET(help)) {
+    // Show help text and return
+    return;
+  }
+
+  if (XTEST_FLAG_GET(debug)) {
+    _DebugListRegisteredTests(::std::cout);
+    return;
+  }
+}
+
+// Initializes xtest.  This must be called before calling RUN_ALL_TESTS().  In
+// particular, it parses a command line for the flags that xtest recognizes.
+// Whenever a Google Test flag is seen, it is removed from argv, and *argc is
+// decremented.
+//
+// No value is returned.  Instead, the xtest flag variables are updated.
+//
+// Calling the function for the second time has no user-visible effect.
+void InitXTest(int32_t* argc, char** argv) {
+  if (XTestIsInitialized())
+    return;
+
+  if (*argc <= 0)
+    return;
+
+  G_argvs.clear();
+  for (int32_t i = 0; i < *argc; ++i)
+    G_argvs.push_back(internal::StreamableToString(argv[i]));
+
+  ParseXTestFlags(argc, argv);
+  PostFlagParsing();
+}
 }  // namespace xtest
