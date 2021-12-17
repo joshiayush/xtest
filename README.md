@@ -40,6 +40,12 @@
         <ul>
             <a href="#commence">Commence</a>
             <ul>
+                <li>
+                  <a href="#prerequisites">Prerequisites</a>
+                  <ul>
+                    <li><a href="#ubuntu">Ubuntu</a></li>
+                  </ul>
+                </li>
                 <li><a href="#installation">Installation</a></li>
             </ul>
         </ul>
@@ -56,14 +62,150 @@
 
 **xtest** is a C++ testing framework inspired by [`gtest`][_gtest]. This is just a minimal implementation of a C++ unit testing framework which gives all the required facilities for unit testing a software without going template crazy and causing compilation issues.
 
+<div align="right">
+  <a href="#top">
+  
+  ![Back to top][back_to_top]
+  
+  </a>
+</div>
+
 # Commence
+
+To download and install library [__xtest__][_xtest] in your system follow the following steps.
+
+## Prerequisites
+
+You must have a `g++ 9.3.0` or greater version with a `cmake` version `3.16.3` or _higher_ installed in your system.
+
+### Ubuntu
+
+__Step 1: Install gcc__
+
+```shell
+sudo apt update
+sudo apt install build-essential
+```
+
+If this is the first time you are installing `g++` then you may also want to install the manual pages about using GNU/Linux for development.
+
+```shell
+sudo apt install manpages-dev
+```
+
+Verify that the compiler is installed.
+
+```shell
+g++ --version
+```
+
+and it should print,
+
+```shell
+g++ (Ubuntu 9.3.0-17ubuntu1~20.04) 9.3.0
+Copyright (C) 2019 Free Software Foundation, Inc.
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+```
+
+In the above output __ubuntu1~20.04__ is my version, yours may be different.
+
+__Step 2: Install cmake__
+
+1. Uninstall the default `cmake` version provided by Ubuntu's package manager and configuration by using:
+
+    ```shell
+    sudo apt remove --purge --auto-remove cmake
+    ```
+  
+   OR:
+  
+    ```shell
+    sudo apt purge --auto-remove cmake
+    ```
+
+   This step is crucial if you have a old version of `cmake` installed in your system.
+
+2. Prepare for installation.
+
+    ```shell
+    sudo apt update
+    sudo apt install -y software-properties-common lsb-release
+    sudo apt clean all
+    ```
+  
+3. Obtain a copy of kitware's signing key.
+
+    ```shell
+    wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | sudo tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
+    ```
+  
+4. Add kitware's repository to your sources list for `Ubuntu Focal Fossa (20.04)`, `Ubuntu Bionic Beaver (18.04)` and `Ubuntu Xenial Xerus (16.04)`.
+
+    ```shell
+    sudo apt-add-repository "deb https://apt.kitware.com/ubuntu/ $(lsb_release -cs) main"
+    ```
+  
+5. As an optional step it is recommended that we also install the kitware-archive-keyring package to ensure that Kitware's keyring stays up to date as they rotate their keys.
+
+    ```shell
+    sudo apt update
+    sudo apt install kitware-archive-keyring
+    sudo rm /etc/apt/trusted.gpg.d/kitware.gpg
+    ```
+  
+6. Finally we can update and install the cmake package.
+
+    ```shell
+    sudo apt update
+    sudo apt install cmake
+    ```
+
+<div align="right">
+  <a href="#top">
+  
+  ![Back to top][back_to_top]
+  
+  </a>
+</div>
 
 ## Installation
 
-For now this installation guide will only help you if you want to install this repository in order to contribute to it :) because this library is still under development.
+Clone the repository.
 
 ```shell
 git clone https://github.com/joshiayush/xtest.git
+```
+
+__Build xtest__
+
+Next step is to build `xtest` as a shared library using our build system `cmake`.
+
+```shell
+mkdir build
+cd build
+cmake -B . -S ../
+make install
+```
+
+This will build `xtest` library as `libxtest.so` file inside the `build` directory. 
+
+__Build samples__
+
+To build samples,
+
+```shell
+mkdir build
+cd build
+cmake -B . -S ../ -DBUILD_SAMPLES
+make install
+```
+
+Run samples by giving the name of the sample as `make` target,
+
+```shell
+make factorial  # builds and runs factorial unit test
+make isprime  # builds and runs isprime unit test
 ```
 
 <div align="right">
