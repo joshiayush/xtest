@@ -1,1 +1,6 @@
+# visual studio code
+.vs
 .vscode
+
+# cmake build system target directory
+build
