@@ -60,31 +60,31 @@
 // Trace out the test failure with information like the source file, line
 // number, received object and what we're expecting.
 #define IMPL__TEST_FAILURE_TRACE(actual, expected)                             \
-  std::cerr << __FILE__ << '(' << __LINE__                                     \
-            << "): error: Value of: " << #actual << '\n'                       \
-            << "  Actual: " << ::xtest::internal::StreamableToString(actual)   \
-            << '\n'                                                            \
-            << "Expected: " << ::xtest::internal::StreamableToString(expected) \
-            << std::endl;
+  ::xtest::impl::AssertionFailure()                                            \
+      << __FILE__ << '(' << __LINE__ << "): error: Value of: " << #actual      \
+      << '\n'                                                                  \
+      << "  Actual: " << ::xtest::internal::StreamableToString(actual) << '\n' \
+      << "Expected: " << ::xtest::internal::StreamableToString(expected)       \
+      << '\n';
 
-#define IMPL__TEST_EQUALITY_FAILURE_MSG()                         \
-  std::cerr << '['                                                \
-            << ::xtest::GetStringAlignedTo("FAILED", 10,          \
-                                           ::xtest::ALIGN_CENTER) \
-            << ']' << ' ' << currentTest->M_suiteName << '.'      \
-            << currentTest->M_testName << ::std::endl;
+#define IMPL__TEST_EQUALITY_FAILURE_MSG()                                 \
+  ::xtest::impl::AssertionFailure()                                       \
+      << '['                                                              \
+      << ::xtest::GetStringAlignedTo("FAILED", 10, ::xtest::ALIGN_CENTER) \
+      << ']' << ' ' << currentTest->M_suiteName << '.'                    \
+      << currentTest->M_testName << '\n';
 
-#define IMPL__TEST_EQUALITY_SUCCESS_MSG()                                  \
-  std::cerr << '['                                                         \
-            << ::xtest::GetStringAlignedTo("OK", 10, ::xtest::ALIGN_RIGHT) \
-            << ']' << ' ' << currentTest->M_suiteName << '.'               \
-            << currentTest->M_testName << ::std::endl;
+#define IMPL__TEST_EQUALITY_SUCCESS_MSG()                                    \
+  ::std::cerr << '['                                                         \
+              << ::xtest::GetStringAlignedTo("OK", 10, ::xtest::ALIGN_RIGHT) \
+              << ']' << ' ' << currentTest->M_suiteName << '.'               \
+              << currentTest->M_testName << '\n';
 
-#define IMPL__TEST_ASSERTION_SETUP()                                       \
-  std::cerr << '['                                                         \
-            << ::xtest::GetStringAlignedTo("RUN", 10, ::xtest::ALIGN_LEFT) \
-            << ']' << ' ' << currentTest->M_suiteName << '.'               \
-            << currentTest->M_testName << ::std::endl;
+#define IMPL__TEST_ASSERTION_SETUP()                                         \
+  ::std::cerr << '['                                                         \
+              << ::xtest::GetStringAlignedTo("RUN", 10, ::xtest::ALIGN_LEFT) \
+              << ']' << ' ' << currentTest->M_suiteName << '.'               \
+              << currentTest->M_testName << '\n';
 
 // Does a equality check between the actual and the expected value.
 //

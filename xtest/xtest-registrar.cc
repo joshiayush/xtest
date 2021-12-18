@@ -81,8 +81,8 @@ void _DebugListRegisteredTests(std::ostream& stream) {
   TestRegistrar* node = GTestRegistryInst.M_head;
   while (node) {
     XTEST_LOG_(INFO) << node->M_suiteName << '.' << node->M_testName << " -> "
-                     << ::xtest::internal::StreamableToString(node->M_testFunc)
-                     << ": " << GetTestResultStr(node->M_testResult);
+                     << reinterpret_cast<void*>(node->M_testFunc) << ": "
+                     << GetTestResultStr(node->M_testResult);
     node = node->M_nextTestSuite;
   }
 }

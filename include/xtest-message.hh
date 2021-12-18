@@ -102,7 +102,7 @@ class Message {
     if (pointer == nullptr)
       *_M_sstream << "(null)";
     else
-      *_M_sstream << reinterpret_cast<const void*>(pointer);
+      *_M_sstream << pointer;
     return *this;
   }
 

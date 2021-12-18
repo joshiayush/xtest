@@ -31,11 +31,10 @@
 #define XTEST_INCLUDE_XTEST_HH_
 
 #include <cinttypes>
+#include <iostream>
 #include <string>
 
-#include "xtest-assertions.hh"
 #include "xtest-message.hh"
-#include "xtest-registrar.hh"
 
 namespace xtest {
 namespace impl {
@@ -47,6 +46,15 @@ namespace impl {
 // inside of the function run_registered_test() that runs the registered test
 // suites.
 void SignalHandler(int param);
+
+class AssertionFailure {
+ public:
+  template <typename Type>
+  AssertionFailure operator<<(const Type& streamable) {
+    ::std::cerr << streamable;
+    return *this;
+  }
+};
 }  // namespace impl
 
 // Global counter for non-fatal test failures.
@@ -162,5 +170,8 @@ void PostFlagParsing();
 // Calling the function for the second time has no user-visible effect.
 void InitXTest(int32_t* argc, char** argv);
 }  // namespace xtest
+
+#include "xtest-assertions.hh"
+#include "xtest-registrar.hh"
 
 #endif  // XTEST_INCLUDE_XTEST_HH_
