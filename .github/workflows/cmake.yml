@@ -59,8 +59,7 @@ jobs:
         run: |
           cmake -B . -S ${{github.workspace}} -DBUILD_SAMPLES:BOOL=ON
           make install
-          make factorial
-          make isprime
+          make factorial isprime
 
       - name: Test
         working-directory: ${{github.workspace}}/build
