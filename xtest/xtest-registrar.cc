@@ -61,11 +61,11 @@ const char* GetTestResultStr(TestResult result) {
 // through this list to execute each test suite.
 TestRegistrar::TestRegistrar(const char* suiteName, const char* testName,
                              TestFunction testFunc)
-    : M_suiteName{suiteName},
-      M_testFunc{testFunc},
-      M_testName{testName},
-      M_nextTestSuite{nullptr},
-      M_testResult{TestResult::UNKNOWN} {
+    : M_suiteName(suiteName),
+      M_testFunc(testFunc),
+      M_testName(testName),
+      M_nextTestSuite(nullptr),
+      M_testResult(TestResult::UNKNOWN) {
   TestRegistrar** link = &GTestRegistryInst.M_head;
   while (*link)
     link = &((*link)->M_nextTestSuite);

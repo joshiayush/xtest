@@ -141,43 +141,6 @@ uint64_t RunRegisteredTests();
 
 #define RUN_ALL_TESTS() ::xtest::RunRegisteredTests()
 
-// XTestIsInitialized() returns true if and only if the user has initialized
-// xtest.  Useful for catching the user mistake of not initializing xtest before
-// calling RUN_ALL_TESTS().
-static bool XTestIsInitialized();
-
-// Checks if the string given is preffixed by valid characters or not.
-//
-// This function is maily used to validate command line flags given to the main
-// executable.
-static uint8_t ValidFlagPreffixLength(const char* flag);
-
-// Returns the value of the xtest command line flag.
-//
-// Parses the value after '=' character over the command line.  If `defOptional`
-// is given then the flag value is treated as a boolen true and returend.
-static const ::std::string ParseFlagValue(const char* const flag,
-                                          const char* flagName,
-                                          bool defOptional);
-
-// Parses the given flag i.e., `flagName` from the command line argument string
-// i.e., `flag`.
-//
-// Parses the given `flagName` from the string `flag` and sets the value in the
-// address `value`.
-//
-// Note: This function is just an overload for the boolean type command line
-// flags like `--help`, `--debug`, etc in this case the address that the `value`
-// is holding will have a bool value set at the end of parsing.
-static bool ParseFlag(const char* const flag, const char* const flagName,
-                      bool* value);
-
-// Parses a single xtest command line flag at a time.
-//
-// This function parses value of a command line flag and sets the value of the
-// global variable that represents that flag with the required type.
-static void ParseXTestFlag(const char* const flag);
-
 // Parses xtest command line flags.
 //
 // Note: This function should be called only at the initialization step.
