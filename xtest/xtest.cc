@@ -130,7 +130,7 @@ std::string GetStringAlignedTo(const ::std::string& str,
 
   switch (alignSide) {
     case ALIGN_LEFT:
-      suffixlen = (whiteSpacesNum / 5) + 1;
+      suffixlen = (whiteSpacesNum / 5);
       preffixlen = whiteSpacesNum - suffixlen;
       break;
     case ALIGN_CENTER:
@@ -138,7 +138,7 @@ std::string GetStringAlignedTo(const ::std::string& str,
       preffixlen = whiteSpacesNum - suffixlen;
       break;
     case ALIGN_RIGHT:
-      preffixlen = (whiteSpacesNum / 5) + 1;
+      preffixlen = (whiteSpacesNum / 5);
       suffixlen = whiteSpacesNum - preffixlen;
       break;
   }

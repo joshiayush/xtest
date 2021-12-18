@@ -34,6 +34,7 @@
 #include <string>
 
 #include "xtest-assertions.hh"
+#include "xtest-message.hh"
 #include "xtest-registrar.hh"
 
 namespace xtest {

@@ -57,6 +57,35 @@
       abort();                                               \
   } while (false)
 
+// Trace out the test failure with information like the source file, line
+// number, received object and what we're expecting.
+#define IMPL__TEST_FAILURE_TRACE(actual, expected)                             \
+  std::cerr << __FILE__ << '(' << __LINE__                                     \
+            << "): error: Value of: " << #actual << '\n'                       \
+            << "  Actual: " << ::xtest::internal::StreamableToString(actual)   \
+            << '\n'                                                            \
+            << "Expected: " << ::xtest::internal::StreamableToString(expected) \
+            << std::endl;
+
+#define IMPL__TEST_EQUALITY_FAILURE_MSG()                         \
+  std::cerr << '['                                                \
+            << ::xtest::GetStringAlignedTo("FAILED", 10,          \
+                                           ::xtest::ALIGN_CENTER) \
+            << ']' << ' ' << currentTest->M_suiteName << '.'      \
+            << currentTest->M_testName << ::std::endl;
+
+#define IMPL__TEST_EQUALITY_SUCCESS_MSG()                                  \
+  std::cerr << '['                                                         \
+            << ::xtest::GetStringAlignedTo("OK", 10, ::xtest::ALIGN_RIGHT) \
+            << ']' << ' ' << currentTest->M_suiteName << '.'               \
+            << currentTest->M_testName << ::std::endl;
+
+#define IMPL__TEST_ASSERTION_SETUP()                                       \
+  std::cerr << '['                                                         \
+            << ::xtest::GetStringAlignedTo("RUN", 10, ::xtest::ALIGN_LEFT) \
+            << ']' << ' ' << currentTest->M_suiteName << '.'               \
+            << currentTest->M_testName << ::std::endl;
+
 // Does a equality check between the actual and the expected value.
 //
 // This implementation detail macro IMPL__TEST_EQ does a equality check between
@@ -67,14 +96,16 @@
 // the stderr file stream and calls the operations defined in IMPL__TEST_FAILED
 // macro to decide whether to abort the current process or just simply increment
 // xtest::g_n_test_failures.
-#define IMPL__TEST_EQ(actual, expected, fatal)                            \
-  do {                                                                    \
-    if ((actual) != (expected)) {                                         \
-      std::cerr << __FILE__ << ':' << __LINE__ << ": FAIL: expected "     \
-                << #actual << " == " << #expected << "; but is actually " \
-                << actual << std::endl;                                   \
-      IMPL__TEST_FAILED(fatal);                                           \
-    }                                                                     \
+#define IMPL__TEST_EQ(actual, expected, fatal)    \
+  do {                                            \
+    IMPL__TEST_ASSERTION_SETUP();                 \
+    if ((actual) != (expected)) {                 \
+      IMPL__TEST_FAILURE_TRACE(actual, expected); \
+      IMPL__TEST_EQUALITY_FAILURE_MSG();          \
+      IMPL__TEST_FAILED(fatal);                   \
+    } else {                                      \
+      IMPL__TEST_EQUALITY_SUCCESS_MSG();          \
+    }                                             \
   } while (false)
 
 #define EXPECT_EQ(actual, expected) IMPL__TEST_EQ(actual, expected, false)
@@ -91,14 +122,16 @@
 // stderr file stream and calls the operations defined in IMPL__TEST_FAILED
 // macro to decide whether to abort the current process or just simply increment
 // xtest::g_n_test_failures.
-#define IMPL__TEST_NE(actual, expected, fatal)                            \
-  do {                                                                    \
-    if ((actual) != (expected)) {                                         \
-      std::cerr << __FILE__ << ':' << __LINE__ << ": FAIL: expected "     \
-                << #actual << " != " << #expected << "; but is actually " \
-                << actual << std::endl;                                   \
-      IMPL__TEST_FAILED(fatal);                                           \
-    }                                                                     \
+#define IMPL__TEST_NE(actual, expected, fatal)    \
+  do {                                            \
+    IMPL__TEST_ASSERTION_SETUP();                 \
+    if ((actual) == (expected)) {                 \
+      IMPL__TEST_FAILURE_TRACE(actual, expected); \
+      IMPL__TEST_EQUALITY_FAILURE_MSG();          \
+      IMPL__TEST_FAILED(fatal);                   \
+    } else {                                      \
+      IMPL__TEST_EQUALITY_SUCCESS_MSG();          \
+    }                                             \
   } while (false)
 
 #define EXPECT_NE(actual, expected) IMPL__TEST_NE(actual, expected, false)
@@ -115,14 +148,16 @@
 // In case the value given does not evaluates to true, this macro calls the
 // operations defined in the IMPL__TEST_FAILED macro to decide whether to abort
 // the current process or just simply increment xtest::g_n_test_failures.
-#define IMPL__TEST_TRUE(actual, fatal)                                \
-  do {                                                                \
-    if (!(actual)) {                                                  \
-      std::cerr << __FILE__ << ':' << __LINE__ << ": FAIL: expected " \
-                << #actual << " to be true; but is actually false"    \
-                << std::endl;                                         \
-      IMPL__TEST_FAILED(fatal);                                       \
-    }                                                                 \
+#define IMPL__TEST_TRUE(actual, fatal)        \
+  do {                                        \
+    IMPL__TEST_ASSERTION_SETUP();             \
+    if (!(actual)) {                          \
+      IMPL__TEST_FAILURE_TRACE(actual, true); \
+      IMPL__TEST_EQUALITY_FAILURE_MSG();      \
+      IMPL__TEST_FAILED(fatal);               \
+    } else {                                  \
+      IMPL__TEST_EQUALITY_SUCCESS_MSG();      \
+    }                                         \
   } while (false)
 
 #define EXPECT_TRUE(actual) IMPL__TEST_TRUE(actual, false)
@@ -139,14 +174,16 @@
 // In case the value given does not evaluates to false, this macro calls the
 // operations defined in the IMPL__TEST_FAILED macro to decide whether to abort
 // the current process or just simply increment xtest::g_n_test_failures.
-#define IMPL__TEST_FALSE(actual, fatal)                               \
-  do {                                                                \
-    if (!(actual)) {                                                  \
-      std::cerr << __FILE__ << ':' << __LINE__ << ": FAIL: expected " \
-                << #actual << " to be false; but is actually true"    \
-                << std::endl;                                         \
-      IMPL__TEST_FAILED(fatal);                                       \
-    }                                                                 \
+#define IMPL__TEST_FALSE(actual, fatal)       \
+  do {                                        \
+    IMPL__TEST_ASSERTION_SETUP();             \
+    if (actual) {                             \
+      IMPL__TEST_FAILURE_TRACE(actual, true); \
+      IMPL__TEST_EQUALITY_FAILURE_MSG();      \
+      IMPL__TEST_FAILED(fatal);               \
+    } else {                                  \
+      IMPL__TEST_EQUALITY_SUCCESS_MSG();      \
+    }                                         \
   } while (false)
 
 #define EXPECT_FALSE(actual) IMPL__TEST_FALSE(actual, false)

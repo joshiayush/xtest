@@ -32,6 +32,7 @@
 #include <cstdint>
 
 #include "internal/xtest-port.hh"
+#include "xtest-message.hh"
 
 namespace xtest {
 // TestRegistry instance that links nodes of different test suites.
@@ -80,8 +81,8 @@ void _DebugListRegisteredTests(std::ostream& stream) {
   TestRegistrar* node = GTestRegistryInst.M_head;
   while (node) {
     XTEST_LOG_(INFO) << node->M_suiteName << '.' << node->M_testName << " -> "
-                     << reinterpret_cast<void*>(node->M_testFunc) << ": "
-                     << GetTestResultStr(node->M_testResult);
+                     << ::xtest::internal::StreamableToString(node->M_testFunc)
+                     << ": " << GetTestResultStr(node->M_testResult);
     node = node->M_nextTestSuite;
   }
 }
