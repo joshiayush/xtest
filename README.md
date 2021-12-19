@@ -182,9 +182,8 @@ __Build xtest__
 Next step is to build `xtest` as a shared library using our build system `cmake`.
 
 ```shell
-mkdir build
+cmake -B build/ -S .
 cd build
-cmake -B . -S ../
 make install
 ```
 
@@ -195,17 +194,16 @@ __Build samples__
 To build samples,
 
 ```shell
-mkdir build
+cmake -B build/ -S . -DBUILD_SAMPLES:BOOL=ON
 cd build
-cmake -B . -S ../ -DBUILD_SAMPLES
 make install
 ```
 
-Run samples by giving the name of the sample as `make` target,
+Now run the `samples`,
 
 ```shell
-make factorial  # builds and runs factorial unit test
-make isprime  # builds and runs isprime unit test
+./samples/factorial/factorial  # Runs the factorial unit test samples binary
+./samples/isprime/isprime      # Runs the isprime unit test samples binary
 ```
 
 <div align="right">
