@@ -35,8 +35,9 @@
 #include "xtest-message.hh"
 
 namespace xtest {
-// TestRegistry instance that links nodes of different test suites.
-TestRegistry GTestRegistryInst = {0};
+// We initialize 'TestRegistry' instance here which then later gets served to
+// each file that include 'xtest-registrar.hh'.
+TestRegistry GTestRegistryInst = {{}, 0};
 
 // Converts a TestResult instance to its string representation form.
 //
@@ -67,10 +68,7 @@ TestRegistrar::TestRegistrar(const char* suiteName, const char* testName,
       M_testName(testName),
       M_nextTestSuite(nullptr),
       M_testResult(TestResult::UNKNOWN) {
-  TestRegistrar** link = &GTestRegistryInst.M_head;
-  while (*link)
-    link = &((*link)->M_nextTestSuite);
-  *link = this;
+  GTestRegistryInst.M_testRegistryTable[M_suiteName].push_back(this);
 }
 
 // Prints out debugging information of the registered test suites.
@@ -78,12 +76,13 @@ TestRegistrar::TestRegistrar(const char* suiteName, const char* testName,
 // This function reads the TestRegistry::m_firt_test linked list and writes that
 // information down to the given file stream.
 void _DebugListRegisteredTests(std::ostream& stream) {
-  TestRegistrar* node = GTestRegistryInst.M_head;
-  while (node) {
-    XTEST_LOG_(INFO) << node->M_suiteName << '.' << node->M_testName << " -> "
-                     << reinterpret_cast<void*>(node->M_testFunc) << ": "
-                     << GetTestResultStr(node->M_testResult);
-    node = node->M_nextTestSuite;
+  for (const auto& testSuite : GTestRegistryInst.M_testRegistryTable) {
+    for (const auto& testCase : testSuite.second) {
+      XTEST_LOG_(INFO) << testCase->M_suiteName << '.' << testCase->M_testName
+                       << " -> "
+                       << reinterpret_cast<void*>(testCase->M_testFunc) << ": "
+                       << GetTestResultStr(testCase->M_testResult);
+    }
   }
 }
 }  // namespace xtest

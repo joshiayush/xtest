@@ -33,6 +33,8 @@
 #include <csetjmp>
 #include <cstdint>
 #include <iostream>
+#include <map>
+#include <vector>
 
 // Creates a test suite and register it using TestRegistrar.
 //
@@ -40,19 +42,20 @@
 // Declaration for registering your test suite for automatic test execution and
 // definition that contains your test suite body.
 //
-// Note: For the best usage of this macro avoid giving same suitName and
+// Note: For the best usage of this macro avoid giving same suiteName and
 // testName to different test suites, otherwise compiler will complain
 // regarding the multiple definitions and declarations of the same function.
-#define TEST(suitName, testName)                                               \
-  void TESTFUNCTION__##suitName##testName(                                     \
-      ::xtest::TestRegistry* testRegistry,                                     \
-      ::xtest::TestRegistrar* currentTest);                                    \
-  namespace {                                                                  \
-  ::xtest::TestRegistrar TESTREGISTRAR__##suitName##testName(                  \
-      #suitName, #testName, TESTFUNCTION__##suitName##testName);               \
-  }                                                                            \
-  void TESTFUNCTION__##suitName##testName(::xtest::TestRegistry* testRegistry, \
-                                          ::xtest::TestRegistrar* currentTest)
+#define TEST(suiteName, testName)                                  \
+  void TESTFUNCTION__##suiteName##testName(                        \
+      ::xtest::TestRegistry* testRegistry,                         \
+      ::xtest::TestRegistrar* currentTest);                        \
+  namespace {                                                      \
+  ::xtest::TestRegistrar TESTREGISTRAR__##suiteName##testName(     \
+      #suiteName, #testName, TESTFUNCTION__##suiteName##testName); \
+  }                                                                \
+  void TESTFUNCTION__##suiteName##testName(                        \
+      ::xtest::TestRegistry* testRegistry,                         \
+      ::xtest::TestRegistrar* currentTest)
 
 namespace xtest {
 struct TestRegistrar;
@@ -106,17 +109,17 @@ class TestRegistrar {
   TestResult M_testResult;         // Result of the test suite
 };
 
-// Defines a pointer that links nodes of different test suites.
+// Constructs a 'map' object that links test suites to their test cases.
 //
-// This structure contains a pointer to the test suites linked list to later
-// traverse the entire linked list to execute each test suite.
+// This structure contains a 'map' instance that links test suites with their
+// test cases to traverse through all of the test cases and run them to later
+// group the result of test cases with their test suites.
 //
 // This structure also contains an instance of std::jmp_buf that stores the
 // environment information for the function xtest::run_registered_tests().
 struct TestRegistry {
  public:
-  // Pointer to the head of the test suite linked list.
-  TestRegistrar* M_head;
+  std::map<const char*, std::vector<TestRegistrar*>> M_testRegistryTable;
 
   // M_jumpOutOfTest instance stores the environment information for function
   // run_registered_tests() to later make a long jump using function

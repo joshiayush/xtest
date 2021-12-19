@@ -190,25 +190,24 @@ Message::Message() : _M_sstream(new ::std::stringstream) {
 // In case an assertion fails then this function marks that test suite as
 // FAILED while silently continuing executing rest of the test suites.
 uint64_t RunRegisteredTests() {
-  TestRegistrar* node = GTestRegistryInst.M_head;
-
   void (*SavedSignalHandler)(int);
   SavedSignalHandler = std::signal(SIGABRT, impl::SignalHandler);
 
-  while (node) {
-    if (node->M_testFunc) {
-      // We are setting a jump here to later mark the test result as FAILED in
-      // case the node->M_testFunc raised an abort signal result of an ASSERT_*
-      // assertion.
-      if (setjmp(GTestRegistryInst.M_jumpOutOfTest)) {
-        node->M_testResult = TestResult::FAILED;
-      } else {
-        node->M_testFunc(&GTestRegistryInst, node);
-        if (node->M_testResult == TestResult::UNKNOWN)
-          node->M_testResult = TestResult::PASSED;
+  for (auto& testSuite : GTestRegistryInst.M_testRegistryTable) {
+    for (auto& testCase : testSuite.second) {
+      if (testCase->M_testFunc) {
+        // We are setting a jump here to later mark the test result as FAILED in
+        // case the testCase->M_testFunc raised an abort signal result of an
+        // ASSERT_* assertion.
+        if (setjmp(GTestRegistryInst.M_jumpOutOfTest)) {
+          testCase->M_testResult = TestResult::FAILED;
+        } else {
+          testCase->M_testFunc(&GTestRegistryInst, testCase);
+          if (testCase->M_testResult == TestResult::UNKNOWN)
+            testCase->M_testResult = TestResult::PASSED;
+        }
       }
     }
-    node = node->M_nextTestSuite;
   }
 
   std::signal(SIGABRT, SavedSignalHandler);
