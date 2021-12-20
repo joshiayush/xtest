@@ -187,7 +187,20 @@ cd build
 make install
 ```
 
-This will build `xtest` library as `libxtest.so` file inside the `build` directory.
+This will build `xtest` library as `libxtest.so` file inside the `build` directory. Now as the next step you have to create a symbolic link of `libxtest.so` in `/usr/lib/` directory,
+
+```shell
+sudo ln -s /build/libxtest.so /usr/lib/libxtest.so
+```
+
+Now create symbolic link for the header files inside `/usr/include/C++/9` inside `xtest`,
+
+```shell
+sudo mkdir /usr/include/C++/9/xtest
+sudo ln -s /include/** /usr/include/C++/9/xtest
+```
+
+Now you are all set.
 
 **Build samples**
 
@@ -233,6 +246,12 @@ int32_t main(int32_t argc, char** argv) {
   ::xtest::InitXTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
+```
+
+Now compile the file and link the `libxtest.so` file with it:
+
+```shell
+g++ -lxtest square_test.cc -o square_test
 ```
 
 For more information on usage see our [wiki](https://github.com/joshiayush/xtest/wiki).
