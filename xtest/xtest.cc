@@ -59,8 +59,6 @@ void SignalHandler(int param) {
 
 // Filled with true if user provides '--help' flag over the command line.
 bool FLAG_xtest_help = false;
-// Filled with true if user provides '--debug' over the command line.
-bool FLAG_xtest_debug = false;
 
 #define XTEST_FLAG_GET(flagName) FLAG_xtest_##flagName
 #define XTEST_FLAG_SET(flagName, value) (void)(XTEST_FLAG_GET(flagName) = value)
@@ -284,7 +282,6 @@ static void ParseXTestFlag(const char* const flag) {
   } while (false)
 
   XTEST_INTERNAL_PARSE_FLAG(help);
-  XTEST_INTERNAL_PARSE_FLAG(debug);
 }
 
 // Parses all the xtest command line flags.
@@ -303,11 +300,6 @@ void ParseXTestFlags(int32_t* argc, char** argv) {
 void PostFlagParsing() {
   if (XTEST_FLAG_GET(help)) {
     // Show help text and return
-    return;
-  }
-
-  if (XTEST_FLAG_GET(debug)) {
-    _DebugListRegisteredTests(::std::cout);
     return;
   }
 }

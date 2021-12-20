@@ -39,22 +39,6 @@ namespace xtest {
 // each file that include 'xtest-registrar.hh'.
 TestRegistry GTestRegistryInst = {{}, 0};
 
-// Converts a TestResult instance to its string representation form.
-//
-// This function takes in a TestResult instance and returns a string that is
-// equal either of: UNKNOWN PASSED FAILED
-const char* GetTestResultStr(TestResult result) {
-  switch (result) {
-    case TestResult::PASSED:
-      return "PASSED";
-    case TestResult::FAILED:
-      return "FAILED";
-    case TestResult::UNKNOWN:
-    default:
-      return "UNKNOWN";
-  }
-}
-
 // Construct a new TestRegistrar object.
 //
 // This constructor appends a new entry of test suite to GTestRegistryInst list.
@@ -69,20 +53,5 @@ TestRegistrar::TestRegistrar(const char* suiteName, const char* testName,
       M_nextTestSuite(nullptr),
       M_testResult(TestResult::UNKNOWN) {
   GTestRegistryInst.M_testRegistryTable[M_suiteName].push_back(this);
-}
-
-// Prints out debugging information of the registered test suites.
-//
-// This function reads the TestRegistry::m_firt_test linked list and writes that
-// information down to the given file stream.
-void _DebugListRegisteredTests(std::ostream& stream) {
-  for (const auto& testSuite : GTestRegistryInst.M_testRegistryTable) {
-    for (const auto& testCase : testSuite.second) {
-      XTEST_LOG_(INFO) << testCase->M_suiteName << '.' << testCase->M_testName
-                       << " -> "
-                       << reinterpret_cast<void*>(testCase->M_testFunc) << ": "
-                       << GetTestResultStr(testCase->M_testResult);
-    }
-  }
 }
 }  // namespace xtest

@@ -74,12 +74,6 @@ typedef void (*TestFunction)(TestRegistry* testRegistry,
 
 enum class TestResult { UNKNOWN, PASSED, FAILED };
 
-// Converts a TestResult instance to its string representation form.
-//
-// This function takes in a TestResult instance and returns a string that is
-// equal either of: UNKNOWN PASSED FAILED
-const char* GetTestResultStr(TestResult result);
-
 class TestRegistrar {
  public:
   // Construct a new TestRegistrar object.
@@ -126,12 +120,6 @@ struct TestRegistry {
   // std::longjmp to register the test result as TestResult::FAILED.
   std::jmp_buf M_jumpOutOfTest;
 };
-
-// Prints out debugging information of the registered test suites.
-//
-// This function reads the TestRegistry::m_firt_test linked list and writes that
-// information down to the given file stream.
-void _DebugListRegisteredTests(std::ostream& stream);
 
 // TestRegistry instance that links nodes of different test suites.
 extern TestRegistry GTestRegistryInst;
