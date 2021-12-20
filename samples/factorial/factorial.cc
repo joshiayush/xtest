@@ -34,7 +34,7 @@
 
 // Container to memoize the path we have already followed in a factorial
 // computation tree.
-std::map<int64_t, int64_t> MemoizedFactorialValues;
+std::map<std::int64_t, std::int64_t> MemoizedFactorialValues;
 
 // Returns num! (the factorial of num).  For negative num, num! is defined to
 // be 1.
@@ -42,7 +42,7 @@ std::map<int64_t, int64_t> MemoizedFactorialValues;
 // This function is higly optimized and based on memoization technique where we
 // memoize the nodes we have already computed in a factorial tree and make use
 // of those memoized nodes in our future computation.
-int64_t Factorial(int64_t num) {
+std::int64_t Factorial(std::int64_t num) {
   if (num <= 0)
     return 1;
   if (MemoizedFactorialValues.find(num) != MemoizedFactorialValues.end())

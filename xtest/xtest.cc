@@ -237,7 +237,7 @@ static void GlobalTestEnvTearDown() {
 
   impl::MessageStream mout;
   mout << '\n';
-  mout << "[" << GetStrFilledWith('-') << "] Global test environment tear‑down."
+  mout << "[" << GetStrFilledWith('-') << "] Global test environment tear-down."
        << '\n';
   mout << "[" << GetStrFilledWith('=') << "] " << testCaseAndTestNums.second
        << " tests from " << testCaseAndTestNums.first << " test case ran."

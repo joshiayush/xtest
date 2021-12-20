@@ -36,14 +36,14 @@
 //
 // This function returns the result of,
 //  (base^num) % mod
-int64_t Pow(int64_t base, int64_t num, int64_t mod);
+std::int64_t Pow(std::int64_t base, std::int64_t num, std::int64_t mod);
 
 // Checks if the given num is a prime number using a probabilistic method called
 // Miller - Rabin method.
 //
 // This function takes in a prime number and a number that is big enough for
 // primality test.
-bool RabinMiller(int64_t var, int64_t num);
+bool RabinMiller(std::int64_t var, std::int64_t num);
 
 // Returns true if and only if num is a prime number.
 //
@@ -53,6 +53,6 @@ bool RabinMiller(int64_t var, int64_t num);
 //
 // The main caveat here is that the algorithm is deterministic only for the
 // numbers that are less than 4,759,123,141.
-bool IsPrime(int64_t num);
+bool IsPrime(std::int64_t num);
 
 #endif  // XTEST_SAMPLES_ISPRIME_ISPRIME_HH_

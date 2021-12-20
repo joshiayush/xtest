@@ -35,9 +35,9 @@
 //
 // This function returns the result of,
 //  (base^num) % mod
-int64_t Pow(int64_t base, int64_t num, int64_t mod) {
-  int64_t pow = base;
-  int64_t result = 1;
+std::int64_t Pow(std::int64_t base, std::int64_t num, std::int64_t mod) {
+  std::int64_t pow = base;
+  std::int64_t result = 1;
 
   while (num) {
     if (num & 1)
@@ -54,9 +54,9 @@ int64_t Pow(int64_t base, int64_t num, int64_t mod) {
 //
 // This function takes in a prime number and a number that is big enough for
 // primality test.
-bool RabinMiller(int64_t var, int64_t num) {
-  int64_t t, u, i;
-  int64_t prev, curr;
+bool RabinMiller(std::int64_t var, std::int64_t num) {
+  std::int64_t t, u, i;
+  std::int64_t prev, curr;
 
   u = num / 2;
   t = 1;
@@ -86,12 +86,12 @@ bool RabinMiller(int64_t var, int64_t num) {
 //
 // The main caveat here is that the algorithm is deterministic only for the
 // numbers that are less than 4,759,123,141.
-bool IsPrime(int64_t num) {
+bool IsPrime(std::int64_t num) {
   if (((!(num & 1)) && num != 2) || (num < 2) || (num % 3 == 0 && num != 3))
     return false;
 
   if (num < 1373653) {
-    for (int64_t k = 1; 36 * k * k - 12 * k < num; ++k)
+    for (std::int64_t k = 1; 36 * k * k - 12 * k < num; ++k)
       if ((num % (6 * k + 1) == 0) || (num % (6 * k - 1) == 0))
         return (false);
     return true;
