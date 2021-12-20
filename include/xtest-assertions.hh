@@ -174,16 +174,16 @@
 // In case the value given does not evaluates to false, this macro calls the
 // operations defined in the IMPL__TEST_FAILED macro to decide whether to abort
 // the current process or just simply increment xtest::g_n_test_failures.
-#define IMPL__TEST_FALSE(actual, fatal)       \
-  do {                                        \
-    IMPL__TEST_ASSERTION_SETUP();             \
-    if (actual) {                             \
-      IMPL__TEST_FAILURE_TRACE(actual, true); \
-      IMPL__TEST_EQUALITY_FAILURE_MSG();      \
-      IMPL__TEST_FAILED(fatal);               \
-    } else {                                  \
-      IMPL__TEST_EQUALITY_SUCCESS_MSG();      \
-    }                                         \
+#define IMPL__TEST_FALSE(actual, fatal)        \
+  do {                                         \
+    IMPL__TEST_ASSERTION_SETUP();              \
+    if (actual) {                              \
+      IMPL__TEST_FAILURE_TRACE(actual, false); \
+      IMPL__TEST_EQUALITY_FAILURE_MSG();       \
+      IMPL__TEST_FAILED(fatal);                \
+    } else {                                   \
+      IMPL__TEST_EQUALITY_SUCCESS_MSG();       \
+    }                                          \
   } while (false)
 
 #define EXPECT_FALSE(actual) IMPL__TEST_FALSE(actual, false)
