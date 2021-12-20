@@ -72,7 +72,7 @@
 
 # Commence
 
-To download and install library [__xtest__][_xtest] in your system follow the following steps.
+To download and install library [**xtest**][_xtest] in your system follow the following steps.
 
 ## Prerequisites
 
@@ -80,7 +80,7 @@ You must have a `g++ 9.3.0` or greater version with a `cmake` version `3.16.3` o
 
 ### Ubuntu
 
-__Step 1: Install gcc__
+**Step 1: Install gcc**
 
 ```shell
 sudo apt update
@@ -108,58 +108,58 @@ This is free software; see the source for copying conditions.  There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 ```
 
-In the above output __ubuntu1~20.04__ is my version, yours may be different.
+In the above output **ubuntu1~20.04** is my version, yours may be different.
 
-__Step 2: Install cmake__
+**Step 2: Install cmake**
 
 1. Uninstall the default `cmake` version provided by Ubuntu's package manager and configuration by using:
 
-    ```shell
-    sudo apt remove --purge --auto-remove cmake
-    ```
-  
+   ```shell
+   sudo apt remove --purge --auto-remove cmake
+   ```
+
    OR:
-  
-    ```shell
-    sudo apt purge --auto-remove cmake
-    ```
+
+   ```shell
+   sudo apt purge --auto-remove cmake
+   ```
 
    This step is crucial if you have a old version of `cmake` installed in your system.
 
 2. Prepare for installation.
 
-    ```shell
-    sudo apt update
-    sudo apt install -y software-properties-common lsb-release
-    sudo apt clean all
-    ```
-  
+   ```shell
+   sudo apt update
+   sudo apt install -y software-properties-common lsb-release
+   sudo apt clean all
+   ```
+
 3. Obtain a copy of kitware's signing key.
 
-    ```shell
-    wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | sudo tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
-    ```
-  
+   ```shell
+   wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | sudo tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
+   ```
+
 4. Add kitware's repository to your sources list for `Ubuntu Focal Fossa (20.04)`, `Ubuntu Bionic Beaver (18.04)` and `Ubuntu Xenial Xerus (16.04)`.
 
-    ```shell
-    sudo apt-add-repository "deb https://apt.kitware.com/ubuntu/ $(lsb_release -cs) main"
-    ```
-  
+   ```shell
+   sudo apt-add-repository "deb https://apt.kitware.com/ubuntu/ $(lsb_release -cs) main"
+   ```
+
 5. As an optional step it is recommended that we also install the kitware-archive-keyring package to ensure that Kitware's keyring stays up to date as they rotate their keys.
 
-    ```shell
-    sudo apt update
-    sudo apt install kitware-archive-keyring
-    sudo rm /etc/apt/trusted.gpg.d/kitware.gpg
-    ```
-  
+   ```shell
+   sudo apt update
+   sudo apt install kitware-archive-keyring
+   sudo rm /etc/apt/trusted.gpg.d/kitware.gpg
+   ```
+
 6. Finally we can update and install the cmake package.
 
-    ```shell
-    sudo apt update
-    sudo apt install cmake
-    ```
+   ```shell
+   sudo apt update
+   sudo apt install cmake
+   ```
 
 <div align="right">
   <a href="#top">
@@ -177,7 +177,7 @@ Clone the repository.
 git clone https://github.com/joshiayush/xtest.git
 ```
 
-__Build xtest__
+**Build xtest**
 
 Next step is to build `xtest` as a shared library using our build system `cmake`.
 
@@ -187,9 +187,9 @@ cd build
 make install
 ```
 
-This will build `xtest` library as `libxtest.so` file inside the `build` directory. 
+This will build `xtest` library as `libxtest.so` file inside the `build` directory.
 
-__Build samples__
+**Build samples**
 
 To build samples,
 
@@ -216,9 +216,26 @@ Now run the `samples`,
 
 # Usage
 
-Currently the project in its development state so you can't use it at the moment. Your contributions are what makes this project grow faster you can consider contributing to [**xtest**][_xtest].
+Testing a custom function that returns the sqaure of a given number.
 
-You can start by looking into the docstrings, there's enough information in that to get you started.
+```C++
+#include <xtest/xtest.hh>
+
+double square(int n) {
+  return n*n;
+}
+
+TEST(TestSquare, TestWithPositiveNumber) {
+  EXPECT_EQ(square(10), 100);
+}
+
+int32_t main(int32_t argc, char** argv) {
+  ::xtest::InitXTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
+```
+
+For more information on usage see our [wiki](https://github.com/joshiayush/xtest/wiki).
 
 <div align="right">
   <a href="#top">
