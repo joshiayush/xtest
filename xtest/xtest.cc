@@ -38,6 +38,7 @@
 #include <limits>
 #include <sstream>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "internal/xtest-port.hh"
@@ -179,6 +180,90 @@ Message::Message() : _M_sstream(new ::std::stringstream) {
   return result;
 }
 
+// Returns the total number of test cases and tests registered.
+//
+// The returned pair has the total number of test cases as its first element and
+// the total number of tests as its second element.
+static ::std::pair<::std::uint64_t, ::std::uint64_t>
+GetTestCaseAndTestsNumber() {
+  ::std::uint64_t testCaseNum = 0;
+  ::std::uint64_t testsNum = 0;
+
+  for (const auto& testCase : GTestRegistryInst.M_testRegistryTable) {
+    ++testCaseNum;
+    testsNum += testCase.second.size();
+  }
+
+  return ::std::pair<::std::uint64_t, ::std::uint64_t>{testCaseNum, testsNum};
+}
+
+// Global test environment setup step.
+//
+// As the project's README clearly says that this project is inspired by
+// googletest so I'm still trying to understand what google does in this step so
+// I can also implement it here.
+static void GlobalTestEnvSetup() {
+  ::std::pair<::std::uint64_t, ::std::uint64_t> testCaseAndTestNums =
+      GetTestCaseAndTestsNumber();
+
+  impl::MessageStream mout;
+  mout << "[" << GetStrFilledWith('=') << "] Running "
+       << testCaseAndTestNums.second << " tests from "
+       << testCaseAndTestNums.first << " test case." << '\n';
+  mout << "[" << GetStrFilledWith('-') << "] Global test environment setup."
+       << '\n';
+}
+
+// Global test environment tear down.
+//
+// Displays how many tests got passed and how many failed.
+// Again I'm still trying to understand what else google does in this step so
+// I can also implement it here.
+static void GlobalTestEnvTearDown() {
+  ::std::pair<::std::uint64_t, ::std::uint64_t> testCaseAndTestNums =
+      GetTestCaseAndTestsNumber();
+
+  std::map<const char*, std::vector<TestRegistrar*>> failedTests;
+  ::std::uint64_t failedTestsNum = 0;
+
+  for (const auto& testCase : GTestRegistryInst.M_testRegistryTable) {
+    for (const auto& test : testCase.second) {
+      if (test->M_testResult == TestResult::FAILED) {
+        failedTests[testCase.first].push_back(test);
+        ++failedTestsNum;
+      }
+    }
+  }
+
+  impl::MessageStream mout;
+  mout << '\n';
+  mout << "[" << GetStrFilledWith('-') << "] Global test environment tear‑down."
+       << '\n';
+  mout << "[" << GetStrFilledWith('=') << "] " << testCaseAndTestNums.second
+       << " tests from " << testCaseAndTestNums.first << " test case ran."
+       << '\n';
+  mout << "[" << GetStringAlignedTo("PASSED", 10, ALIGN_CENTER) << "] "
+       << testCaseAndTestNums.second - failedTestsNum << " test." << '\n';
+
+  if (failedTestsNum == 0)
+    return;
+
+  mout << "[" << GetStringAlignedTo("FAILED") << "] " << failedTestsNum
+       << " test, listed below:" << '\n';
+  for (const auto& testCase : failedTests) {
+    for (const auto& test : testCase.second) {
+      mout << "[" << GetStringAlignedTo("FAILED") << "] " << test->M_suiteName
+           << "." << test->M_testName << '\n';
+    }
+  }
+
+  mout << '\n';
+  if (failedTestsNum == 1)
+    mout << failedTestsNum << " FAILED TEST" << '\n';
+  else
+    mout << failedTestsNum << " FAILED TESTS" << '\n';
+}
+
 // Runs all the registered test suites and returns the failure count.
 //
 // This function runs all the registered test suites in the
@@ -191,6 +276,7 @@ uint64_t RunRegisteredTests() {
   void (*SavedSignalHandler)(int);
   SavedSignalHandler = std::signal(SIGABRT, impl::SignalHandler);
 
+  GlobalTestEnvSetup();
   for (auto& testSuite : GTestRegistryInst.M_testRegistryTable) {
     for (auto& testCase : testSuite.second) {
       if (testCase->M_testFunc) {
@@ -208,8 +294,8 @@ uint64_t RunRegisteredTests() {
     }
   }
 
+  GlobalTestEnvTearDown();
   std::signal(SIGABRT, SavedSignalHandler);
-
   return G_n_testFailures;
 }
 

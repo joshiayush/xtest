@@ -55,6 +55,15 @@ class AssertionFailure {
     return *this;
   }
 };
+
+class MessageStream {
+ public:
+  template <typename Type>
+  MessageStream operator<<(const Type& streamable) {
+    ::std::cout << streamable;
+    return *this;
+  }
+};
 }  // namespace impl
 
 // Global counter for non-fatal test failures.
