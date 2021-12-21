@@ -62,6 +62,8 @@
 
 **xtest** is a C++ testing framework inspired by [`gtest`][_gtest]. This is just a minimal implementation of a C++ unit testing framework which gives all the required facilities for unit testing a software without going template crazy and causing compilation issues.
 
+**Consider installing [`xtest`][_xtest] from the most stable branch [stable](https://github.com/joshiayush/xtest/tree/stable).**
+
 <div align="right">
   <a href="#top">
   
