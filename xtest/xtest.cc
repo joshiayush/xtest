@@ -60,6 +60,7 @@ void SignalHandler(int param) {
 
 // Filled with true if user provides '--help' flag over the command line.
 bool FLAG_xtest_help = false;
+bool FLAG_xtest_shuffle = false;
 
 #define XTEST_FLAG_GET(flagName) FLAG_xtest_##flagName
 #define XTEST_FLAG_SET(flagName, value) (void)(XTEST_FLAG_GET(flagName) = value)
@@ -69,6 +70,14 @@ bool FLAG_xtest_help = false;
 // This global counter is defined in the object file xtest.cc and incremented
 // every time a non-fatal test assertion fails.
 uint64_t G_n_testFailures = 0;
+
+static const char HelpMessage[] =
+    "This program contains tests written using xtest. You can use the\n"
+    "following command line flags to control its behaviour:\n"
+    "\n"
+    "Test Execution:\n"
+    "   --shuffle\n"
+    "     Randomize tests' orders.\n";
 
 // A copy of all command line arguments.  Set by InitXTest().
 static ::std::vector<::std::string> G_argvs;
@@ -276,8 +285,12 @@ uint64_t RunRegisteredTests() {
   void (*SavedSignalHandler)(int);
   SavedSignalHandler = std::signal(SIGABRT, impl::SignalHandler);
 
+  impl::MessageStream mout;
+
   GlobalTestEnvSetup();
   for (auto& testSuite : GTestRegistryInst.M_testRegistryTable) {
+    mout << "[" << GetStrFilledWith('-') << "] " << testSuite.second.size()
+         << " tests from " << testSuite.first << '\n';
     for (auto& testCase : testSuite.second) {
       if (testCase->M_testFunc) {
         // We are setting a jump here to later mark the test result as FAILED in
@@ -292,6 +305,8 @@ uint64_t RunRegisteredTests() {
         }
       }
     }
+    mout << "[" << GetStrFilledWith('-') << "] " << testSuite.second.size()
+         << " tests from " << testSuite.first << '\n';
   }
 
   GlobalTestEnvTearDown();
@@ -368,11 +383,13 @@ static void ParseXTestFlag(const char* const flag) {
   } while (false)
 
   XTEST_INTERNAL_PARSE_FLAG(help);
+  XTEST_INTERNAL_PARSE_FLAG(shuffle);
 }
 
 // Parses all the xtest command line flags.
 //
-// Note: This function should be called only at the initialization step.
+// Note: This function should be called only at the initialization step of
+// 'xtest' library.
 void ParseXTestFlags(int32_t* argc, char** argv) {
   for (int32_t i = 1; i < *argc; ++i) {
     const ::std::string argString = internal::StreamableToString(argv[i]);
@@ -382,11 +399,18 @@ void ParseXTestFlags(int32_t* argc, char** argv) {
 
 // Invokes functions corresponding to the command line flags given.
 //
-// Note: This function should be called after the ParseXTestFlags() function.
+// Note: This function should be called after the 'ParseXTestFlags()' function.
 void PostFlagParsing() {
   if (XTEST_FLAG_GET(help)) {
-    // Show help text and return
-    return;
+    impl::MessageStream mout;
+    mout << HelpMessage;
+    ::std::exit(EXIT_SUCCESS);
+  }
+
+  if (XTEST_FLAG_GET(shuffle)) {
+    impl::MessageStream mout;
+    mout << "Shuffling is not available for now, be kind and make a PR.\n";
+    ::std::exit(EXIT_SUCCESS);
   }
 }
 
