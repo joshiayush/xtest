@@ -47,6 +47,11 @@ namespace impl {
 // suites.
 void SignalHandler(int param);
 
+// Special class to take the failure messages to the console.
+//
+// This class will print the streamable object in 'red' color as it depicts
+// 'ERROR'.  At this moment we don't have any functionality to colorify the
+// streamable object before putting it on the console.
 class AssertionFailure {
  public:
   template <typename Type>
@@ -56,6 +61,12 @@ class AssertionFailure {
   }
 };
 
+// Special class to take streamables to the console and highlight them with
+// green color.
+//
+// This class will print the streamable object in 'green' color,  At this moment
+// we don't have any functionality to colorify the streamable object before
+// putting it on the console.
 class MessageStream {
  public:
   template <typename Type>

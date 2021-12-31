@@ -307,6 +307,7 @@ uint64_t RunRegisteredTests() {
     }
     mout << "[" << GetStrFilledWith('-') << "] " << testSuite.second.size()
          << " tests from " << testSuite.first << '\n';
+    mout << '\n';
   }
 
   GlobalTestEnvTearDown();
