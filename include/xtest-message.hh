@@ -70,12 +70,12 @@ class Message {
   Message();
 
   // Copy constructor.
-  Message(const Message& msg) : _M_sstream(new ::std::stringstream) {  // NOLINT
+  Message(const Message& msg) : _M_sstream(new std::stringstream) {  // NOLINT
     *_M_sstream << msg.GetString();
   }
 
   // Constructs a Message from a C-string.
-  explicit Message(const char* str) : _M_sstream(new ::std::stringstream) {
+  explicit Message(const char* str) : _M_sstream(new std::stringstream) {
     *_M_sstream << str;
   }
 
@@ -123,11 +123,11 @@ class Message {
   // character in the buffer is replaced with "\\0".
   //
   // INTERNAL IMPLEMENTATION - DO NOT USE IN A USER PROGRAM.
-  ::std::string GetString() const;
+  std::string GetString() const;
 
  private:
   // We'll hold the text streamed to this object here.
-  const std::unique_ptr<::std::stringstream> _M_sstream;
+  const std::unique_ptr<std::stringstream> _M_sstream;
 
   // We declare (but don't implement) this to prevent the compiler from
   // implementing the assignment operator.
@@ -141,10 +141,10 @@ inline std::ostream& operator<<(std::ostream& os, const Message& streamable) {
 
 namespace internal {
 // Converts a streamable value to an std::string.  A NULL pointer is converted
-// to "(null)".  When the input value is a ::string, ::std::string, ::wstring,
-// or ::std::wstring object, each NULL character in it is replaced with "\\0".
+// to "(null)".  When the input value is a ::string, std::string, ::wstring,
+// or std::wstring object, each NULL character in it is replaced with "\\0".
 template <typename T>
-::std::string StreamableToString(const T& streamable) {
+std::string StreamableToString(const T& streamable) {
   return (Message() << streamable).GetString();
 }
 }  // namespace internal

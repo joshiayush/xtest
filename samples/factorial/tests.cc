@@ -88,6 +88,6 @@ TEST(TestFactorial, TestWithOddCompositeNumbers) {
 }
 
 int32_t main(int32_t argc, char** argv) {
-  ::xtest::InitXTest(&argc, argv);
+  xtest::InitXTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

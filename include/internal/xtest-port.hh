@@ -59,7 +59,7 @@ class XTestLog {
   // Flushes the buffers and, if severity is XTEST_FATAL, aborts the program.
   ~XTestLog();
 
-  ::std::ostream& GetStream() { return ::std::cerr; }
+  std::ostream& GetStream() { return std::cerr; }
 
  private:
   const XTestLogSeverity _M_severity;
@@ -67,9 +67,9 @@ class XTestLog {
   XTEST_DISALLOW_COPY_AND_ASSIGN_(XTestLog);
 };
 
-#define XTEST_LOG_(severity)                                                 \
-  ::xtest::internal::XTestLog(::xtest::internal::XTEST_##severity, __FILE__, \
-                              __LINE__)                                      \
+#define XTEST_LOG_(severity)                                             \
+  xtest::internal::XTestLog(xtest::internal::XTEST_##severity, __FILE__, \
+                            __LINE__)                                    \
       .GetStream()
 }  // namespace internal
 

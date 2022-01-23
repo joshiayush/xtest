@@ -53,13 +53,37 @@ void SignalHandler(int param);
 // 'ERROR'.  At this moment we don't have any functionality to colorify the
 // streamable object before putting it on the console.
 class AssertionFailure {
+ private:
+  // The type of basic IO manipulators (endl, ends, and flush) for narrow
+  // streams.
+  //
+  // @TODO(joshiayush): Copy of the Message implementation of this type, if
+  // possible refactor into one single definition.
+  typedef std::ostream& (*BasicNarrowIoManip)(std::ostream&);
+
+  std::ostream& _M_stream;
+
  public:
+  AssertionFailure() : _M_stream(std::cerr) {}
+
   template <typename Type>
-  AssertionFailure operator<<(const Type& streamable) {
-    ::std::cerr << streamable;
+  AssertionFailure& operator<<(const Type& streamable) {
+    _M_stream << internal::StreamableToString(streamable);
+    return *this;
+  }
+
+  // Since the basic IO manipulators are overloaded for both narrow and wide
+  // streams, we have to provide this specialized definition of operator <<,
+  // even though its body is the same as the templatized version above.  Without
+  // this definition, streaming endl or other basic IO manipulators to Message
+  // will confuse the compiler.
+  AssertionFailure& operator<<(BasicNarrowIoManip val) {
+    _M_stream << val;
     return *this;
   }
 };
+
+#define FAIL() xtest::impl::AssertionFailure()
 
 // Special class to take streamables to the console and highlight them with
 // green color.
@@ -68,13 +92,37 @@ class AssertionFailure {
 // we don't have any functionality to colorify the streamable object before
 // putting it on the console.
 class MessageStream {
+ private:
+  // The type of basic IO manipulators (endl, ends, and flush) for narrow
+  // streams.
+  //
+  // @TODO(joshiayush): Copy of the Message implementation of this type, if
+  // possible refactor into one single definition.
+  typedef std::ostream& (*BasicNarrowIoManip)(std::ostream&);
+
+  std::ostream& _M_stream;
+
  public:
+  MessageStream() : _M_stream(std::cout) {}
+
   template <typename Type>
   MessageStream operator<<(const Type& streamable) {
-    ::std::cout << streamable;
+    std::cout << internal::StreamableToString(streamable);
+    return *this;
+  }
+
+  // Since the basic IO manipulators are overloaded for both narrow and wide
+  // streams, we have to provide this specialized definition of operator <<,
+  // even though its body is the same as the templatized version above.  Without
+  // this definition, streaming endl or other basic IO manipulators to Message
+  // will confuse the compiler.
+  MessageStream& operator<<(BasicNarrowIoManip val) {
+    std::cout << val;
     return *this;
   }
 };
+
+#define MESSAGE() xtest::impl::MessageStream()
 }  // namespace impl
 
 // Global counter for non-fatal test failures.
@@ -104,7 +152,7 @@ extern uint64_t G_n_testFailures;
 // ```
 std::string GetStrFilledWith(
     const char& chr,
-    ::std::size_t width = XTEST_DEFAULT_SUMMARY_STATUS_STR_WIDTH_);
+    std::size_t width = XTEST_DEFAULT_SUMMARY_STATUS_STR_WIDTH_);
 
 enum StringAlignValues { ALIGN_RIGHT, ALIGN_LEFT, ALIGN_CENTER };
 
@@ -125,8 +173,8 @@ enum StringAlignValues { ALIGN_RIGHT, ALIGN_LEFT, ALIGN_CENTER };
 // `alignSide` i.e., `XTEST_DEFAULT_SUMMARY_STATUS_STR_WIDTH_` and
 // `ALIGN_CENTER` respectively.
 std::string GetStringAlignedTo(
-    const ::std::string& str,
-    const ::std::size_t& newStrWidth = XTEST_DEFAULT_SUMMARY_STATUS_STR_WIDTH_,
+    const std::string& str,
+    const std::size_t& newStrWidth = XTEST_DEFAULT_SUMMARY_STATUS_STR_WIDTH_,
     const StringAlignValues& alignSide = ALIGN_CENTER);
 
 // Summarize test results.
@@ -168,7 +216,7 @@ void SummarizeTestResults();
 // FAILED while silently continuing executing rest of the test suites.
 uint64_t RunRegisteredTests();
 
-#define RUN_ALL_TESTS() ::xtest::RunRegisteredTests()
+#define RUN_ALL_TESTS() xtest::RunRegisteredTests()
 
 // Parses xtest command line flags.
 //

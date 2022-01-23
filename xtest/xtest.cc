@@ -80,7 +80,7 @@ static const char HelpMessage[] =
     "     Randomize tests' orders.\n";
 
 // A copy of all command line arguments.  Set by InitXTest().
-static ::std::vector<::std::string> G_argvs;
+static std::vector<std::string> G_argvs;
 
 // XTestIsInitialized() returns true if and only if the user has initialized
 // xtest.  Useful for catching the user mistake of not initializing xtest before
@@ -102,9 +102,9 @@ static bool XTestIsInitialized() { return G_argvs.size() > 0; }
 //
 //  1 FAILED TEST
 // ```
-std::string GetStrFilledWith(const char& chr, ::std::size_t width) {
-  ::std::stringstream sstream;
-  for (::std::size_t i = 0; i < width; ++i)
+std::string GetStrFilledWith(const char& chr, std::size_t width) {
+  std::stringstream sstream;
+  for (std::size_t i = 0; i < width; ++i)
     sstream << chr;
   return sstream.str();
 }
@@ -125,16 +125,16 @@ std::string GetStrFilledWith(const char& chr, ::std::size_t width) {
 // If not given this function will use the default values for `newStrWidth` and
 // `alignSide` i.e., `XTEST_DEFAULT_SUMMARY_STATUS_STR_WIDTH_` and
 // `ALIGN_CENTER` respectively.
-std::string GetStringAlignedTo(const ::std::string& str,
-                               const ::std::size_t& newStrWidth,
+std::string GetStringAlignedTo(const std::string& str,
+                               const std::size_t& newStrWidth,
                                const StringAlignValues& alignSide) {
-  ::std::size_t strlen = str.length();
+  std::size_t strlen = str.length();
   if (strlen >= newStrWidth)
     return str.c_str();
 
-  ::std::stringstream sstream;
-  ::std::size_t whiteSpacesNum = newStrWidth - strlen;
-  ::std::size_t suffixlen, preffixlen;
+  std::stringstream sstream;
+  std::size_t whiteSpacesNum = newStrWidth - strlen;
+  std::size_t suffixlen, preffixlen;
 
   switch (alignSide) {
     case ALIGN_LEFT:
@@ -162,7 +162,7 @@ std::string GetStringAlignedTo(const ::std::string& str,
 // ASSERT_* or EXPECT_* in a procedure adds over 200 bytes to the procedure's
 // stack frame leading to huge stack frames in some cases; gcc does not reuse
 // the stack space.
-Message::Message() : _M_sstream(new ::std::stringstream) {
+Message::Message() : _M_sstream(new std::stringstream) {
   // By default, we want there to be enough precision when printing a double to
   // a Message.
   *_M_sstream << std::setprecision(std::numeric_limits<double>::digits10 + 2);
@@ -172,8 +172,8 @@ Message::Message() : _M_sstream(new ::std::stringstream) {
 // character in the buffer is replaced with "\\0".
 //
 // INTERNAL IMPLEMENTATION - DO NOT USE IN A USER PROGRAM.
-::std::string Message::GetString() const {
-  const ::std::string& str = _M_sstream->str();
+std::string Message::GetString() const {
+  const std::string& str = _M_sstream->str();
   const char* const start = str.c_str();
   const char* const end = start + str.length();
 
@@ -193,17 +193,16 @@ Message::Message() : _M_sstream(new ::std::stringstream) {
 //
 // The returned pair has the total number of test cases as its first element and
 // the total number of tests as its second element.
-static ::std::pair<::std::uint64_t, ::std::uint64_t>
-GetTestCaseAndTestsNumber() {
-  ::std::uint64_t testCaseNum = 0;
-  ::std::uint64_t testsNum = 0;
+static std::pair<std::uint64_t, std::uint64_t> GetTestCaseAndTestsNumber() {
+  std::uint64_t testCaseNum = 0;
+  std::uint64_t testsNum = 0;
 
   for (const auto& testCase : GTestRegistryInst.M_testRegistryTable) {
     ++testCaseNum;
     testsNum += testCase.second.size();
   }
 
-  return ::std::pair<::std::uint64_t, ::std::uint64_t>{testCaseNum, testsNum};
+  return std::pair<std::uint64_t, std::uint64_t>{testCaseNum, testsNum};
 }
 
 // Global test environment setup step.
@@ -212,15 +211,14 @@ GetTestCaseAndTestsNumber() {
 // googletest so I'm still trying to understand what google does in this step so
 // I can also implement it here.
 static void GlobalTestEnvSetup() {
-  ::std::pair<::std::uint64_t, ::std::uint64_t> testCaseAndTestNums =
+  std::pair<std::uint64_t, std::uint64_t> testCaseAndTestNums =
       GetTestCaseAndTestsNumber();
 
-  impl::MessageStream mout;
-  mout << "[" << GetStrFilledWith('=') << "] Running "
-       << testCaseAndTestNums.second << " tests from "
-       << testCaseAndTestNums.first << " test case." << '\n';
-  mout << "[" << GetStrFilledWith('-') << "] Global test environment setup."
-       << '\n';
+  MESSAGE() << "[" << GetStrFilledWith('=') << "] Running "
+            << testCaseAndTestNums.second << " tests from "
+            << testCaseAndTestNums.first << " test case." << std::endl;
+  MESSAGE() << "[" << GetStrFilledWith('-')
+            << "] Global test environment setup." << std::endl;
 }
 
 // Global test environment tear down.
@@ -229,48 +227,48 @@ static void GlobalTestEnvSetup() {
 // Again I'm still trying to understand what else google does in this step so
 // I can also implement it here.
 static void GlobalTestEnvTearDown() {
-  ::std::pair<::std::uint64_t, ::std::uint64_t> testCaseAndTestNums =
+  std::pair<std::uint64_t, std::uint64_t> testCaseAndTestNums =
       GetTestCaseAndTestsNumber();
 
   std::map<const char*, std::vector<TestRegistrar*>> failedTests;
-  ::std::uint64_t failedTestsNum = 0;
+  std::uint64_t failedTestsNum = 0;
 
   for (const auto& testCase : GTestRegistryInst.M_testRegistryTable) {
     for (const auto& test : testCase.second) {
-      if (test->M_testResult == TestResult::FAILED) {
-        failedTests[testCase.first].push_back(test);
-        ++failedTestsNum;
-      }
+      if (test->M_testResult != TestResult::FAILED)
+        continue;
+      failedTests[testCase.first].push_back(test);
+      ++failedTestsNum;
     }
   }
 
-  impl::MessageStream mout;
-  mout << '\n';
-  mout << "[" << GetStrFilledWith('-') << "] Global test environment tear-down."
-       << '\n';
-  mout << "[" << GetStrFilledWith('=') << "] " << testCaseAndTestNums.second
-       << " tests from " << testCaseAndTestNums.first << " test case ran."
-       << '\n';
-  mout << "[" << GetStringAlignedTo("PASSED", 10, ALIGN_CENTER) << "] "
-       << testCaseAndTestNums.second - failedTestsNum << " test." << '\n';
+  MESSAGE() << std::endl;
+  MESSAGE() << "[" << GetStrFilledWith('-')
+            << "] Global test environment tear-down." << std::endl;
+  MESSAGE() << "[" << GetStrFilledWith('=') << "] "
+            << testCaseAndTestNums.second << " tests from "
+            << testCaseAndTestNums.first << " test case ran." << std::endl;
+  MESSAGE() << "[" << GetStringAlignedTo("PASSED", 10, ALIGN_CENTER) << "] "
+            << testCaseAndTestNums.second - failedTestsNum << " test."
+            << std::endl;
 
   if (failedTestsNum == 0)
     return;
 
-  mout << "[" << GetStringAlignedTo("FAILED") << "] " << failedTestsNum
-       << " test, listed below:" << '\n';
+  MESSAGE() << "[" << GetStringAlignedTo("FAILED") << "] " << failedTestsNum
+            << " test, listed below:" << std::endl;
   for (const auto& testCase : failedTests) {
     for (const auto& test : testCase.second) {
-      mout << "[" << GetStringAlignedTo("FAILED") << "] " << test->M_suiteName
-           << "." << test->M_testName << '\n';
+      MESSAGE() << "[" << GetStringAlignedTo("FAILED") << "] "
+                << test->M_suiteName << "." << test->M_testName << std::endl;
     }
   }
 
-  mout << '\n';
+  MESSAGE() << std::endl;
   if (failedTestsNum == 1)
-    mout << failedTestsNum << " FAILED TEST" << '\n';
+    MESSAGE() << failedTestsNum << " FAILED TEST" << std::endl;
   else
-    mout << failedTestsNum << " FAILED TESTS" << '\n';
+    MESSAGE() << failedTestsNum << " FAILED TESTS" << std::endl;
 }
 
 // Runs all the registered test suites and returns the failure count.
@@ -285,12 +283,10 @@ uint64_t RunRegisteredTests() {
   void (*SavedSignalHandler)(int);
   SavedSignalHandler = std::signal(SIGABRT, impl::SignalHandler);
 
-  impl::MessageStream mout;
-
   GlobalTestEnvSetup();
   for (auto& testSuite : GTestRegistryInst.M_testRegistryTable) {
-    mout << "[" << GetStrFilledWith('-') << "] " << testSuite.second.size()
-         << " tests from " << testSuite.first << '\n';
+    MESSAGE() << "[" << GetStrFilledWith('-') << "] " << testSuite.second.size()
+              << " tests from " << testSuite.first << std::endl;
     for (auto& testCase : testSuite.second) {
       if (testCase->M_testFunc) {
         // We are setting a jump here to later mark the test result as FAILED in
@@ -305,9 +301,9 @@ uint64_t RunRegisteredTests() {
         }
       }
     }
-    mout << "[" << GetStrFilledWith('-') << "] " << testSuite.second.size()
-         << " tests from " << testSuite.first << '\n';
-    mout << '\n';
+    MESSAGE() << "[" << GetStrFilledWith('-') << "] " << testSuite.second.size()
+              << " tests from " << testSuite.first << std::endl
+              << std::endl;
   }
 
   GlobalTestEnvTearDown();
@@ -320,9 +316,9 @@ uint64_t RunRegisteredTests() {
 // This function is maily used to validate command line flags given to the main
 // executable.
 static uint8_t ValidFlagPreffixLength(const char* flag) {
-  if (::std::strncmp(flag, "--", 2) == 0)
+  if (std::strncmp(flag, "--", 2) == 0)
     return 2;
-  if (::std::strncmp(flag, "-", 1) == 0)
+  if (std::strncmp(flag, "-", 1) == 0)
     return 1;
   return 0;
 }
@@ -331,22 +327,22 @@ static uint8_t ValidFlagPreffixLength(const char* flag) {
 //
 // Parses the value after '=' character over the command line.  If `defOptional`
 // is given then the flag value is treated as a boolen true and returend.
-static const ::std::string ParseFlagValue(const char* const flag,
-                                          const char* flagName,
-                                          bool defOptional) {
+static const std::string ParseFlagValue(const char* const flag,
+                                        const char* flagName,
+                                        bool defOptional) {
   if (flag == nullptr || flagName == nullptr)
-    return ::std::string();
+    return std::string();
 
   uint8_t preffixLen = ValidFlagPreffixLength(flag);
   if (preffixLen == 0)
-    return ::std::string();
+    return std::string();
 
-  const char* flagEnd = flag + (preffixLen + ::std::strlen(flagName) + 1);
+  const char* flagEnd = flag + (preffixLen + std::strlen(flagName) + 1);
   if (defOptional && *flagEnd == '\0')
     return "true";
 
   if (*flagEnd != '=')
-    return ::std::string();
+    return std::string();
 
   return ++flagEnd;
 }
@@ -362,11 +358,11 @@ static const ::std::string ParseFlagValue(const char* const flag,
 // is holding will have a bool value set at the end of parsing.
 static bool ParseFlag(const char* const flag, const char* const flagName,
                       bool* value) {
-  const ::std::string valueStr = ParseFlagValue(flag, flagName, true);
+  const std::string valueStr = ParseFlagValue(flag, flagName, true);
   const char* valueCStr = valueStr.c_str();
   if (valueCStr == nullptr)
     return false;
-  *value = ::std::strcmp(valueCStr, "true") == 0;
+  *value = std::strcmp(valueCStr, "true") == 0;
   return true;
 }
 
@@ -393,7 +389,7 @@ static void ParseXTestFlag(const char* const flag) {
 // 'xtest' library.
 void ParseXTestFlags(int32_t* argc, char** argv) {
   for (int32_t i = 1; i < *argc; ++i) {
-    const ::std::string argString = internal::StreamableToString(argv[i]);
+    const std::string argString = internal::StreamableToString(argv[i]);
     ParseXTestFlag(argString.c_str());
   }
 }
@@ -403,15 +399,13 @@ void ParseXTestFlags(int32_t* argc, char** argv) {
 // Note: This function should be called after the 'ParseXTestFlags()' function.
 void PostFlagParsing() {
   if (XTEST_FLAG_GET(help)) {
-    impl::MessageStream mout;
-    mout << HelpMessage;
-    ::std::exit(EXIT_SUCCESS);
+    MESSAGE() << HelpMessage;
+    std::exit(EXIT_SUCCESS);
   }
 
   if (XTEST_FLAG_GET(shuffle)) {
-    impl::MessageStream mout;
-    mout << "Shuffling is not available for now, be kind and make a PR.\n";
-    ::std::exit(EXIT_SUCCESS);
+    MESSAGE() << "Shuffling is not available for now, be kind and make a PR.\n";
+    std::exit(EXIT_SUCCESS);
   }
 }
 

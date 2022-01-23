@@ -42,7 +42,7 @@ const char kUnknownFile[] = "unknown file";
 
 // Formats a source file path and a line number as they would appear
 // in an error message from the compiler used to compile this code.
-::std::string FormatFileLocation(const char* file, const uint64_t& line) {
+std::string FormatFileLocation(const char* file, const uint64_t& line) {
   const std::string fileName(file == nullptr ? kUnknownFile : file);
   return fileName + ":" + StreamableToString(line) + ":";
 }
@@ -60,10 +60,10 @@ XTestLog::XTestLog(const XTestLogSeverity& severity, const char* file,
 
 // Flushes the buffers and, if severity is XTEST_FATAL, aborts the program.
 XTestLog::~XTestLog() {
-  GetStream() << ::std::endl;
+  GetStream() << std::endl;
   if (_M_severity == XTEST_FATAL) {
-    ::std::fflush(stderr);
-    ::std::abort();
+    std::fflush(stderr);
+    std::abort();
   }
 }
 }  // namespace internal

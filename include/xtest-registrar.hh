@@ -45,17 +45,15 @@
 // Note: For the best usage of this macro avoid giving same suiteName and
 // testName to different test suites, otherwise compiler will complain
 // regarding the multiple definitions and declarations of the same function.
-#define TEST(suiteName, testName)                                  \
-  void TESTFUNCTION__##suiteName##testName(                        \
-      ::xtest::TestRegistry* testRegistry,                         \
-      ::xtest::TestRegistrar* currentTest);                        \
-  namespace {                                                      \
-  ::xtest::TestRegistrar TESTREGISTRAR__##suiteName##testName(     \
-      #suiteName, #testName, TESTFUNCTION__##suiteName##testName); \
-  }                                                                \
-  void TESTFUNCTION__##suiteName##testName(                        \
-      ::xtest::TestRegistry* testRegistry,                         \
-      ::xtest::TestRegistrar* currentTest)
+#define TEST(suiteName, testName)                                              \
+  void TESTFUNCTION__##suiteName##testName(xtest::TestRegistry* testRegistry,  \
+                                           xtest::TestRegistrar* currentTest); \
+  namespace {                                                                  \
+  xtest::TestRegistrar TESTREGISTRAR__##suiteName##testName(                   \
+      #suiteName, #testName, TESTFUNCTION__##suiteName##testName);             \
+  }                                                                            \
+  void TESTFUNCTION__##suiteName##testName(xtest::TestRegistry* testRegistry,  \
+                                           xtest::TestRegistrar* currentTest)
 
 namespace xtest {
 struct TestRegistrar;
