@@ -194,14 +194,11 @@ std::string Message::GetString() const {
 // The returned pair has the total number of test cases as its first element and
 // the total number of tests as its second element.
 static std::pair<std::uint64_t, std::uint64_t> GetTestCaseAndTestsNumber() {
-  std::uint64_t testCaseNum = 0;
-  std::uint64_t testsNum = 0;
-
+  std::uint64_t testsNum = 0, testCaseNum = 0;
   for (const auto& testCase : GTestRegistryInst.M_testRegistryTable) {
     ++testCaseNum;
     testsNum += testCase.second.size();
   }
-
   return std::pair<std::uint64_t, std::uint64_t>{testCaseNum, testsNum};
 }
 
@@ -242,8 +239,8 @@ static void GlobalTestEnvTearDown() {
     }
   }
 
-  MESSAGE() << std::endl;
-  MESSAGE() << "[" << GetStrFilledWith('-')
+  MESSAGE() << std::endl
+            << "[" << GetStrFilledWith('-')
             << "] Global test environment tear-down." << std::endl;
   MESSAGE() << "[" << GetStrFilledWith('=') << "] "
             << testCaseAndTestNums.second << " tests from "
@@ -264,11 +261,9 @@ static void GlobalTestEnvTearDown() {
     }
   }
 
-  MESSAGE() << std::endl;
-  if (failedTestsNum == 1)
-    MESSAGE() << failedTestsNum << " FAILED TEST" << std::endl;
-  else
-    MESSAGE() << failedTestsNum << " FAILED TESTS" << std::endl;
+  MESSAGE() << std::endl
+            << failedTestsNum << " FAILED TEST"
+            << (failedTestsNum == 1 ? "" : "S") << std::endl;
 }
 
 // Runs all the registered test suites and returns the failure count.
