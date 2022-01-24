@@ -32,32 +32,32 @@
 #include "factorial/factorial.hh"
 #include "xtest.hh"
 
-TEST(TestFactorial, TestWithNegativeNumbers) {
+TEST(TestWithNegativeNumbers, TestFactorial) {
   EXPECT_EQ(Factorial(std::numeric_limits<int64_t>::lowest()), 1);
 }
 
-TEST(TestFactorial, TestWithNegativePrimeNumbers) {
+TEST(TestWithNegativePrimeNumbers, TestFactorial) {
   EXPECT_EQ(Factorial(-2), 1);
   EXPECT_EQ(Factorial(-5), 1);
   EXPECT_EQ(Factorial(-7), 1);
   EXPECT_EQ(Factorial(-13), 1);
 }
 
-TEST(TestFactorial, TestWithNegativeEvenCompositeNumbers) {
+TEST(TestWithNegativeEvenCompositeNumbers, TestFactorial) {
   EXPECT_EQ(Factorial(-4), 1);
   EXPECT_EQ(Factorial(-6), 1);
   EXPECT_EQ(Factorial(-8), 1);
   EXPECT_EQ(Factorial(-10), 1);
 }
 
-TEST(TestFactorial, TestWithNegativeOddCompositeNumbers) {
+TEST(TestWithNegativeOddCompositeNumbers, TestFactorial) {
   EXPECT_EQ(Factorial(-4), 1);
   EXPECT_EQ(Factorial(-6), 1);
   EXPECT_EQ(Factorial(-8), 1);
   EXPECT_EQ(Factorial(-10), 1);
 }
 
-TEST(TestFactorial, DoomedToBeFailedTests) {
+TEST(DoomedToBeFailedTests, TestFactorial) {
   EXPECT_EQ(Factorial(2), 1);
   EXPECT_EQ(Factorial(5), 1);
   EXPECT_EQ(Factorial(7), 1);
@@ -68,23 +68,23 @@ TEST(TestFactorial, DoomedToBeFailedTests) {
   EXPECT_EQ(Factorial(-10), 6227020800);
 }
 
-TEST(TestFactorial, TestWithPrimeNumbers) {
+TEST(TestWithPrimeNumbers, TestFactorial) {
   EXPECT_EQ(Factorial(2), 2);
   EXPECT_EQ(Factorial(5), 120);
   EXPECT_EQ(Factorial(7), 5040);
   EXPECT_EQ(Factorial(13), 6227020800);
 }
 
-TEST(TestFactorial, TestWithEvenCompositeNumbers) {
+TEST(TestWithEvenCompositeNumbers, TestFactorial) {
   EXPECT_EQ(Factorial(4), 24);
   EXPECT_EQ(Factorial(6), 720);
   EXPECT_EQ(Factorial(8), 40320);
   EXPECT_EQ(Factorial(10), 3628800);
 }
 
-TEST(TestFactorial, TestWithOddCompositeNumbers) {
+TEST(TestWithOddCompositeNumbers, TestFactorial) {
   EXPECT_EQ(Factorial(9), 362880);
-  EXPECT_EQ(Factorial(15), 1307674368000);  
+  EXPECT_EQ(Factorial(15), 1307674368000);
 }
 
 int32_t main(int32_t argc, char** argv) {
