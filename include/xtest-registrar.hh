@@ -119,6 +119,9 @@ struct TestRegistry {
   std::jmp_buf M_jumpOutOfTest;
 };
 
+using UnitTest = std::map<const char*, std::vector<TestRegistrar*>>;
+using UnitTestPair = std::pair<const char*, std::vector<TestRegistrar*>>;
+
 // TestRegistry instance that links nodes of different test suites.
 extern TestRegistry GTestRegistryInst;
 }  // namespace xtest

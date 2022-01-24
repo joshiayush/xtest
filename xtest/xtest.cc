@@ -32,6 +32,7 @@
 #include <cinttypes>
 #include <csetjmp>
 #include <csignal>
+#include <cstdio>
 #include <cstring>
 #include <iomanip>
 #include <iostream>
@@ -71,13 +72,18 @@ bool FLAG_xtest_shuffle = false;
 // every time a non-fatal test assertion fails.
 uint64_t G_n_testFailures = 0;
 
-static const char HelpMessage[] =
+uint64_t G_n_tests = 0;
+uint64_t G_n_testSuites = 0;
+
+std::uint64_t G_n_failedTests = 0;
+
+static const char kHelpMessage[] =
     "This program contains tests written using xtest. You can use the\n"
     "following command line flags to control its behaviour:\n"
     "\n"
     "Test Execution:\n"
     "   --shuffle\n"
-    "     Randomize tests' orders.\n";
+    "     Randomize tests' orders. (In development)\n";
 
 // A copy of all command line arguments.  Set by InitXTest().
 static std::vector<std::string> G_argvs;
@@ -193,77 +199,143 @@ std::string Message::GetString() const {
 //
 // The returned pair has the total number of test cases as its first element and
 // the total number of tests as its second element.
-static std::pair<std::uint64_t, std::uint64_t> GetTestCaseAndTestsNumber() {
-  std::uint64_t testsNum = 0, testCaseNum = 0;
+static std::pair<std::uint64_t, std::uint64_t> GetTestSuiteAndTestsNumber() {
+  if (G_n_testSuites != 0 && G_n_tests != 0)
+    return std::pair<std::uint64_t, std::uint64_t>{G_n_testSuites, G_n_tests};
+  G_n_testSuites = G_n_tests = 0;
   for (const auto& testCase : GTestRegistryInst.M_testRegistryTable) {
-    ++testCaseNum;
-    testsNum += testCase.second.size();
+    ++G_n_testSuites;
+    G_n_tests += testCase.second.size();
   }
-  return std::pair<std::uint64_t, std::uint64_t>{testCaseNum, testsNum};
+  return std::pair<std::uint64_t, std::uint64_t>{G_n_testSuites, G_n_tests};
 }
 
-// Global test environment setup step.
-//
-// As the project's README clearly says that this project is inspired by
-// googletest so I'm still trying to understand what google does in this step so
-// I can also implement it here.
-static void GlobalTestEnvSetup() {
-  std::pair<std::uint64_t, std::uint64_t> testCaseAndTestNums =
-      GetTestCaseAndTestsNumber();
-
-  MESSAGE() << "[" << GetStrFilledWith('=') << "] Running "
-            << testCaseAndTestNums.second << " tests from "
-            << testCaseAndTestNums.first << " test case." << std::endl;
-  MESSAGE() << "[" << GetStrFilledWith('-')
-            << "] Global test environment setup." << std::endl;
-}
-
-// Global test environment tear down.
-//
-// Displays how many tests got passed and how many failed.
-// Again I'm still trying to understand what else google does in this step so
-// I can also implement it here.
-static void GlobalTestEnvTearDown() {
-  std::pair<std::uint64_t, std::uint64_t> testCaseAndTestNums =
-      GetTestCaseAndTestsNumber();
-
-  std::map<const char*, std::vector<TestRegistrar*>> failedTests;
-  std::uint64_t failedTestsNum = 0;
-
-  for (const auto& testCase : GTestRegistryInst.M_testRegistryTable) {
+static UnitTest GetFailedTests() {
+  UnitTest failed_tests;
+  for (const UnitTestPair& testCase : GTestRegistryInst.M_testRegistryTable) {
     for (const auto& test : testCase.second) {
       if (test->M_testResult != TestResult::FAILED)
         continue;
-      failedTests[testCase.first].push_back(test);
-      ++failedTestsNum;
+      failed_tests[testCase.first].push_back(test);
+    }
+  }
+  return failed_tests;
+}
+
+static std::uint64_t GetFailedTestCount() {
+  if (G_n_failedTests != 0)
+    return G_n_failedTests;
+  UnitTest failedTests = GetFailedTests();
+  for (const UnitTestPair& test_pair : failedTests)
+    for (const TestRegistrar* const& test : test_pair.second)
+      ++G_n_failedTests;
+  return G_n_failedTests;
+}
+
+class PrettyUnitTestResultPrinter {
+ public:
+  PrettyUnitTestResultPrinter() {}
+  static void PrintTestName(const char* test_suite, const char* test_name);
+  static void OnTestStart(const UnitTestPair& testSuite);
+  static void OnTestIterationStart();
+  static void OnEnvironmentsSetUpStart();
+  static void OnTestExecutionStart();
+  static void OnTestEnd(const UnitTestPair& testSuite);
+  static void OnTestIterationEnd();
+  static void OnTestExecutionEnd();
+  static void OnEnvironmentsTearDownStart();
+
+ private:
+  static void PrintFailedTests();
+};
+
+void PrettyUnitTestResultPrinter::PrintTestName(const char* test_suite,
+                                                const char* test_name) {
+  std::printf("%s.%s", test_suite, test_name);
+}
+
+void PrettyUnitTestResultPrinter::OnTestExecutionStart() {
+  PrettyUnitTestResultPrinter::OnTestIterationStart();
+  PrettyUnitTestResultPrinter::OnEnvironmentsSetUpStart();
+}
+
+void PrettyUnitTestResultPrinter::OnTestExecutionEnd() {
+  PrettyUnitTestResultPrinter::OnEnvironmentsTearDownStart();
+  PrettyUnitTestResultPrinter::OnTestIterationEnd();
+}
+
+void PrettyUnitTestResultPrinter::OnTestStart(const UnitTestPair& testSuite) {
+  std::printf("\n");
+  std::printf("[%s] %lu tests from %s\n", GetStrFilledWith('-').c_str(),
+              testSuite.second.size(), testSuite.first);
+  std::fflush(stdout);
+}
+
+void PrettyUnitTestResultPrinter::OnTestEnd(const UnitTestPair& testSuite) {
+  std::printf("[%s] %lu tests from %s", GetStrFilledWith('-').c_str(),
+              testSuite.second.size(), testSuite.first);
+  std::printf("\n");
+  std::fflush(stdout);
+}
+
+void PrettyUnitTestResultPrinter::PrintFailedTests() {
+  std::printf("[%s] %lu test, listed below:\n",
+              GetStringAlignedTo("FAILED", 10, ALIGN_CENTER).c_str(),
+              GetFailedTestCount());
+
+  UnitTest failedTests = GetFailedTests();
+  for (const UnitTestPair& testCase : failedTests) {
+    for (const TestRegistrar* const& test : testCase.second) {
+      std::printf("[%s] ", GetStringAlignedTo("FAILED").c_str());
+      PrettyUnitTestResultPrinter::PrintTestName(test->M_suiteName,
+                                                 test->M_testName);
+      std::printf("\n");
     }
   }
 
-  MESSAGE() << std::endl
-            << "[" << GetStrFilledWith('-')
-            << "] Global test environment tear-down." << std::endl;
-  MESSAGE() << "[" << GetStrFilledWith('=') << "] "
-            << testCaseAndTestNums.second << " tests from "
-            << testCaseAndTestNums.first << " test case ran." << std::endl;
-  MESSAGE() << "[" << GetStringAlignedTo("PASSED", 10, ALIGN_CENTER) << "] "
-            << testCaseAndTestNums.second - failedTestsNum << " test."
-            << std::endl;
+  std::printf("\n");
+  std::printf("%lu FAILED %s\n", GetFailedTestCount(),
+              (GetFailedTestCount() == 1 ? "TEST" : "TESTS"));
+  std::fflush(stdout);
+}
 
-  if (failedTestsNum == 0)
-    return;
+void PrettyUnitTestResultPrinter::OnTestIterationStart() {
+  std::printf("[%s] ", GetStrFilledWith('=').c_str());
+  std::printf("Running %lu tests from %lu test suites.\n",
+              GetTestSuiteAndTestsNumber().second,
+              GetTestSuiteAndTestsNumber().first);
+  std::fflush(stdout);
+}
 
-  MESSAGE() << "[" << GetStringAlignedTo("FAILED") << "] " << failedTestsNum
-            << " test, listed below:" << std::endl;
-  for (const auto& testCase : failedTests) {
-    for (const auto& test : testCase.second) {
-      MESSAGE() << "[" << GetStringAlignedTo("FAILED") << "] "
-                << test->M_suiteName << "." << test->M_testName << std::endl;
-    }
-  }
+void PrettyUnitTestResultPrinter::OnTestIterationEnd() {
+  std::printf("[%s] ", GetStrFilledWith('=').c_str());
+  std::printf("Ran %lu tests from %lu test suites.\n",
+              GetTestSuiteAndTestsNumber().second,
+              GetTestSuiteAndTestsNumber().first);
 
-  MESSAGE() << std::endl
-            << failedTestsNum << " FAILED TEST"
-            << (failedTestsNum == 1 ? "" : "S") << std::endl;
+  std::printf("[%s] %lu test.\n",
+              GetStringAlignedTo("PASSED", 10, ALIGN_CENTER).c_str(),
+              GetTestSuiteAndTestsNumber().second - GetFailedTestCount());
+
+  if (GetFailedTestCount() == 0)
+    goto fflushStream;
+  PrettyUnitTestResultPrinter::PrintFailedTests();
+
+fflushStream:
+  std::fflush(stdout);
+}
+
+void PrettyUnitTestResultPrinter::OnEnvironmentsSetUpStart() {
+  std::printf("[%s] ", GetStrFilledWith('-').c_str());
+  std::printf("Global test environment set-up.\n");
+  std::fflush(stdout);
+}
+
+void PrettyUnitTestResultPrinter::OnEnvironmentsTearDownStart() {
+  std::printf("\n");
+  std::printf("[%s] ", GetStrFilledWith('-').c_str());
+  std::printf("Global test environment tear-down.\n");
+  std::fflush(stdout);
 }
 
 // Runs all the registered test suites and returns the failure count.
@@ -278,11 +350,10 @@ uint64_t RunRegisteredTests() {
   void (*SavedSignalHandler)(int);
   SavedSignalHandler = std::signal(SIGABRT, impl::SignalHandler);
 
-  GlobalTestEnvSetup();
-  for (auto& testSuite : GTestRegistryInst.M_testRegistryTable) {
-    MESSAGE() << "[" << GetStrFilledWith('-') << "] " << testSuite.second.size()
-              << " tests from " << testSuite.first << std::endl;
-    for (auto& testCase : testSuite.second) {
+  PrettyUnitTestResultPrinter::OnTestExecutionStart();
+  for (const UnitTestPair& testSuite : GTestRegistryInst.M_testRegistryTable) {
+    PrettyUnitTestResultPrinter::OnTestStart(testSuite);
+    for (TestRegistrar* const& testCase : testSuite.second) {
       if (testCase->M_testFunc) {
         // We are setting a jump here to later mark the test result as FAILED in
         // case the testCase->M_testFunc raised an abort signal result of an
@@ -296,12 +367,10 @@ uint64_t RunRegisteredTests() {
         }
       }
     }
-    MESSAGE() << "[" << GetStrFilledWith('-') << "] " << testSuite.second.size()
-              << " tests from " << testSuite.first << std::endl
-              << std::endl;
+    PrettyUnitTestResultPrinter::OnTestEnd(testSuite);
   }
+  PrettyUnitTestResultPrinter::OnTestExecutionEnd();
 
-  GlobalTestEnvTearDown();
   std::signal(SIGABRT, SavedSignalHandler);
   return G_n_testFailures;
 }
@@ -394,12 +463,7 @@ void ParseXTestFlags(int32_t* argc, char** argv) {
 // Note: This function should be called after the 'ParseXTestFlags()' function.
 void PostFlagParsing() {
   if (XTEST_FLAG_GET(help)) {
-    MESSAGE() << HelpMessage;
-    std::exit(EXIT_SUCCESS);
-  }
-
-  if (XTEST_FLAG_GET(shuffle)) {
-    MESSAGE() << "Shuffling is not available for now, be kind and make a PR.\n";
+    MESSAGE() << kHelpMessage;
     std::exit(EXIT_SUCCESS);
   }
 }
