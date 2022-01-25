@@ -57,7 +57,7 @@ TEST(TestWithNegativeOddCompositeNumbers, TestFactorial) {
   EXPECT_EQ(Factorial(-10), 1);
 }
 
-TEST(DoomedToBeFailedTests, TestFactorial) {
+TEST(DoomedToBeFailedTestsPrimary, TestFactorial) {
   EXPECT_EQ(Factorial(2), 1);
   EXPECT_EQ(Factorial(5), 1);
   EXPECT_EQ(Factorial(7), 1);
@@ -66,6 +66,17 @@ TEST(DoomedToBeFailedTests, TestFactorial) {
   EXPECT_EQ(Factorial(-6), 120);
   EXPECT_EQ(Factorial(-8), 5040);
   EXPECT_EQ(Factorial(-10), 6227020800);
+}
+
+TEST(DoomedToBeFailedTestsSecondary, TestFactorial) {
+  EXPECT_EQ(Factorial(2), 21);
+  EXPECT_EQ(Factorial(5), 21);
+  EXPECT_EQ(Factorial(7), 21);
+  EXPECT_EQ(Factorial(13), 21);
+  EXPECT_EQ(Factorial(-4), 22);
+  EXPECT_EQ(Factorial(-6), 2120);
+  EXPECT_EQ(Factorial(-8), 25040);
+  EXPECT_EQ(Factorial(-10), 26227020800);
 }
 
 TEST(TestWithPrimeNumbers, TestFactorial) {
