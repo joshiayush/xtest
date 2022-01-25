@@ -34,16 +34,17 @@
 #include <iostream>
 #include <string>
 
+#include "xtest-assertions.hh"
 #include "xtest-message.hh"
+#include "xtest-registrar.hh"
 
 namespace xtest {
 namespace impl {
-// Calls std::longjmp() with M_jumpOutOfTest instance as its first
-// argument.
+// Calls `std::longjmp()` with `M_jumpOutOfTest` instance as its first argument.
 //
-// This function calls the std::longjmp() function with the std::jmp_buf
-// instance M_jumpOutOfTest as its first argument when the SIGABRT is raised
-// inside of the function run_registered_test() that runs the registered test
+// This function calls the `std::longjmp()` function with the `std::jmp_buf`
+// instance `M_jumpOutOfTest` as its first argument when the `SIGABRT` is raised
+// inside of the function `RunRegisteredTests()` that runs the registered test
 // suites.
 void SignalHandler(int param);
 
@@ -148,7 +149,7 @@ extern uint64_t G_n_testFailures;
 // [  FAILED  ] 1 test, listed below:
 // [  FAILED  ] SquareRootTest.PositiveNos
 //
-//  1 FAILED TEST
+// 1 FAILED TEST
 // ```
 std::string GetStrFilledWith(
     const char& chr,
@@ -180,37 +181,77 @@ std::string GetStringAlignedTo(
 // Runs all the registered test suites and returns the failure count.
 //
 // This function runs all the registered test suites in the
-// xtest::GTestRegistryInst.M_head instance while also handling the abort
-// signals raised by ASSERT_* assertions.
-//
-// In case an assertion fails then this function marks that test suite as
-// FAILED while silently continuing executing rest of the test suites.
+// `xtest::GTestRegistryInst.M_head instance` while also handling the abort
+// signals raised by `ASSERT_*` assertions.
 uint64_t RunRegisteredTests();
 
 #define RUN_ALL_TESTS() xtest::RunRegisteredTests()
 
-// Parses xtest command line flags.
+class PrettyUnitTestResultPrinter {
+ public:
+  // No instance should instantiate from this class.
+  PrettyUnitTestResultPrinter() = delete;
+  // Joins the test suite and test name at `.` and prints on the console using
+  // `printf()`.
+  static void PrintTestName(const char* test_suite, const char* test_name);
+  // Prints out the information related to the number of tests a test suite
+  // shares.
+  static void OnTestStart(const UnitTestPair& testSuite);
+  // Prints the number of test suites and tests to run.  Should only be called
+  // before starting iteration over the registered test suites.
+  static void OnTestIterationStart();
+  // Should be called for printing the status of the global environment set-up.
+  // (Global environment set-up in `xtest` is a myth, this function just prints
+  // a line and flushes the output stream).  This line is needed to give our
+  // users a complete feel of `googletest`.
+  static void OnEnvironmentsSetUpStart();
+  // Prints out information related to the number of test suites and tests
+  // before executing the registered tests.
+  static void OnTestExecutionStart();
+  // Prints out the information related to the number of tests a test suite
+  // shares.  This function is very much similar to
+  // `PrettyUnitTestResultPrinter::OnTestStart()` but should be ran after
+  // executing all the tests of a test suite.
+  static void OnTestEnd(const UnitTestPair& testSuite);
+  // Prints number of test suites and tests ran.  Should only be called after
+  // iterating over all the registered test suites.
+  static void OnTestIterationEnd();
+  // Prints out information related to the number of test failed ans passed
+  // after executing all the registered tests.
+  static void OnTestExecutionEnd();
+  // Should be called for printing the status of the global environment
+  // tear-down. (Global environment tear-down in `xtest` is a myth, this
+  // function just prints a line and flushes the output stream).  This line is
+  // needed to give our users a complete feel of `googletest`.
+  static void OnEnvironmentsTearDownStart();
+
+ private:
+  // Prints the number of tests that failed after executing all the registered
+  // tests.  If none of the test failed and this function is somehow got called
+  // then this function prints `0 FAILED TESTS` and flushes the stream buffer.
+  //
+  // Note: This function should only be called when there are failed tests.
+  static void PrintFailedTests();
+};
+
+// Parses all the xtest command line flags.
 //
-// Note: This function should be called only at the initialization step.
+// This function should be called only at the initialization step of `xtest`
+// library.
 void ParseXTestFlags(int32_t* argc, char** argv);
 
 // Invokes functions corresponding to the command line flags given.
 //
-// Note: This function should be called after the ParseXTestFlags() function.
+// This function should be called after the `ParseXTestFlags()` function.
 void PostFlagParsing();
 
-// Initializes xtest.  This must be called before calling RUN_ALL_TESTS().  In
-// particular, it parses a command line for the flags that xtest recognizes.
+// Initializes xtest.  This must be called before calling `RUN_ALL_TESTS()`.
+//
+// In particular, it parses a command line for the flags that xtest recognizes.
 // Whenever a Google Test flag is seen, it is removed from argv, and *argc is
-// decremented.
-//
-// No value is returned.  Instead, the xtest flag variables are updated.
-//
-// Calling the function for the second time has no user-visible effect.
+// decremented.  Calling the function for the second time has no user-visible
+// effect.
 void InitXTest(int32_t* argc, char** argv);
 }  // namespace xtest
-
-#include "xtest-assertions.hh"
-#include "xtest-registrar.hh"
 
 #endif  // XTEST_INCLUDE_XTEST_HH_

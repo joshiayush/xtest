@@ -70,10 +70,10 @@ bool FLAG_xtest_shuffle = false;
 //
 // This global counter is defined in the object file xtest.cc and incremented
 // every time a non-fatal test assertion fails.
-uint64_t G_n_testFailures = 0;
+std::uint64_t G_n_testFailures = 0;
 
-uint64_t G_n_tests = 0;
-uint64_t G_n_testSuites = 0;
+std::uint64_t G_n_tests = 0;
+std::uint64_t G_n_testSuites = 0;
 
 std::uint64_t G_n_failedTests = 0;
 
@@ -210,6 +210,11 @@ static std::pair<std::uint64_t, std::uint64_t> GetTestSuiteAndTestsNumber() {
   return std::pair<std::uint64_t, std::uint64_t>{G_n_testSuites, G_n_tests};
 }
 
+// Returns the `UnitTest` instance of failed tests.
+//
+// Iterates over the `GTestRegistryInst.M_testRegistryTable` instance and adds
+// the pair who's `M_testResult` equals to `TestResult::FAILED` in the
+// `failed_tests` container.
 static UnitTest GetFailedTests() {
   UnitTest failed_tests;
   for (const UnitTestPair& testCase : GTestRegistryInst.M_testRegistryTable) {
@@ -222,6 +227,10 @@ static UnitTest GetFailedTests() {
   return failed_tests;
 }
 
+// Returns the number of tests that failed during test execution.
+//
+// This function keeps a count of the number of test suites that called the
+// `abort()` function in case of test failure assertion.
 static std::uint64_t GetFailedTestCount() {
   if (G_n_failedTests != 0)
     return G_n_failedTests;
@@ -232,38 +241,29 @@ static std::uint64_t GetFailedTestCount() {
   return G_n_failedTests;
 }
 
-class PrettyUnitTestResultPrinter {
- public:
-  PrettyUnitTestResultPrinter() {}
-  static void PrintTestName(const char* test_suite, const char* test_name);
-  static void OnTestStart(const UnitTestPair& testSuite);
-  static void OnTestIterationStart();
-  static void OnEnvironmentsSetUpStart();
-  static void OnTestExecutionStart();
-  static void OnTestEnd(const UnitTestPair& testSuite);
-  static void OnTestIterationEnd();
-  static void OnTestExecutionEnd();
-  static void OnEnvironmentsTearDownStart();
-
- private:
-  static void PrintFailedTests();
-};
-
+// Joins the test suite and test name at `.` and prints on the console using
+// `printf()`.
 void PrettyUnitTestResultPrinter::PrintTestName(const char* test_suite,
                                                 const char* test_name) {
   std::printf("%s.%s", test_suite, test_name);
 }
 
+// Prints out information related to the number of test suites and tests before
+// executing the registered tests.
 void PrettyUnitTestResultPrinter::OnTestExecutionStart() {
   PrettyUnitTestResultPrinter::OnTestIterationStart();
   PrettyUnitTestResultPrinter::OnEnvironmentsSetUpStart();
 }
 
+// Prints out information related to the number of test failed ans passed after
+// executing all the registered tests.
 void PrettyUnitTestResultPrinter::OnTestExecutionEnd() {
   PrettyUnitTestResultPrinter::OnEnvironmentsTearDownStart();
   PrettyUnitTestResultPrinter::OnTestIterationEnd();
 }
 
+// Prints out the information related to the number of tests a test suite
+// shares.
 void PrettyUnitTestResultPrinter::OnTestStart(const UnitTestPair& testSuite) {
   std::printf("\n");
   std::printf("[%s] %lu tests from %s\n", GetStrFilledWith('-').c_str(),
@@ -271,6 +271,10 @@ void PrettyUnitTestResultPrinter::OnTestStart(const UnitTestPair& testSuite) {
   std::fflush(stdout);
 }
 
+// Prints out the information related to the number of tests a test suite
+// shares.  This function is very much similar to
+// `PrettyUnitTestResultPrinter::OnTestStart()` but should be ran after
+// executing all the tests of a test suite.
 void PrettyUnitTestResultPrinter::OnTestEnd(const UnitTestPair& testSuite) {
   std::printf("[%s] %lu tests from %s", GetStrFilledWith('-').c_str(),
               testSuite.second.size(), testSuite.first);
@@ -278,6 +282,10 @@ void PrettyUnitTestResultPrinter::OnTestEnd(const UnitTestPair& testSuite) {
   std::fflush(stdout);
 }
 
+// Prints the number of tests that failed after executing all the registered
+// tests.  If none of the test failed and this function is somehow got called
+// then this function prints `0 FAILED TESTS` and flushes the stream buffer.
+// This function should only be called when there are failed tests.
 void PrettyUnitTestResultPrinter::PrintFailedTests() {
   std::printf("[%s] %lu test, listed below:\n",
               GetStringAlignedTo("FAILED", 10, ALIGN_CENTER).c_str(),
@@ -299,6 +307,8 @@ void PrettyUnitTestResultPrinter::PrintFailedTests() {
   std::fflush(stdout);
 }
 
+// Prints the number of test suites and tests to run.  Should only be called
+// before starting iteration over the registered test suites.
 void PrettyUnitTestResultPrinter::OnTestIterationStart() {
   std::printf("[%s] ", GetStrFilledWith('=').c_str());
   std::printf("Running %lu tests from %lu test suites.\n",
@@ -307,6 +317,8 @@ void PrettyUnitTestResultPrinter::OnTestIterationStart() {
   std::fflush(stdout);
 }
 
+// Prints number of test suites and tests ran.  Should only be called after
+// iterating over all the registered test suites.
 void PrettyUnitTestResultPrinter::OnTestIterationEnd() {
   std::printf("[%s] ", GetStrFilledWith('=').c_str());
   std::printf("Ran %lu tests from %lu test suites.\n",
@@ -325,12 +337,20 @@ fflushStream:
   std::fflush(stdout);
 }
 
+// Should be called for printing the status of the global environment set-up.
+// (Global environment set-up in `xtest` is a myth, this function just prints a
+// line and flushes the output stream).  This line is needed to give our users a
+// complete feel of `googletest`.
 void PrettyUnitTestResultPrinter::OnEnvironmentsSetUpStart() {
   std::printf("[%s] ", GetStrFilledWith('-').c_str());
   std::printf("Global test environment set-up.\n");
   std::fflush(stdout);
 }
 
+// Should be called for printing the status of the global environment tear-down.
+// (Global environment tear-down in `xtest` is a myth, this function just prints
+// a line and flushes the output stream).  This line is needed to give our users
+// a complete feel of `googletest`.
 void PrettyUnitTestResultPrinter::OnEnvironmentsTearDownStart() {
   std::printf("\n");
   std::printf("[%s] ", GetStrFilledWith('-').c_str());
@@ -338,40 +358,47 @@ void PrettyUnitTestResultPrinter::OnEnvironmentsTearDownStart() {
   std::fflush(stdout);
 }
 
+// Runs the registered test suite.
+//
+// This function runs the registered test suite in the
+// `xtest::GTestRegistryInst.M_head instance` while also handling the abort
+// signals raised by `ASSERT_*` assertions.
+//
+// In case an assertion fails then this function marks that test suite as
+// `FAILED` while silently continuing executing rest of the test suites.
+static void RunRegisteredTestSuite(const std::vector<TestRegistrar*>& tests) {
+  void (*SavedSignalHandler)(int);
+  SavedSignalHandler = std::signal(SIGABRT, impl::SignalHandler);
+  for (TestRegistrar* const& test : tests) {
+    if (test->M_testFunc == nullptr)
+      continue;
+    // We are setting a jump here to later mark the test result as `FAILED` in
+    // case the `test->M_testFunc` raised an abort signal result of an
+    // `ASSERT_*` assertion.
+    if (setjmp(GTestRegistryInst.M_jumpOutOfTest)) {
+      test->M_testResult = TestResult::FAILED;
+    } else {
+      test->M_testFunc(&GTestRegistryInst, test);
+      if (test->M_testResult == TestResult::UNKNOWN)
+        test->M_testResult = TestResult::PASSED;
+    }
+  }
+  std::signal(SIGABRT, SavedSignalHandler);
+}
+
 // Runs all the registered test suites and returns the failure count.
 //
 // This function runs all the registered test suites in the
-// xtest::GTestRegistryInst.M_head instance while also handling the abort
-// signals raised by ASSERT_* assertions.
-//
-// In case an assertion fails then this function marks that test suite as
-// FAILED while silently continuing executing rest of the test suites.
+// `xtest::GTestRegistryInst.M_head instance` while also handling the abort
+// signals raised by `ASSERT_*` assertions.
 uint64_t RunRegisteredTests() {
-  void (*SavedSignalHandler)(int);
-  SavedSignalHandler = std::signal(SIGABRT, impl::SignalHandler);
-
   PrettyUnitTestResultPrinter::OnTestExecutionStart();
   for (const UnitTestPair& testSuite : GTestRegistryInst.M_testRegistryTable) {
     PrettyUnitTestResultPrinter::OnTestStart(testSuite);
-    for (TestRegistrar* const& testCase : testSuite.second) {
-      if (testCase->M_testFunc) {
-        // We are setting a jump here to later mark the test result as FAILED in
-        // case the testCase->M_testFunc raised an abort signal result of an
-        // ASSERT_* assertion.
-        if (setjmp(GTestRegistryInst.M_jumpOutOfTest)) {
-          testCase->M_testResult = TestResult::FAILED;
-        } else {
-          testCase->M_testFunc(&GTestRegistryInst, testCase);
-          if (testCase->M_testResult == TestResult::UNKNOWN)
-            testCase->M_testResult = TestResult::PASSED;
-        }
-      }
-    }
+    RunRegisteredTestSuite(testSuite.second);
     PrettyUnitTestResultPrinter::OnTestEnd(testSuite);
   }
   PrettyUnitTestResultPrinter::OnTestExecutionEnd();
-
-  std::signal(SIGABRT, SavedSignalHandler);
   return G_n_testFailures;
 }
 
@@ -449,8 +476,8 @@ static void ParseXTestFlag(const char* const flag) {
 
 // Parses all the xtest command line flags.
 //
-// Note: This function should be called only at the initialization step of
-// 'xtest' library.
+// This function should be called only at the initialization step of `xtest`
+// library.
 void ParseXTestFlags(int32_t* argc, char** argv) {
   for (int32_t i = 1; i < *argc; ++i) {
     const std::string argString = internal::StreamableToString(argv[i]);
@@ -460,7 +487,7 @@ void ParseXTestFlags(int32_t* argc, char** argv) {
 
 // Invokes functions corresponding to the command line flags given.
 //
-// Note: This function should be called after the 'ParseXTestFlags()' function.
+// This function should be called after the `ParseXTestFlags()` function.
 void PostFlagParsing() {
   if (XTEST_FLAG_GET(help)) {
     MESSAGE() << kHelpMessage;
@@ -468,14 +495,12 @@ void PostFlagParsing() {
   }
 }
 
-// Initializes xtest.  This must be called before calling RUN_ALL_TESTS().  In
-// particular, it parses a command line for the flags that xtest recognizes.
+// Initializes xtest.  This must be called before calling `RUN_ALL_TESTS()`.
+//
+// In particular, it parses a command line for the flags that xtest recognizes.
 // Whenever a Google Test flag is seen, it is removed from argv, and *argc is
-// decremented.
-//
-// No value is returned.  Instead, the xtest flag variables are updated.
-//
-// Calling the function for the second time has no user-visible effect.
+// decremented.  Calling the function for the second time has no user-visible
+// effect.
 void InitXTest(int32_t* argc, char** argv) {
   if (XTestIsInitialized())
     return;
