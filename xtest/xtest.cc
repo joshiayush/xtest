@@ -185,12 +185,8 @@ std::string Message::GetString() const {
 
   std::string result;
   result.reserve(static_cast<size_t>(2 * (end - start)));
-  for (const char* ch = start; ch != end; ++ch) {
-    if (*ch == '\0')
-      result += "\\0";
-    else
-      result += *ch;
-  }
+  for (const char* ch = start; ch != end; ++ch)
+    result += *ch == '\0' ? std::string("\\0") : std::string(sizeof(char), *ch);
 
   return result;
 }
@@ -287,9 +283,12 @@ void PrettyUnitTestResultPrinter::OnTestEnd(const UnitTestPair& testSuite) {
 // then this function prints `0 FAILED TESTS` and flushes the stream buffer.
 // This function should only be called when there are failed tests.
 void PrettyUnitTestResultPrinter::PrintFailedTests() {
-  std::printf("[%s] %lu test, listed below:\n",
-              GetStringAlignedTo("FAILED", 10, ALIGN_CENTER).c_str(),
-              GetFailedTestCount());
+  std::printf(
+      "[%s] %lu test, listed below:\n",
+      GetStringAlignedTo("FAILED", XTEST_DEFAULT_SUMMARY_STATUS_STR_WIDTH_,
+                         ALIGN_CENTER)
+          .c_str(),
+      GetFailedTestCount());
 
   UnitTest failedTests = GetFailedTests();
   for (const UnitTestPair& testCase : failedTests) {
@@ -325,9 +324,12 @@ void PrettyUnitTestResultPrinter::OnTestIterationEnd() {
               GetTestSuiteAndTestsNumber().second,
               GetTestSuiteAndTestsNumber().first);
 
-  std::printf("[%s] %lu test.\n",
-              GetStringAlignedTo("PASSED", 10, ALIGN_CENTER).c_str(),
-              GetTestSuiteAndTestsNumber().second - GetFailedTestCount());
+  std::printf(
+      "[%s] %lu test.\n",
+      GetStringAlignedTo("PASSED", XTEST_DEFAULT_SUMMARY_STATUS_STR_WIDTH_,
+                         ALIGN_CENTER)
+          .c_str(),
+      GetTestSuiteAndTestsNumber().second - GetFailedTestCount());
 
   if (GetFailedTestCount() == 0)
     goto fflushStream;
@@ -343,7 +345,7 @@ fflushStream:
 // complete feel of `googletest`.
 void PrettyUnitTestResultPrinter::OnEnvironmentsSetUpStart() {
   std::printf("[%s] ", GetStrFilledWith('-').c_str());
-  std::printf("Global test environment set-up.\n");
+  std::printf("Global test environment set-up.");
   std::fflush(stdout);
 }
 
