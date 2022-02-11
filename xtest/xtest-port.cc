@@ -61,10 +61,8 @@ XTestLog::XTestLog(const XTestLogSeverity& severity, const char* file,
 // Flushes the buffers and, if severity is XTEST_FATAL, aborts the program.
 XTestLog::~XTestLog() {
   GetStream() << std::endl;
-  if (_M_severity == XTEST_FATAL) {
-    std::fflush(stderr);
+  if (_M_severity == XTEST_FATAL)
     std::abort();
-  }
 }
 }  // namespace internal
 }  // namespace xtest
