@@ -385,7 +385,6 @@ static void RunRegisteredTestSuite(const std::vector<TestRegistrar*>& tests) {
         test->M_testResult = TestResult::PASSED;
     }
   }
-  std::signal(SIGABRT, SavedSignalHandler);
 }
 
 // Runs all the registered test suites and returns the failure count.
