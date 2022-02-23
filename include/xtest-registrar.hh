@@ -36,6 +36,8 @@
 #include <map>
 #include <vector>
 
+#include "internal/xtest-port.hh"
+
 // Creates a test suite and register it using TestRegistrar.
 //
 // This macro expands to a function declaration and definition.
@@ -58,6 +60,8 @@
 namespace xtest {
 struct TestRegistrar;
 struct TestRegistry;
+
+typedef internal::TimeInMillis TimeInMillis;
 
 // Pointer to a void function type.
 //
@@ -95,10 +99,11 @@ class TestRegistrar {
   const char* M_testName;   // Test name
   const char* M_suiteName;  // Test suite name
 
-  TestFunction M_testFunc;         // Test function to execute
+  TestFunction M_testFunc;         // Test function to execute.
   TestRegistrar* M_nextTestSuite;  // Pointer to the next TestRegistrar object
-                                   // i.e., to the next test suite
-  TestResult M_testResult;         // Result of the test suite
+                                   // i.e., to the next test suite.
+  TestResult M_testResult;         // Result of the test suite.
+  TimeInMillis M_elapsedTime;      // Elapsed time in milliseconds.
 };
 
 // Constructs a 'map' object that links test suites to their test cases.

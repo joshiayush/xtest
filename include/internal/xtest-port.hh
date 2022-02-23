@@ -30,6 +30,8 @@
 #ifndef XTEST_INCLUDE_INTERNAL_XTEST_PORT_HH_
 #define XTEST_INCLUDE_INTERNAL_XTEST_PORT_HH_
 
+#include <chrono>  // NOLINT
+#include <cstdint>
 #include <iostream>
 
 // Disallow copy constructor and operator=
@@ -40,6 +42,11 @@
 
 namespace xtest {
 namespace internal {
+using TimeInMillis = int64_t;
+
+// The biggest signed integer type the compiler supports.
+using BiggestInt = int64_t;
+
 // Severity types for custom logging class.
 //
 // This enum specifies severity types for custom logging class XTestLog to use
@@ -71,8 +78,19 @@ class XTestLog {
   xtest::internal::XTestLog(xtest::internal::XTEST_##severity, __FILE__, \
                             __LINE__)                                    \
       .GetStream()
-}  // namespace internal
 
+// A helper class for measuring elapsed times.
+class Timer {
+ public:
+  Timer();
+
+  // Return time elapsed in milliseconds since the timer was created.
+  TimeInMillis Elapsed();
+
+ private:
+  std::chrono::steady_clock::time_point start_;
+};
+}  // namespace internal
 };  // namespace xtest
 
 #endif  // XTEST_INCLUDE_INTERNAL_XTEST_PORT_HH_

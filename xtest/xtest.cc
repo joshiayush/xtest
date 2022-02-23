@@ -29,6 +29,7 @@
 
 #include "xtest.hh"
 
+#include <chrono>  // NOLINT
 #include <cinttypes>
 #include <csetjmp>
 #include <csignal>
@@ -58,6 +59,17 @@ void SignalHandler(int param) {
   std::longjmp(GTestRegistryInst.M_jumpOutOfTest, 1);
 }
 }  // namespace impl
+
+namespace internal {
+Timer::Timer() : start_(std::chrono::steady_clock::now()) {}
+
+// Return time elapsed in milliseconds since the timer was created.
+TimeInMillis Timer::Elapsed() {
+  return std::chrono::duration_cast<std::chrono::milliseconds>(
+             std::chrono::steady_clock::now() - start_)
+      .count();
+}
+}  // namespace internal
 
 // Filled with true if user provides '--help' flag over the command line.
 bool FLAG_xtest_help = false;
@@ -274,6 +286,10 @@ void PrettyUnitTestResultPrinter::OnTestStart(const UnitTestPair& testSuite) {
 void PrettyUnitTestResultPrinter::OnTestEnd(const UnitTestPair& testSuite) {
   std::printf("[%s] %lu tests from %s", GetStrFilledWith('-').c_str(),
               testSuite.second.size(), testSuite.first);
+  TimeInMillis elapsedTime = 0;
+  for (const TestRegistrar* const& test : testSuite.second)
+    elapsedTime += test->M_elapsedTime;
+  std::printf(" (%lu ms total)", elapsedTime);
   std::printf("\n");
   std::fflush(stdout);
 }
@@ -374,6 +390,7 @@ static void RunRegisteredTestSuite(const std::vector<TestRegistrar*>& tests) {
   for (TestRegistrar* const& test : tests) {
     if (test->M_testFunc == nullptr)
       continue;
+    internal::Timer timer;
     // We are setting a jump here to later mark the test result as `FAILED` in
     // case the `test->M_testFunc` raised an abort signal result of an
     // `ASSERT_*` assertion.
@@ -384,6 +401,7 @@ static void RunRegisteredTestSuite(const std::vector<TestRegistrar*>& tests) {
       if (test->M_testResult == TestResult::UNKNOWN)
         test->M_testResult = TestResult::PASSED;
     }
+    test->M_elapsedTime = timer.Elapsed();
   }
 }
 
