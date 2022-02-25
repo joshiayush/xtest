@@ -33,157 +33,189 @@
 #include <cstdlib>
 #include <iostream>
 
-// Aborts the current process if fatal is true.
-//
-// This implementation detail macro IMPL__TEST_FAILED aborts the current
-// process if the fatal is true, otherwise increments the global variable
-// xtest::g_n_test_failures by 1 which keeps a counter of the number of
-// non-fatal tests that failed so far.
-//
-// In case of a test failure this function also marks the result of the test
-// suite as FAILED by setting up the current_test->m_result variable to
-// xtest::TestResult::FAILED.
-//
-// Variable current_test is passed to the test suite from the function
-// xtest::run_registered_tests().
-//
-// fatal can be anything that evaluates to true when used in a if clause
-// so make sure that you provide a valid boolean value to this macro.
-#define IMPL__TEST_FAILED(fatal)                           \
-  do {                                                     \
-    currentTest->M_testResult = xtest::TestResult::FAILED; \
-    ++xtest::G_n_testFailures;                             \
-    if (fatal)                                             \
-      abort();                                             \
-  } while (false)
+#include "internal/xtest-port.hh"
+#include "xtest-message.hh"
+#include "xtest-registrar.hh"
+#include "xtest.hh"
 
-// Trace out the test failure with information like the source file, line
-// number, received object and what we're expecting.
-#define IMPL__TEST_FAILURE_TRACE(actual, expected)                           \
-  FAIL() << __FILE__ << '(' << __LINE__ << "): error: Value of: " << #actual \
-         << '\n'                                                             \
-         << "  Actual: " << xtest::internal::StreamableToString(actual)      \
-         << '\n'                                                             \
-         << "Expected: " << xtest::internal::StreamableToString(expected)    \
-         << std::endl
+namespace xtest {
+namespace internal {
+class AssertionContext {
+ public:
+  AssertionContext(const char* file, uint64_t line,
+                   TestRegistrar* const& current_test)
+      : file_(file), line_(line), current_test_(current_test) {}
+  const char* file() const { return file_; }
+  uint64_t line() const { return line_; }
+  TestRegistrar* const current_test() const { return current_test_; }
 
-#define IMPL__TEST_EQUALITY_FAILURE_MSG()                                \
-  FAIL() << '['                                                          \
-         << xtest::GetStringAlignedTo("FAILED", 10, xtest::ALIGN_CENTER) \
-         << ']' << ' ' << currentTest->M_suiteName << '.'                \
-         << currentTest->M_testName << std::endl
+ private:
+  const char* file_;
+  const uint64_t line_;
+  TestRegistrar* const current_test_;
+};
 
-#define IMPL__TEST_EQUALITY_SUCCESS_MSG()                                  \
-  FAIL() << '[' << xtest::GetStringAlignedTo("OK", 10, xtest::ALIGN_RIGHT) \
-         << ']' << ' ' << currentTest->M_suiteName << '.'                  \
-         << currentTest->M_testName << std::endl
+void OnTestAssertionStart(const TestRegistrar* const& test);
+void OnTestAssertionEnd(const TestRegistrar* const& test,
+                        const TimeInMillis& elapsed_time);
 
-#define IMPL__TEST_ASSERTION_SETUP()                                       \
-  FAIL() << '[' << xtest::GetStringAlignedTo("RUN", 10, xtest::ALIGN_LEFT) \
-         << ']' << ' ' << currentTest->M_suiteName << '.'                  \
-         << currentTest->M_testName << std::endl
+template <typename T1, typename T2>
+void OnTestAssertionFailure(const char* lhs_expr, const char* rhs_expr,
+                            const T1& lhs, const T2& rhs,
+                            const AssertionContext& assertion_context,
+                            const bool& is_fatal) {
+  std::fprintf(stderr,
+               "%s(%lu): error: Value of: %s\n  Actual: %s\nExpected: %s\n",
+               assertion_context.file(), assertion_context.line(), lhs_expr,
+               xtest::internal::StreamableToString(lhs).c_str(),
+               xtest::internal::StreamableToString(rhs).c_str());
+  std::fflush(stderr);
+  assertion_context.current_test()->M_testResult = xtest::TestResult::FAILED;
+  ++::xtest::G_n_testFailures;
+  if (is_fatal)
+    std::abort();
+}
 
-// Does a equality check between the actual and the expected value.
-//
-// This implementation detail macro IMPL__TEST_EQ does a equality check between
-// the value actual and expected provided that both of the operands must have a
-// overridden implementation for the equality check operator i.e., (==).
-//
-// In case the expressions are not equal this macro prints a failure message on
-// the stderr file stream and calls the operations defined in IMPL__TEST_FAILED
-// macro to decide whether to abort the current process or just simply increment
-// xtest::g_n_test_failures.
-#define IMPL__TEST_EQ(actual, expected, fatal)    \
-  do {                                            \
-    IMPL__TEST_ASSERTION_SETUP();                 \
-    if ((actual) != (expected)) {                 \
-      IMPL__TEST_FAILURE_TRACE(actual, expected); \
-      IMPL__TEST_EQUALITY_FAILURE_MSG();          \
-      IMPL__TEST_FAILED(fatal);                   \
-    } else {                                      \
-      IMPL__TEST_EQUALITY_SUCCESS_MSG();          \
-    }                                             \
-  } while (false)
+class AssertionResult {
+ public:
+  explicit AssertionResult(const bool& success) : success_(success) {}
 
-#define EXPECT_EQ(actual, expected) IMPL__TEST_EQ(actual, expected, false)
-#define ASSERT_EQ(actual, expected) IMPL__TEST_EQ(actual, expected, true)
+  template <typename Streamable>
+  AssertionResult operator<<(const Streamable& streamable) {
+    if (!success_) {
+      std::fprintf(stderr, "%s\n",
+                   xtest::internal::StreamableToString(streamable).c_str());
+      std::fflush(stderr);
+    }
+    return *this;
+  }
 
-// Does a non-equality check between the actual and the expected value.
-//
-// This implementation detail macro IMPL__TEST_NE does a non-equality check
-// between the value actual and expected provided that both of the operands must
-// have a overridden implementation for the non-equality check operator i.e.,
-// (!=).
-//
-// In case the expressions are equal this macro prints a failure message on the
-// stderr file stream and calls the operations defined in IMPL__TEST_FAILED
-// macro to decide whether to abort the current process or just simply increment
-// xtest::g_n_test_failures.
-#define IMPL__TEST_NE(actual, expected, fatal)    \
-  do {                                            \
-    IMPL__TEST_ASSERTION_SETUP();                 \
-    if ((actual) == (expected)) {                 \
-      IMPL__TEST_FAILURE_TRACE(actual, expected); \
-      IMPL__TEST_EQUALITY_FAILURE_MSG();          \
-      IMPL__TEST_FAILED(fatal);                   \
-    } else {                                      \
-      IMPL__TEST_EQUALITY_SUCCESS_MSG();          \
-    }                                             \
-  } while (false)
+ private:
+  bool success_;
+};
 
-#define EXPECT_NE(actual, expected) IMPL__TEST_NE(actual, expected, false)
-#define ASSERT_NE(actual, expected) IMPL__TEST_NE(actual, expected, true)
+AssertionResult AssertionSuccess();
+AssertionResult AssertionFailure();
+}  // namespace internal
 
-// Checks if the given value evaluates to true or not.
-//
-// This implementation detail macro IMPL__TEST_TRUE checks if the given value
-// i.e., actual evaluates to true or not.
-//
-// Note: The value given can be anything that evaluates to true when used inside
-// of a if clause.
-//
-// In case the value given does not evaluates to true, this macro calls the
-// operations defined in the IMPL__TEST_FAILED macro to decide whether to abort
-// the current process or just simply increment xtest::g_n_test_failures.
-#define IMPL__TEST_TRUE(actual, fatal)        \
-  do {                                        \
-    IMPL__TEST_ASSERTION_SETUP();             \
-    if (!(actual)) {                          \
-      IMPL__TEST_FAILURE_TRACE(actual, true); \
-      IMPL__TEST_EQUALITY_FAILURE_MSG();      \
-      IMPL__TEST_FAILED(fatal);               \
-    } else {                                  \
-      IMPL__TEST_EQUALITY_SUCCESS_MSG();      \
-    }                                         \
-  } while (false)
+class BoolTrueHelper {
+ public:
+  template <typename T>
+  static internal::AssertionResult Check(
+      const char* actual_expr, const T& actual,
+      internal::AssertionContext&& assertion_context, const bool& is_fatal) {
+    internal::Timer timer;
+    internal::OnTestAssertionStart(assertion_context.current_test());
+    if (!actual)
+      internal::OnTestAssertionFailure(actual_expr, "true", actual, true,
+                                       assertion_context, is_fatal);
+    else
+      assertion_context.current_test()->M_testResult =
+          ::xtest::TestResult::PASSED;
+    internal::OnTestAssertionEnd(assertion_context.current_test(),
+                                 timer.Elapsed());
+    return actual ? internal::AssertionSuccess() : internal::AssertionFailure();
+  }
+};
 
-#define EXPECT_TRUE(actual) IMPL__TEST_TRUE(actual, false)
-#define ASSERT_TRUE(actual) IMPL__TEST_TRUE(actual, true)
+#define XTEST_ASSERT_TRUE_(actual, fatal)                                   \
+  ::xtest::BoolTrueHelper::Check(                                           \
+      #actual, actual,                                                      \
+      ::xtest::internal::AssertionContext(__FILE__, __LINE__, currentTest), \
+      fatal)
 
-// Checks if the given value evaluates to false or not.
-//
-// This implementation detail macro IMPL__TEST_FALSE checks if the given value
-// i.e., actual evaluates to false or not.
-//
-// Note: The value given can be anything that evaluates to false when used
-// inside of a if clause.
-//
-// In case the value given does not evaluates to false, this macro calls the
-// operations defined in the IMPL__TEST_FAILED macro to decide whether to abort
-// the current process or just simply increment xtest::g_n_test_failures.
-#define IMPL__TEST_FALSE(actual, fatal)        \
-  do {                                         \
-    IMPL__TEST_ASSERTION_SETUP();              \
-    if (actual) {                              \
-      IMPL__TEST_FAILURE_TRACE(actual, false); \
-      IMPL__TEST_EQUALITY_FAILURE_MSG();       \
-      IMPL__TEST_FAILED(fatal);                \
-    } else {                                   \
-      IMPL__TEST_EQUALITY_SUCCESS_MSG();       \
-    }                                          \
-  } while (false)
+#define EXPECT_TRUE(actual) XTEST_ASSERT_TRUE_(actual, false)
+#define ASSERT_TRUE(actual) XTEST_ASSERT_TRUE_(actual, true)
 
-#define EXPECT_FALSE(actual) IMPL__TEST_FALSE(actual, false)
-#define ASSERT_FALSE(actual) IMPL__TEST_FALSE(actual, true)
+class BoolFalseHelper {
+ public:
+  template <typename T>
+  static internal::AssertionResult Check(
+      const char* actual_expr, const T& actual,
+      internal::AssertionContext&& assertion_context, const bool& is_fatal) {
+    internal::Timer timer;
+    internal::OnTestAssertionStart(assertion_context.current_test());
+    if (actual)
+      internal::OnTestAssertionFailure(actual_expr, "false", actual, false,
+                                       assertion_context, is_fatal);
+    else
+      assertion_context.current_test()->M_testResult =
+          ::xtest::TestResult::PASSED;
+    internal::OnTestAssertionEnd(assertion_context.current_test(),
+                                 timer.Elapsed());
+    return !actual ? internal::AssertionSuccess()
+                   : internal::AssertionFailure();
+  }
+};
+
+#define XTEST_ASSERT_FALSE_(actual, fatal)                                  \
+  ::xtest::BoolFalseHelper::Check(                                          \
+      #actual, actual,                                                      \
+      ::xtest::internal::AssertionContext(__FILE__, __LINE__, currentTest), \
+      fatal)
+
+#define EXPECT_FALSE(actual) XTEST_ASSERT_FALSE_(actual, false)
+#define ASSERT_FALSE(actual) XTEST_ASSERT_FALSE_(actual, true)
+
+class NqHelper {
+ public:
+  template <typename T1, typename T2>
+  static internal::AssertionResult Compare(
+      const char* lhs_expr, const char* rhs_expr, const T1& lhs, const T2& rhs,
+      internal::AssertionContext&& assertion_context, const bool& is_fatal) {
+    internal::Timer timer;
+    bool result = lhs == rhs;
+    internal::OnTestAssertionStart(assertion_context.current_test());
+    if (result)
+      internal::OnTestAssertionFailure(lhs_expr, rhs_expr, lhs, rhs,
+                                       assertion_context, is_fatal);
+    else
+      assertion_context.current_test()->M_testResult =
+          ::xtest::TestResult::PASSED;
+    internal::OnTestAssertionEnd(assertion_context.current_test(),
+                                 timer.Elapsed());
+    return result ? internal::AssertionSuccess() : internal::AssertionFailure();
+  }
+};
+
+#define XTEST_ASSERT_NE_(actual, expected, fatal)                           \
+  ::xtest::NqHelper::Compare(                                               \
+      #actual, #expected, actual, expected,                                 \
+      ::xtest::internal::AssertionContext(__FILE__, __LINE__, currentTest), \
+      fatal)
+
+#define EXPECT_NE(actual, expected) XTEST_ASSERT_NE_(actual, expected, false)
+#define ASSERT_NE(actual, expected) XTEST_ASSERT_NE_(actual, expected, true)
+
+class EqHelper {
+ public:
+  template <typename T1, typename T2>
+  static internal::AssertionResult Compare(
+      const char* lhs_expr, const char* rhs_expr, const T1& lhs, const T2& rhs,
+      internal::AssertionContext&& assertion_context, const bool& is_fatal) {
+    internal::Timer timer;
+    bool result = lhs == rhs;
+    internal::OnTestAssertionStart(assertion_context.current_test());
+    if (!result)
+      internal::OnTestAssertionFailure(lhs_expr, rhs_expr, lhs, rhs,
+                                       assertion_context, is_fatal);
+    else
+      assertion_context.current_test()->M_testResult =
+          ::xtest::TestResult::PASSED;
+    internal::OnTestAssertionEnd(assertion_context.current_test(),
+                                 timer.Elapsed());
+    return result ? internal::AssertionSuccess() : internal::AssertionFailure();
+  }
+};
+
+#define XTEST_ASSERT_EQ_(actual, expected, fatal)                           \
+  ::xtest::EqHelper::Compare(                                               \
+      #actual, #expected, actual, expected,                                 \
+      ::xtest::internal::AssertionContext(__FILE__, __LINE__, currentTest), \
+      fatal)
+
+#define EXPECT_EQ(actual, expected) XTEST_ASSERT_EQ_(actual, expected, false)
+#define ASSERT_EQ(actual, expected) XTEST_ASSERT_EQ_(actual, expected, true)
+}  // namespace xtest
 
 #endif  // XTEST_INCLUDE_XTEST_ASSERTIONS_HH_

@@ -34,7 +34,6 @@
 #include <iostream>
 #include <string>
 
-#include "xtest-assertions.hh"
 #include "xtest-message.hh"
 #include "xtest-registrar.hh"
 
@@ -253,5 +252,7 @@ void PostFlagParsing();
 // effect.
 void InitXTest(int32_t* argc, char** argv);
 }  // namespace xtest
+
+#include "xtest-assertions.hh"
 
 #endif  // XTEST_INCLUDE_XTEST_HH_
