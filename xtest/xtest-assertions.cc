@@ -29,6 +29,7 @@
 
 #include "xtest-assertions.hh"
 
+#include <cstdint>
 #include <cstdio>
 
 #include "internal/xtest-port.hh"
@@ -37,10 +38,35 @@
 
 namespace xtest {
 namespace internal {
-AssertionResult AssertionSuccess() { return AssertionResult(true); }
-AssertionResult AssertionFailure() { return AssertionResult(false); }
+//  Constructs a AssertionContext.
+AssertionContext::AssertionContext(const char* file, uint64_t line,
+                                   TestRegistrar* const& current_test)
+    : file_(file), line_(line), current_test_(current_test) {}
 
-void OnTestAssertionStart(const TestRegistrar* const& test) {
+// Returns file name inside which the {EXPECT|ASSERT} assertion has been used.
+const char* AssertionContext::file() const noexcept { return file_; }
+
+// Returns line number where the {EXPECT|ASSERT} assertion is placed.
+uint64_t AssertionContext::line() const noexcept { return line_; }
+
+// Returns the test suite instance inside which the {EXPECT|ASSERT} assertion is
+// present.
+TestRegistrar* const AssertionContext::current_test() const noexcept {
+  return current_test_;
+}
+
+// Returns a `AssertionResult` instance of success type in case of
+// {EXPECT|ASSERT} assertion success.
+AssertionResult AssertionSuccess() { return AssertionResult(true); }
+// Returns a `AssertionResult` instance of failure type in case of
+// {EXPECT|ASSERT} assertion failure.
+AssertionResult AssertionFailure(const bool& is_fatal) {
+  return AssertionResult(false, is_fatal);
+}
+
+// Prints out the information of the test suite and the test name.
+void PrettyAssertionResultPrinter::OnTestAssertionStart(
+    const TestRegistrar* const& test) {
   std::printf("[%s] %s.%s",
               ::xtest::GetStringAlignedTo(
                   "RUN", XTEST_DEFAULT_SUMMARY_STATUS_STR_WIDTH_, ALIGN_LEFT)
@@ -50,8 +76,10 @@ void OnTestAssertionStart(const TestRegistrar* const& test) {
   std::fflush(stdout);
 }
 
-void OnTestAssertionEnd(const TestRegistrar* const& test,
-                        const TimeInMillis& elapsed_time) {
+// Prints out the information of the test suite and the test name with the
+// assertion result.
+void PrettyAssertionResultPrinter::OnTestAssertionEnd(
+    const TestRegistrar* const& test, const TimeInMillis& elapsed_time) {
   std::printf(
       "[%s] %s.%s (%lu ms)",
       test->M_testResult == ::xtest::TestResult::PASSED

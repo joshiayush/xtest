@@ -1,4 +1,4 @@
-// Copyright 2021, xtest Inc.
+// Copyright 2021, The xtest authors.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -11,7 +11,7 @@
 // copyright notice, this list of conditions and the following disclaimer
 // in the documentation and/or other materials provided with the
 // distribution.
-//     * Neither the name of xtest Inc. nor the names of its
+//     * Neither the name of The xtest authors. nor the names of its
 // contributors may be used to endorse or promote products derived from
 // this software without specific prior written permission.
 //
@@ -40,14 +40,29 @@
 
 namespace xtest {
 namespace internal {
+// Internal implementation of an {EXPECT|ASSERT} assertion context.
+//
+// Includes:
+//  * file_         - File where the {EXPECT|ASSERT} assertion has been used.
+//  * line_         - Line number where the {EXPECT|ASSERT} assertion has been
+//                    used.
+//  * current_test_ - Test suite inside which the {EXPECT|ASSERT} assertion is
+//                    present.
 class AssertionContext {
  public:
+  //  Constructs a AssertionContext.
   AssertionContext(const char* file, uint64_t line,
-                   TestRegistrar* const& current_test)
-      : file_(file), line_(line), current_test_(current_test) {}
-  const char* file() const { return file_; }
-  uint64_t line() const { return line_; }
-  TestRegistrar* const current_test() const { return current_test_; }
+                   TestRegistrar* const& current_test);
+
+  // Returns file name inside which the {EXPECT|ASSERT} assertion has been used.
+  const char* file() const noexcept;
+
+  // Returns line number where the {EXPECT|ASSERT} assertion is placed.
+  uint64_t line() const noexcept;
+
+  // Returns the test suite instance inside which the {EXPECT|ASSERT} assertion
+  // is present.
+  TestRegistrar* const current_test() const noexcept;
 
  private:
   const char* file_;
@@ -55,31 +70,54 @@ class AssertionContext {
   TestRegistrar* const current_test_;
 };
 
-void OnTestAssertionStart(const TestRegistrar* const& test);
-void OnTestAssertionEnd(const TestRegistrar* const& test,
-                        const TimeInMillis& elapsed_time);
+// Utility class to pretty print {EXPECT|ASSERT} assertion results.
+class PrettyAssertionResultPrinter {
+ public:
+  // No instance should instantiate from this class.
+  PrettyAssertionResultPrinter() = delete;
 
-template <typename T1, typename T2>
-void OnTestAssertionFailure(const char* lhs_expr, const char* rhs_expr,
-                            const T1& lhs, const T2& rhs,
-                            const AssertionContext& assertion_context,
-                            const bool& is_fatal) {
-  std::fprintf(stderr,
-               "%s(%lu): error: Value of: %s\n  Actual: %s\nExpected: %s\n",
-               assertion_context.file(), assertion_context.line(), lhs_expr,
-               xtest::internal::StreamableToString(lhs).c_str(),
-               xtest::internal::StreamableToString(rhs).c_str());
-  std::fflush(stderr);
-  assertion_context.current_test()->M_testResult = xtest::TestResult::FAILED;
-  ++::xtest::G_n_testFailures;
-  if (is_fatal)
-    std::abort();
-}
+  // Prints out the information of the test suite and the test name.
+  static void OnTestAssertionStart(const TestRegistrar* const& test);
 
+  // Prints out the information of the test suite and the test name with the
+  // assertion result.
+  static void OnTestAssertionEnd(const TestRegistrar* const& test,
+                                 const TimeInMillis& elapsed_time);
+
+  // Prints out a trace on {EXPECT|ASSERT} assertion failure with the file and
+  // the line number.
+  template <typename T1, typename T2>
+  static void OnTestAssertionFailure(
+      const char* lhs_expr, const char* rhs_expr, const T1& lhs, const T2& rhs,
+      const AssertionContext& assertion_context) {
+    std::fprintf(stderr,
+                 "%s(%lu): error: Value of: %s\n  Actual: %s\nExpected: %s\n",
+                 assertion_context.file(), assertion_context.line(), lhs_expr,
+                 xtest::internal::StreamableToString(lhs).c_str(),
+                 xtest::internal::StreamableToString(rhs).c_str());
+    std::fflush(stderr);
+
+    // Mark the current test as `xtest::TestResult::FAILED` on failure.
+    assertion_context.current_test()->M_testResult = xtest::TestResult::FAILED;
+    // Add this test in the global test failure counter.
+    ++::xtest::G_n_testFailures;
+  }
+};
+
+// Representation of an {EXPECT|ASSERT} assertion result.
 class AssertionResult {
  public:
-  explicit AssertionResult(const bool& success) : success_(success) {}
+  // Creates an {EXPECT|ASSERT} assertion result instance from the given
+  // `success` value.
+  explicit AssertionResult(const bool& success)
+      : success_(success), fatal_(false) {}
 
+  AssertionResult(const bool& success, const bool& fatal)
+      : success_(success), fatal_(fatal) {}
+
+  // Streams data to the `stderr` stream when this instance represents a
+  // {EXPECT|ASSERT} assertion failure.  There will be not output in case of
+  // {EXPECT|ASSERT} assertion success.
   template <typename Streamable>
   AssertionResult operator<<(const Streamable& streamable) {
     if (!success_) {
@@ -90,12 +128,25 @@ class AssertionResult {
     return *this;
   }
 
+  ~AssertionResult() {
+    // We raise an abort signal in case `is_fatal` is true; this is to catch the
+    // abort signal later and mark the result of the test suite as
+    // `xtest::TestResult::FAILED`.
+    if (fatal_)
+      std::abort();
+  }
+
  private:
+  bool fatal_;
   bool success_;
 };
 
+// Returns a `AssertionResult` instance of success type in case of
+// {EXPECT|ASSERT} assertion success.
 AssertionResult AssertionSuccess();
-AssertionResult AssertionFailure();
+// Returns a `AssertionResult` instance of failure type in case of
+// {EXPECT|ASSERT} assertion failure.
+AssertionResult AssertionFailure(const bool& is_fatal);
 }  // namespace internal
 
 class BoolTrueHelper {
@@ -105,16 +156,18 @@ class BoolTrueHelper {
       const char* actual_expr, const T& actual,
       internal::AssertionContext&& assertion_context, const bool& is_fatal) {
     internal::Timer timer;
-    internal::OnTestAssertionStart(assertion_context.current_test());
+    internal::PrettyAssertionResultPrinter::OnTestAssertionStart(
+        assertion_context.current_test());
     if (!actual)
-      internal::OnTestAssertionFailure(actual_expr, "true", actual, true,
-                                       assertion_context, is_fatal);
+      internal::PrettyAssertionResultPrinter::OnTestAssertionFailure(
+          actual_expr, "true", actual, true, assertion_context);
     else
       assertion_context.current_test()->M_testResult =
           ::xtest::TestResult::PASSED;
-    internal::OnTestAssertionEnd(assertion_context.current_test(),
-                                 timer.Elapsed());
-    return actual ? internal::AssertionSuccess() : internal::AssertionFailure();
+    internal::PrettyAssertionResultPrinter::OnTestAssertionEnd(
+        assertion_context.current_test(), timer.Elapsed());
+    return actual ? internal::AssertionSuccess()
+                  : internal::AssertionFailure(is_fatal);
   }
 };
 
@@ -134,17 +187,18 @@ class BoolFalseHelper {
       const char* actual_expr, const T& actual,
       internal::AssertionContext&& assertion_context, const bool& is_fatal) {
     internal::Timer timer;
-    internal::OnTestAssertionStart(assertion_context.current_test());
+    internal::PrettyAssertionResultPrinter::OnTestAssertionStart(
+        assertion_context.current_test());
     if (actual)
-      internal::OnTestAssertionFailure(actual_expr, "false", actual, false,
-                                       assertion_context, is_fatal);
+      internal::PrettyAssertionResultPrinter::OnTestAssertionFailure(
+          actual_expr, "false", actual, false, assertion_context);
     else
       assertion_context.current_test()->M_testResult =
           ::xtest::TestResult::PASSED;
-    internal::OnTestAssertionEnd(assertion_context.current_test(),
-                                 timer.Elapsed());
+    internal::PrettyAssertionResultPrinter::OnTestAssertionEnd(
+        assertion_context.current_test(), timer.Elapsed());
     return !actual ? internal::AssertionSuccess()
-                   : internal::AssertionFailure();
+                   : internal::AssertionFailure(is_fatal);
   }
 };
 
@@ -159,22 +213,110 @@ class BoolFalseHelper {
 
 class NqHelper {
  public:
-  template <typename T1, typename T2>
+  // This function is an overload for r-value `AssertionContext` instance
+  // reference.
+  template <
+      typename T1, typename T2,
+      // Disable this overload for cases where one argument is a pointer
+      // and the other is the null pointer constant.
+      typename std::enable_if<!std::is_integral<T1>::value ||
+                              !std::is_pointer<T2>::value>::type* = nullptr>
   static internal::AssertionResult Compare(
       const char* lhs_expr, const char* rhs_expr, const T1& lhs, const T2& rhs,
       internal::AssertionContext&& assertion_context, const bool& is_fatal) {
+    return CmpHelperNE(lhs_expr, rhs_expr, lhs, rhs, assertion_context,
+                       is_fatal);
+  }
+
+  // This function is an overload for l-value `AssertionContext` instance
+  // reference.
+  template <typename T1, typename T2>
+  static internal::AssertionResult Compare(
+      const char* lhs_expr, const char* rhs_expr, const T1& lhs, const T2& rhs,
+      internal::AssertionContext& assertion_context, const bool& is_fatal) {
+    return CmpHelperNE(lhs_expr, rhs_expr, lhs, rhs, assertion_context,
+                       is_fatal);
+  }
+
+  // With this overloaded version, we allow anonymous enums to be used in
+  // {ASSERT|EXPECT}_EQ when compiled with gcc 4, as anonymous enums can be
+  // implicitly cast to BiggestInt.
+  //
+  // Even though its body looks the same as the above version, we cannot merge
+  // the two, as it will make anonymous enums unhappy.
+  //
+  // This function is an overload for r-value `AssertionContext` instance
+  // reference.
+  static internal::AssertionResult Compare(
+      const char* lhs_expr, const char* rhs_expr, internal::BiggestInt lhs,
+      internal::BiggestInt rhs, internal::AssertionContext&& assertion_context,
+      const bool& is_fatal) {
+    return CmpHelperNE(lhs_expr, rhs_expr, lhs, rhs, assertion_context,
+                       is_fatal);
+  }
+
+  // With this overloaded version, we allow anonymous enums to be used in
+  // {ASSERT|EXPECT}_EQ when compiled with gcc 4, as anonymous enums can be
+  // implicitly cast to BiggestInt.
+  //
+  // Even though its body looks the same as the above version, we cannot merge
+  // the two, as it will make anonymous enums unhappy.
+  //
+  // This function is an overload for l-value `AssertionContext` instance
+  // reference.
+  static internal::AssertionResult Compare(
+      const char* lhs_expr, const char* rhs_expr, internal::BiggestInt lhs,
+      internal::BiggestInt rhs, internal::AssertionContext& assertion_context,
+      const bool& is_fatal) {
+    return CmpHelperNE(lhs_expr, rhs_expr, lhs, rhs, assertion_context,
+                       is_fatal);
+  }
+
+  // With this overload version, we allow `0` to be used as a null pointer
+  // literal.
+  //
+  // This function is an overload for r-value `AssertionContext` instance
+  // reference.
+  template <typename T>
+  static internal::AssertionResult Compare(
+      const char* lhs_expr, const char* rhs_expr, std::nullptr_t /* lhs */,
+      T* rhs, internal::AssertionContext&& assertion_context,
+      const bool& if_fatal) {
+    return CmpHelperNE(lhs_expr, rhs_expr, static_cast<T*>(nullptr), rhs);
+  }
+
+  // With this overload version, we allow `0` to be used as a null pointer
+  // literal.
+  //
+  // This function is an overload for l-value `AssertionContext` instance
+  // reference.
+  template <typename T>
+  static internal::AssertionResult Compare(
+      const char* lhs_expr, const char* rhs_expr, std::nullptr_t /* lhs */,
+      T* rhs, internal::AssertionContext& assertion_context,
+      const bool& if_fatal) {
+    return CmpHelperNE(lhs_expr, rhs_expr, static_cast<T*>(nullptr), rhs);
+  }
+
+ private:
+  template <typename T1, typename T2>
+  static internal::AssertionResult CmpHelperNE(
+      const char* lhs_expr, const char* rhs_expr, const T1& lhs, const T2& rhs,
+      internal::AssertionContext& assertion_context, const bool& is_fatal) {
     internal::Timer timer;
     bool result = lhs == rhs;
-    internal::OnTestAssertionStart(assertion_context.current_test());
+    internal::PrettyAssertionResultPrinter::OnTestAssertionStart(
+        assertion_context.current_test());
     if (result)
-      internal::OnTestAssertionFailure(lhs_expr, rhs_expr, lhs, rhs,
-                                       assertion_context, is_fatal);
+      internal::PrettyAssertionResultPrinter::OnTestAssertionFailure(
+          lhs_expr, rhs_expr, lhs, rhs, assertion_context);
     else
       assertion_context.current_test()->M_testResult =
           ::xtest::TestResult::PASSED;
-    internal::OnTestAssertionEnd(assertion_context.current_test(),
-                                 timer.Elapsed());
-    return result ? internal::AssertionSuccess() : internal::AssertionFailure();
+    internal::PrettyAssertionResultPrinter::OnTestAssertionEnd(
+        assertion_context.current_test(), timer.Elapsed());
+    return result ? internal::AssertionSuccess()
+                  : internal::AssertionFailure(is_fatal);
   }
 };
 
@@ -189,22 +331,110 @@ class NqHelper {
 
 class EqHelper {
  public:
-  template <typename T1, typename T2>
+  // This function is an overload for r-value `AssertionContext` instance
+  // reference.
+  template <
+      typename T1, typename T2,
+      // Disable this overload for cases where one argument is a pointer
+      // and the other is the null pointer constant.
+      typename std::enable_if<!std::is_integral<T1>::value ||
+                              !std::is_pointer<T2>::value>::type* = nullptr>
   static internal::AssertionResult Compare(
       const char* lhs_expr, const char* rhs_expr, const T1& lhs, const T2& rhs,
       internal::AssertionContext&& assertion_context, const bool& is_fatal) {
+    return CmpHelperEQ(lhs_expr, rhs_expr, lhs, rhs, assertion_context,
+                       is_fatal);
+  }
+
+  // This function is an overload for l-value `AssertionContext` instance
+  // reference.
+  template <typename T1, typename T2>
+  static internal::AssertionResult Compare(
+      const char* lhs_expr, const char* rhs_expr, const T1& lhs, const T2& rhs,
+      internal::AssertionContext& assertion_context, const bool& is_fatal) {
+    return CmpHelperEQ(lhs_expr, rhs_expr, lhs, rhs, assertion_context,
+                       is_fatal);
+  }
+
+  // With this overloaded version, we allow anonymous enums to be used in
+  // {ASSERT|EXPECT}_EQ when compiled with gcc 4, as anonymous enums can be
+  // implicitly cast to BiggestInt.
+  //
+  // Even though its body looks the same as the above version, we cannot merge
+  // the two, as it will make anonymous enums unhappy.
+  //
+  // This function is an overload for r-value `AssertionContext` instance
+  // reference.
+  static internal::AssertionResult Compare(
+      const char* lhs_expr, const char* rhs_expr, internal::BiggestInt lhs,
+      internal::BiggestInt rhs, internal::AssertionContext&& assertion_context,
+      const bool& is_fatal) {
+    return CmpHelperEQ(lhs_expr, rhs_expr, lhs, rhs, assertion_context,
+                       is_fatal);
+  }
+
+  // With this overloaded version, we allow anonymous enums to be used in
+  // {ASSERT|EXPECT}_EQ when compiled with gcc 4, as anonymous enums can be
+  // implicitly cast to BiggestInt.
+  //
+  // Even though its body looks the same as the above version, we cannot merge
+  // the two, as it will make anonymous enums unhappy.
+  //
+  // This function is an overload for l-value `AssertionContext` instance
+  // reference.
+  static internal::AssertionResult Compare(
+      const char* lhs_expr, const char* rhs_expr, internal::BiggestInt lhs,
+      internal::BiggestInt rhs, internal::AssertionContext& assertion_context,
+      const bool& is_fatal) {
+    return CmpHelperEQ(lhs_expr, rhs_expr, lhs, rhs, assertion_context,
+                       is_fatal);
+  }
+
+  // With this overload version, we allow `0` to be used as a null pointer
+  // literal.
+  //
+  // This function is an overload for r-value `AssertionContext` instance
+  // reference.
+  template <typename T>
+  static internal::AssertionResult Compare(
+      const char* lhs_expr, const char* rhs_expr, std::nullptr_t /* lhs */,
+      T* rhs, internal::AssertionContext&& assertion_context,
+      const bool& if_fatal) {
+    return CmpHelperEQ(lhs_expr, rhs_expr, static_cast<T*>(nullptr), rhs);
+  }
+
+  // With this overload version, we allow `0` to be used as a null pointer
+  // literal.
+  //
+  // This function is an overload for l-value `AssertionContext` instance
+  // reference.
+  template <typename T>
+  static internal::AssertionResult Compare(
+      const char* lhs_expr, const char* rhs_expr, std::nullptr_t /* lhs */,
+      T* rhs, internal::AssertionContext& assertion_context,
+      const bool& if_fatal) {
+    return CmpHelperEQ(lhs_expr, rhs_expr, static_cast<T*>(nullptr), rhs);
+  }
+
+ private:
+  template <typename T1, typename T2>
+  static internal::AssertionResult CmpHelperEQ(
+      const char* lhs_expr, const char* rhs_expr, const T1& lhs, const T2& rhs,
+      internal::AssertionContext& assertion_context, const bool& is_fatal) {
     internal::Timer timer;
     bool result = lhs == rhs;
-    internal::OnTestAssertionStart(assertion_context.current_test());
+    internal::PrettyAssertionResultPrinter::OnTestAssertionStart(
+        assertion_context.current_test());
     if (!result)
-      internal::OnTestAssertionFailure(lhs_expr, rhs_expr, lhs, rhs,
-                                       assertion_context, is_fatal);
+      internal::PrettyAssertionResultPrinter::OnTestAssertionFailure(
+          lhs_expr, rhs_expr, lhs, rhs, assertion_context);
     else
       assertion_context.current_test()->M_testResult =
           ::xtest::TestResult::PASSED;
-    internal::OnTestAssertionEnd(assertion_context.current_test(),
-                                 timer.Elapsed());
-    return result ? internal::AssertionSuccess() : internal::AssertionFailure();
+    internal::PrettyAssertionResultPrinter::OnTestAssertionEnd(
+        assertion_context.current_test(), timer.Elapsed());
+    return result ? internal::AssertionSuccess()
+                  : internal::AssertionFailure(is_fatal);
   }
 };
 
