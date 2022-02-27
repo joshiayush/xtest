@@ -190,34 +190,43 @@ class PrettyUnitTestResultPrinter {
  public:
   // No instance should instantiate from this class.
   PrettyUnitTestResultPrinter() = delete;
+
   // Joins the test suite and test name at `.` and prints on the console using
   // `printf()`.
   static void PrintTestName(const char* test_suite, const char* test_name);
+
   // Prints out the information related to the number of tests a test suite
   // shares.
   static void OnTestStart(const UnitTestPair& testSuite);
+
   // Prints the number of test suites and tests to run.  Should only be called
   // before starting iteration over the registered test suites.
   static void OnTestIterationStart();
+
   // Should be called for printing the status of the global environment set-up.
   // (Global environment set-up in `xtest` is a myth, this function just prints
   // a line and flushes the output stream).  This line is needed to give our
   // users a complete feel of `googletest`.
   static void OnEnvironmentsSetUpStart();
+
   // Prints out information related to the number of test suites and tests
   // before executing the registered tests.
   static void OnTestExecutionStart();
+
   // Prints out the information related to the number of tests a test suite
   // shares.  This function is very much similar to
   // `PrettyUnitTestResultPrinter::OnTestStart()` but should be ran after
   // executing all the tests of a test suite.
   static void OnTestEnd(const UnitTestPair& testSuite);
+
   // Prints number of test suites and tests ran.  Should only be called after
   // iterating over all the registered test suites.
   static void OnTestIterationEnd();
+
   // Prints out information related to the number of test failed ans passed
   // after executing all the registered tests.
   static void OnTestExecutionEnd();
+
   // Should be called for printing the status of the global environment
   // tear-down. (Global environment tear-down in `xtest` is a myth, this
   // function just prints a line and flushes the output stream).  This line is
