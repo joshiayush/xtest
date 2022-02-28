@@ -50,7 +50,7 @@ namespace internal {
 //                    present.
 class AssertionContext {
  public:
-  //  Constructs a AssertionContext.
+  // Constructs a AssertionContext.
   AssertionContext(const char* file, uint64_t line,
                    TestRegistrar* const& current_test);
 
@@ -149,27 +149,60 @@ AssertionResult AssertionSuccess();
 AssertionResult AssertionFailure(const bool& is_fatal);
 }  // namespace internal
 
-class BoolTrueHelper {
- public:
-  template <typename T>
-  static internal::AssertionResult Check(
-      const char* actual_expr, const T& actual,
-      internal::AssertionContext&& assertion_context, const bool& is_fatal) {
-    internal::Timer timer;
-    internal::PrettyAssertionResultPrinter::OnTestAssertionStart(
-        assertion_context.current_test());
-    if (!actual)
-      internal::PrettyAssertionResultPrinter::OnTestAssertionFailure(
-          actual_expr, "true", actual, true, assertion_context);
-    else
-      assertion_context.current_test()->M_testResult =
-          ::xtest::TestResult::PASSED;
-    internal::PrettyAssertionResultPrinter::OnTestAssertionEnd(
-        assertion_context.current_test(), timer.Elapsed());
-    return actual ? internal::AssertionSuccess()
-                  : internal::AssertionFailure(is_fatal);
-  }
-};
+// A macro for implementing the helper functions needed to implement
+// {EXPECT|ASSERT}_{TRUE|FALSE}.  It is here just to avoid copy-and-paste of
+// similar code.
+#define XTEST_IMPL_CHECK_HELPER_(helper, boolean)                              \
+  class Bool##helper##Helper {                                                 \
+   public:                                                                     \
+    template <typename T>                                                      \
+    static internal::AssertionResult Check(                                    \
+        const char* actual_expr, const T& actual,                              \
+        internal::AssertionContext&& assertion_context,                        \
+        const bool& is_fatal) {                                                \
+      internal::Timer timer;                                                   \
+      internal::PrettyAssertionResultPrinter::OnTestAssertionStart(            \
+          assertion_context.current_test());                                   \
+      if ((actual) == (boolean)) {                                             \
+        assertion_context.current_test()->M_testResult =                       \
+            ::xtest::TestResult::PASSED;                                       \
+      } else {                                                                 \
+        internal::PrettyAssertionResultPrinter::OnTestAssertionFailure(        \
+            actual_expr, #boolean, actual, boolean, assertion_context);        \
+      }                                                                        \
+      internal::PrettyAssertionResultPrinter::OnTestAssertionEnd(              \
+          assertion_context.current_test(), timer.Elapsed());                  \
+      return ((actual) == (boolean)) ? internal::AssertionSuccess()            \
+                                     : internal::AssertionFailure(is_fatal);   \
+    }                                                                          \
+                                                                               \
+    template <typename T>                                                      \
+    static internal::AssertionResult Check(                                    \
+        const char* actual_expr, const T& actual,                              \
+        internal::AssertionContext& assertion_context, const bool& is_fatal) { \
+      internal::Timer timer;                                                   \
+      internal::PrettyAssertionResultPrinter::OnTestAssertionStart(            \
+          assertion_context.current_test());                                   \
+      if ((actual) == (boolean)) {                                             \
+        assertion_context.current_test()->M_testResult =                       \
+            ::xtest::TestResult::PASSED;                                       \
+      } else {                                                                 \
+        internal::PrettyAssertionResultPrinter::OnTestAssertionFailure(        \
+            actual_expr, #boolean, actual, boolean, assertion_context);        \
+      }                                                                        \
+      internal::PrettyAssertionResultPrinter::OnTestAssertionEnd(              \
+          assertion_context.current_test(), timer.Elapsed());                  \
+      return ((actual) == (boolean)) ? internal::AssertionSuccess()            \
+                                     : internal::AssertionFailure(is_fatal);   \
+    }                                                                          \
+  };
+
+// Implements the helper functions for {EXPECT|ASSERT}_TRUE.
+XTEST_IMPL_CHECK_HELPER_(True, true)
+// Implements the helper functions for {EXPECT|ASSERT}_FALSE.
+XTEST_IMPL_CHECK_HELPER_(False, false)
+
+#undef XTEST_IMPL_CHECK_HELPER_
 
 #define XTEST_ASSERT_TRUE_(actual, fatal)                                   \
   ::xtest::BoolTrueHelper::Check(                                           \
@@ -180,28 +213,6 @@ class BoolTrueHelper {
 #define EXPECT_TRUE(actual) XTEST_ASSERT_TRUE_(actual, false)
 #define ASSERT_TRUE(actual) XTEST_ASSERT_TRUE_(actual, true)
 
-class BoolFalseHelper {
- public:
-  template <typename T>
-  static internal::AssertionResult Check(
-      const char* actual_expr, const T& actual,
-      internal::AssertionContext&& assertion_context, const bool& is_fatal) {
-    internal::Timer timer;
-    internal::PrettyAssertionResultPrinter::OnTestAssertionStart(
-        assertion_context.current_test());
-    if (actual)
-      internal::PrettyAssertionResultPrinter::OnTestAssertionFailure(
-          actual_expr, "false", actual, false, assertion_context);
-    else
-      assertion_context.current_test()->M_testResult =
-          ::xtest::TestResult::PASSED;
-    internal::PrettyAssertionResultPrinter::OnTestAssertionEnd(
-        assertion_context.current_test(), timer.Elapsed());
-    return !actual ? internal::AssertionSuccess()
-                   : internal::AssertionFailure(is_fatal);
-  }
-};
-
 #define XTEST_ASSERT_FALSE_(actual, fatal)                                  \
   ::xtest::BoolFalseHelper::Check(                                          \
       #actual, actual,                                                      \
@@ -211,241 +222,171 @@ class BoolFalseHelper {
 #define EXPECT_FALSE(actual) XTEST_ASSERT_FALSE_(actual, false)
 #define ASSERT_FALSE(actual) XTEST_ASSERT_FALSE_(actual, true)
 
-class NqHelper {
- public:
-  // This function is an overload for r-value `AssertionContext` instance
-  // reference.
-  template <
-      typename T1, typename T2,
-      // Disable this overload for cases where one argument is a pointer
-      // and the other is the null pointer constant.
-      typename std::enable_if<!std::is_integral<T1>::value ||
-                              !std::is_pointer<T2>::value>::type* = nullptr>
-  static internal::AssertionResult Compare(
-      const char* lhs_expr, const char* rhs_expr, const T1& lhs, const T2& rhs,
-      internal::AssertionContext&& assertion_context, const bool& is_fatal) {
-    return CmpHelperNE(lhs_expr, rhs_expr, lhs, rhs, assertion_context,
-                       is_fatal);
-  }
+// A macro for implementing the helper functions needed to implement ASSERT_??
+// and EXPECT_??.  It is here just to avoid copy-and-paste of similar code.
+//
+// The first template is there to disable that `Compare` overload for cases
+// where one argument is a pointer and the other is the null pointer constant.
+//
+// With the second overloaded version, we allow anonymous enums to be used in
+// {ASSERT|EXPECT}_?? when compiled with gcc 4, as anonymous enums can be
+// implicitly cast to BiggestInt.
+//
+// Even though its body looks the same as the first version, we cannot merge
+// the two, as it will make anonymous enums unhappy.
+//
+// With the thrid overload version, we allow `0` to be used as a null pointer
+// literal.
+#define XTEST_IMPL_CMP_HELPER_(opr_name, opr)                                  \
+  class opr_name##Helper {                                                     \
+   public:                                                                     \
+    template <                                                                 \
+        typename T1, typename T2,                                              \
+        typename std::enable_if<!std::is_integral<T1>::value ||                \
+                                !std::is_pointer<T2>::value>::type* = nullptr> \
+    static internal::AssertionResult Compare(                                  \
+        const char* lhs_expr, const char* rhs_expr, const T1& lhs,             \
+        const T2& rhs, internal::AssertionContext&& assertion_context,         \
+        const bool& is_fatal) {                                                \
+      return CmpHelper##opr_name(lhs_expr, rhs_expr, lhs, rhs,                 \
+                                 assertion_context, is_fatal);                 \
+    }                                                                          \
+                                                                               \
+    template <typename T1, typename T2>                                        \
+    static internal::AssertionResult Compare(                                  \
+        const char* lhs_expr, const char* rhs_expr, const T1& lhs,             \
+        const T2& rhs, internal::AssertionContext& assertion_context,          \
+        const bool& is_fatal) {                                                \
+      return CmpHelper##opr_name(lhs_expr, rhs_expr, lhs, rhs,                 \
+                                 assertion_context, is_fatal);                 \
+    }                                                                          \
+                                                                               \
+    static internal::AssertionResult Compare(                                  \
+        const char* lhs_expr, const char* rhs_expr, internal::BiggestInt lhs,  \
+        internal::BiggestInt rhs,                                              \
+        internal::AssertionContext&& assertion_context,                        \
+        const bool& is_fatal) {                                                \
+      return CmpHelper##opr_name(lhs_expr, rhs_expr, lhs, rhs,                 \
+                                 assertion_context, is_fatal);                 \
+    }                                                                          \
+                                                                               \
+    static internal::AssertionResult Compare(                                  \
+        const char* lhs_expr, const char* rhs_expr, internal::BiggestInt lhs,  \
+        internal::BiggestInt rhs,                                              \
+        internal::AssertionContext& assertion_context, const bool& is_fatal) { \
+      return CmpHelper##opr_name(lhs_expr, rhs_expr, lhs, rhs,                 \
+                                 assertion_context, is_fatal);                 \
+    }                                                                          \
+                                                                               \
+    template <typename T>                                                      \
+    static internal::AssertionResult Compare(                                  \
+        const char* lhs_expr, const char* rhs_expr, std::nullptr_t /* lhs */,  \
+        T* rhs, internal::AssertionContext&& assertion_context,                \
+        const bool& is_fatal) {                                                \
+      return CmpHelper##opr_name(lhs_expr, rhs_expr, static_cast<T*>(nullptr), \
+                                 rhs, assertion_context, is_fatal);            \
+    }                                                                          \
+                                                                               \
+    template <typename T>                                                      \
+    static internal::AssertionResult Compare(                                  \
+        const char* lhs_expr, const char* rhs_expr, std::nullptr_t /* lhs */,  \
+        T* rhs, internal::AssertionContext& assertion_context,                 \
+        const bool& is_fatal) {                                                \
+      return CmpHelper##opr_name(lhs_expr, rhs_expr, static_cast<T*>(nullptr), \
+                                 rhs, assertion_context, is_fatal);            \
+    }                                                                          \
+                                                                               \
+   private:                                                                    \
+    template <typename T1, typename T2>                                        \
+    static internal::AssertionResult CmpHelper##opr_name(                      \
+        const char* lhs_expr, const char* rhs_expr, const T1& lhs,             \
+        const T2& rhs, internal::AssertionContext& assertion_context,          \
+        const bool& is_fatal) {                                                \
+      internal::Timer timer;                                                   \
+      internal::PrettyAssertionResultPrinter::OnTestAssertionStart(            \
+          assertion_context.current_test());                                   \
+      if (lhs opr rhs) {                                                       \
+        assertion_context.current_test()->M_testResult =                       \
+            ::xtest::TestResult::PASSED;                                       \
+      } else {                                                                 \
+        internal::PrettyAssertionResultPrinter::OnTestAssertionFailure(        \
+            lhs_expr, rhs_expr, lhs, rhs, assertion_context);                  \
+      }                                                                        \
+      internal::PrettyAssertionResultPrinter::OnTestAssertionEnd(              \
+          assertion_context.current_test(), timer.Elapsed());                  \
+      return (lhs opr rhs) ? internal::AssertionSuccess()                      \
+                           : internal::AssertionFailure(is_fatal);             \
+    }                                                                          \
+  };
 
-  // This function is an overload for l-value `AssertionContext` instance
-  // reference.
-  template <typename T1, typename T2>
-  static internal::AssertionResult Compare(
-      const char* lhs_expr, const char* rhs_expr, const T1& lhs, const T2& rhs,
-      internal::AssertionContext& assertion_context, const bool& is_fatal) {
-    return CmpHelperNE(lhs_expr, rhs_expr, lhs, rhs, assertion_context,
-                       is_fatal);
-  }
+// Implements the helper functions for {EXPECT|ASSERT}_EQ.
+XTEST_IMPL_CMP_HELPER_(EQ, ==)
+// Implements the helper functions for {EXPECT|ASSERT}_NE.
+XTEST_IMPL_CMP_HELPER_(NE, !=)
+// Implements the helper functions for {EXPECT|ASSERT}_LE.
+XTEST_IMPL_CMP_HELPER_(LE, <=)
+// Implements the helper functions for {EXPECT|ASSERT}_LT.
+XTEST_IMPL_CMP_HELPER_(LT, <)
+// Implements the helper functions for {EXPECT|ASSERT}_GE.
+XTEST_IMPL_CMP_HELPER_(GE, >=)
+// Implements the helper functions for {EXPECT|ASSERT}_GT.
+XTEST_IMPL_CMP_HELPER_(GT, >)
 
-  // With this overloaded version, we allow anonymous enums to be used in
-  // {ASSERT|EXPECT}_EQ when compiled with gcc 4, as anonymous enums can be
-  // implicitly cast to BiggestInt.
-  //
-  // Even though its body looks the same as the above version, we cannot merge
-  // the two, as it will make anonymous enums unhappy.
-  //
-  // This function is an overload for r-value `AssertionContext` instance
-  // reference.
-  static internal::AssertionResult Compare(
-      const char* lhs_expr, const char* rhs_expr, internal::BiggestInt lhs,
-      internal::BiggestInt rhs, internal::AssertionContext&& assertion_context,
-      const bool& is_fatal) {
-    return CmpHelperNE(lhs_expr, rhs_expr, lhs, rhs, assertion_context,
-                       is_fatal);
-  }
+#undef XTEST_IMPL_CMP_HELPER_
 
-  // With this overloaded version, we allow anonymous enums to be used in
-  // {ASSERT|EXPECT}_EQ when compiled with gcc 4, as anonymous enums can be
-  // implicitly cast to BiggestInt.
-  //
-  // Even though its body looks the same as the above version, we cannot merge
-  // the two, as it will make anonymous enums unhappy.
-  //
-  // This function is an overload for l-value `AssertionContext` instance
-  // reference.
-  static internal::AssertionResult Compare(
-      const char* lhs_expr, const char* rhs_expr, internal::BiggestInt lhs,
-      internal::BiggestInt rhs, internal::AssertionContext& assertion_context,
-      const bool& is_fatal) {
-    return CmpHelperNE(lhs_expr, rhs_expr, lhs, rhs, assertion_context,
-                       is_fatal);
-  }
-
-  // With this overload version, we allow `0` to be used as a null pointer
-  // literal.
-  //
-  // This function is an overload for r-value `AssertionContext` instance
-  // reference.
-  template <typename T>
-  static internal::AssertionResult Compare(
-      const char* lhs_expr, const char* rhs_expr, std::nullptr_t /* lhs */,
-      T* rhs, internal::AssertionContext&& assertion_context,
-      const bool& if_fatal) {
-    return CmpHelperNE(lhs_expr, rhs_expr, static_cast<T*>(nullptr), rhs);
-  }
-
-  // With this overload version, we allow `0` to be used as a null pointer
-  // literal.
-  //
-  // This function is an overload for l-value `AssertionContext` instance
-  // reference.
-  template <typename T>
-  static internal::AssertionResult Compare(
-      const char* lhs_expr, const char* rhs_expr, std::nullptr_t /* lhs */,
-      T* rhs, internal::AssertionContext& assertion_context,
-      const bool& if_fatal) {
-    return CmpHelperNE(lhs_expr, rhs_expr, static_cast<T*>(nullptr), rhs);
-  }
-
- private:
-  template <typename T1, typename T2>
-  static internal::AssertionResult CmpHelperNE(
-      const char* lhs_expr, const char* rhs_expr, const T1& lhs, const T2& rhs,
-      internal::AssertionContext& assertion_context, const bool& is_fatal) {
-    internal::Timer timer;
-    bool result = lhs == rhs;
-    internal::PrettyAssertionResultPrinter::OnTestAssertionStart(
-        assertion_context.current_test());
-    if (result)
-      internal::PrettyAssertionResultPrinter::OnTestAssertionFailure(
-          lhs_expr, rhs_expr, lhs, rhs, assertion_context);
-    else
-      assertion_context.current_test()->M_testResult =
-          ::xtest::TestResult::PASSED;
-    internal::PrettyAssertionResultPrinter::OnTestAssertionEnd(
-        assertion_context.current_test(), timer.Elapsed());
-    return result ? internal::AssertionSuccess()
-                  : internal::AssertionFailure(is_fatal);
-  }
-};
-
-#define XTEST_ASSERT_NE_(actual, expected, fatal)                           \
-  ::xtest::NqHelper::Compare(                                               \
-      #actual, #expected, actual, expected,                                 \
+#define XTEST_ASSERT_EQ_(val1, val2, fatal)                                 \
+  ::xtest::EQHelper::Compare(                                               \
+      #val1, #val2, val1, val2,                                             \
       ::xtest::internal::AssertionContext(__FILE__, __LINE__, currentTest), \
       fatal)
 
-#define EXPECT_NE(actual, expected) XTEST_ASSERT_NE_(actual, expected, false)
-#define ASSERT_NE(actual, expected) XTEST_ASSERT_NE_(actual, expected, true)
+#define EXPECT_EQ(val1, val2) XTEST_ASSERT_EQ_(val1, val2, false)
+#define ASSERT_EQ(val1, val2) XTEST_ASSERT_EQ_(val1, val2, true)
 
-class EqHelper {
- public:
-  // This function is an overload for r-value `AssertionContext` instance
-  // reference.
-  template <
-      typename T1, typename T2,
-      // Disable this overload for cases where one argument is a pointer
-      // and the other is the null pointer constant.
-      typename std::enable_if<!std::is_integral<T1>::value ||
-                              !std::is_pointer<T2>::value>::type* = nullptr>
-  static internal::AssertionResult Compare(
-      const char* lhs_expr, const char* rhs_expr, const T1& lhs, const T2& rhs,
-      internal::AssertionContext&& assertion_context, const bool& is_fatal) {
-    return CmpHelperEQ(lhs_expr, rhs_expr, lhs, rhs, assertion_context,
-                       is_fatal);
-  }
-
-  // This function is an overload for l-value `AssertionContext` instance
-  // reference.
-  template <typename T1, typename T2>
-  static internal::AssertionResult Compare(
-      const char* lhs_expr, const char* rhs_expr, const T1& lhs, const T2& rhs,
-      internal::AssertionContext& assertion_context, const bool& is_fatal) {
-    return CmpHelperEQ(lhs_expr, rhs_expr, lhs, rhs, assertion_context,
-                       is_fatal);
-  }
-
-  // With this overloaded version, we allow anonymous enums to be used in
-  // {ASSERT|EXPECT}_EQ when compiled with gcc 4, as anonymous enums can be
-  // implicitly cast to BiggestInt.
-  //
-  // Even though its body looks the same as the above version, we cannot merge
-  // the two, as it will make anonymous enums unhappy.
-  //
-  // This function is an overload for r-value `AssertionContext` instance
-  // reference.
-  static internal::AssertionResult Compare(
-      const char* lhs_expr, const char* rhs_expr, internal::BiggestInt lhs,
-      internal::BiggestInt rhs, internal::AssertionContext&& assertion_context,
-      const bool& is_fatal) {
-    return CmpHelperEQ(lhs_expr, rhs_expr, lhs, rhs, assertion_context,
-                       is_fatal);
-  }
-
-  // With this overloaded version, we allow anonymous enums to be used in
-  // {ASSERT|EXPECT}_EQ when compiled with gcc 4, as anonymous enums can be
-  // implicitly cast to BiggestInt.
-  //
-  // Even though its body looks the same as the above version, we cannot merge
-  // the two, as it will make anonymous enums unhappy.
-  //
-  // This function is an overload for l-value `AssertionContext` instance
-  // reference.
-  static internal::AssertionResult Compare(
-      const char* lhs_expr, const char* rhs_expr, internal::BiggestInt lhs,
-      internal::BiggestInt rhs, internal::AssertionContext& assertion_context,
-      const bool& is_fatal) {
-    return CmpHelperEQ(lhs_expr, rhs_expr, lhs, rhs, assertion_context,
-                       is_fatal);
-  }
-
-  // With this overload version, we allow `0` to be used as a null pointer
-  // literal.
-  //
-  // This function is an overload for r-value `AssertionContext` instance
-  // reference.
-  template <typename T>
-  static internal::AssertionResult Compare(
-      const char* lhs_expr, const char* rhs_expr, std::nullptr_t /* lhs */,
-      T* rhs, internal::AssertionContext&& assertion_context,
-      const bool& if_fatal) {
-    return CmpHelperEQ(lhs_expr, rhs_expr, static_cast<T*>(nullptr), rhs);
-  }
-
-  // With this overload version, we allow `0` to be used as a null pointer
-  // literal.
-  //
-  // This function is an overload for l-value `AssertionContext` instance
-  // reference.
-  template <typename T>
-  static internal::AssertionResult Compare(
-      const char* lhs_expr, const char* rhs_expr, std::nullptr_t /* lhs */,
-      T* rhs, internal::AssertionContext& assertion_context,
-      const bool& if_fatal) {
-    return CmpHelperEQ(lhs_expr, rhs_expr, static_cast<T*>(nullptr), rhs);
-  }
-
- private:
-  template <typename T1, typename T2>
-  static internal::AssertionResult CmpHelperEQ(
-      const char* lhs_expr, const char* rhs_expr, const T1& lhs, const T2& rhs,
-      internal::AssertionContext& assertion_context, const bool& is_fatal) {
-    internal::Timer timer;
-    bool result = lhs == rhs;
-    internal::PrettyAssertionResultPrinter::OnTestAssertionStart(
-        assertion_context.current_test());
-    if (!result)
-      internal::PrettyAssertionResultPrinter::OnTestAssertionFailure(
-          lhs_expr, rhs_expr, lhs, rhs, assertion_context);
-    else
-      assertion_context.current_test()->M_testResult =
-          ::xtest::TestResult::PASSED;
-    internal::PrettyAssertionResultPrinter::OnTestAssertionEnd(
-        assertion_context.current_test(), timer.Elapsed());
-    return result ? internal::AssertionSuccess()
-                  : internal::AssertionFailure(is_fatal);
-  }
-};
-
-#define XTEST_ASSERT_EQ_(actual, expected, fatal)                           \
-  ::xtest::EqHelper::Compare(                                               \
-      #actual, #expected, actual, expected,                                 \
+#define XTEST_ASSERT_NE_(val1, val2, fatal)                                 \
+  ::xtest::NEHelper::Compare(                                               \
+      #val1, #val2, val1, val2,                                             \
       ::xtest::internal::AssertionContext(__FILE__, __LINE__, currentTest), \
       fatal)
 
-#define EXPECT_EQ(actual, expected) XTEST_ASSERT_EQ_(actual, expected, false)
-#define ASSERT_EQ(actual, expected) XTEST_ASSERT_EQ_(actual, expected, true)
+#define EXPECT_NE(val1, val2) XTEST_ASSERT_NE_(val1, val2, false)
+#define ASSERT_NE(val1, val2) XTEST_ASSERT_NE_(val1, val2, true)
+
+#define XTEST_ASSERT_LE_(val1, val2, fatal)                                 \
+  ::xtest::LEHelper::Compare(                                               \
+      #val1, #val2, val1, val2,                                             \
+      ::xtest::internal::AssertionContext(__FILE__, __LINE__, currentTest), \
+      fatal)
+
+#define EXPECT_LE(val1, val2) XTEST_ASSERT_LE_(val1, val2, false)
+#define ASSERT_LE(val1, val2) XTEST_ASSERT_LE_(val1, val2, true)
+
+#define XTEST_ASSERT_LT_(val1, val2, fatal)                                 \
+  ::xtest::LTHelper::Compare(                                               \
+      #val1, #val2, val1, val2,                                             \
+      ::xtest::internal::AssertionContext(__FILE__, __LINE__, currentTest), \
+      fatal)
+
+#define EXPECT_LT(val1, val2) XTEST_ASSERT_LT_(val1, val2, false)
+#define ASSERT_LT(val1, val2) XTEST_ASSERT_LT_(val1, val2, true)
+
+#define XTEST_ASSERT_GE_(val1, val2, fatal)                                 \
+  ::xtest::GEHelper::Compare(                                               \
+      #val1, #val2, val1, val2,                                             \
+      ::xtest::internal::AssertionContext(__FILE__, __LINE__, currentTest), \
+      fatal)
+
+#define EXPECT_GE(val1, val2) XTEST_ASSERT_GE_(val1, val2, false)
+#define ASSERT_GE(val1, val2) XTEST_ASSERT_GE_(val1, val2, true)
+
+#define XTEST_ASSERT_GT_(val1, val2, fatal)                                 \
+  ::xtest::GTHelper::Compare(                                               \
+      #val1, #val2, val1, val2,                                             \
+      ::xtest::internal::AssertionContext(__FILE__, __LINE__, currentTest), \
+      fatal)
+
+#define EXPECT_GT(val1, val2) XTEST_ASSERT_GT_(val1, val2, false)
+#define ASSERT_GT(val1, val2) XTEST_ASSERT_GT_(val1, val2, true)
 }  // namespace xtest
 
 #endif  // XTEST_INCLUDE_XTEST_ASSERTIONS_HH_
