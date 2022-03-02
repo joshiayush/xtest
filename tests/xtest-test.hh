@@ -30,6 +30,8 @@
 #ifndef XTEST_TESTS_XTEST_TEST_HH_
 #define XTEST_TESTS_XTEST_TEST_HH_
 
+#include <string>
+
 #include "xtest.hh"
 
 TEST(XtestDefaultSummaryStatusStrWidthTest, CheckIfVisible) {
