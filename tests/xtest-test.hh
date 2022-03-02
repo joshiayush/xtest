@@ -32,6 +32,7 @@
 
 #include <string>
 
+#include "redirector.hh"
 #include "xtest.hh"
 
 TEST(XtestDefaultSummaryStatusStrWidthTest, CheckIfVisible) {
@@ -80,6 +81,18 @@ TEST(GetStringAlignedToTest, AlignRightWithDefaultSummaryStatusWidth) {
       "FAILED", XTEST_DEFAULT_SUMMARY_STATUS_STR_WIDTH_,
       xtest::StringAlignValues::ALIGN_RIGHT);
   const std::string expected("    FAILED");
+  EXPECT_EQ(actual, expected);
+}
+
+TEST(PrettyUnitTestResultPrinterTest, StaticMethodPrintTestName) {
+  xtest::testing::StdoutRedirectorContext stdout_redirector_context;
+  stdout_redirector_context.ReplaceStdoutWithContextBuffer();
+  xtest::PrettyUnitTestResultPrinter::PrintTestName(currentTest->M_suiteName,
+                                                    currentTest->M_testName);
+  stdout_redirector_context.RestoreStdout();
+  const std::string actual(stdout_redirector_context.m_output_buffer_);
+  const std::string expected(
+      "PrettyUnitTestResultPrinterTest.StaticMethodPrintTestName");
   EXPECT_EQ(actual, expected);
 }
 
