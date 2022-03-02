@@ -1,4 +1,4 @@
-# Copyright 2021, xtest Inc.
+# Copyright 2021, The xtest authors.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -11,7 +11,7 @@
 # copyright notice, this list of conditions and the following disclaimer
 # in the documentation and/or other materials provided with the
 # distribution.
-#     * Neither the name of xtest Inc. nor the names of its
+#     * Neither the name of The xtest authors. nor the names of its
 # contributors may be used to endorse or promote products derived from
 # this software without specific prior written permission.
 #
@@ -27,30 +27,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-cmake_minimum_required(VERSION 3.16.3)
-project(xtest
-	VERSION 1.0.0
-	HOMEPAGE_URL https://github.com/joshiayush/xtest/wiki
-	LANGUAGES C CXX)
+file(GLOB XTEST_TEST_SRC_FILES "*.cc")
 
-include_directories(include)
-
-# Note: This requires cmake to be run each time the files have changed to
-# configure the build system 
-file(GLOB_RECURSE XTEST_SRC_FILES "xtest/*.cc")
-
-option(BUILD_TESTS "Builds the tests for library xtest itself." OFF)
-option(BUILD_SAMPLES "Builds the samples for library xtest." OFF)
-
-add_library(${PROJECT_NAME} SHARED ${XTEST_SRC_FILES})
-set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PROJECT_VERSION} SOVERSION 1)
-
-install(TARGETS ${PROJECT_NAME} LIBRARY DESTINATION ${CMAKE_SOURCE_DIR}/build)
-
-if(BUILD_SAMPLES)
-	add_subdirectory(samples)
-endif()
-
-if (BUILD_TESTS)
-	add_subdirectory(tests)
-endif()
+add_executable(tests ${XTEST_TEST_SRC_FILES})
+target_link_libraries(tests ${PROJECT_NAME})
