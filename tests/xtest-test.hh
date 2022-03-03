@@ -30,6 +30,8 @@
 #ifndef XTEST_TESTS_XTEST_TEST_HH_
 #define XTEST_TESTS_XTEST_TEST_HH_
 
+#include <cstdio>
+#include <cstring>
 #include <string>
 
 #include "redirector.hh"
@@ -85,14 +87,30 @@ TEST(GetStringAlignedToTest, AlignRightWithDefaultSummaryStatusWidth) {
 }
 
 TEST(PrettyUnitTestResultPrinterTest, StaticMethodPrintTestName) {
-  xtest::testing::StdoutRedirectorContext stdout_redirector_context;
-  stdout_redirector_context.ReplaceStdoutWithContextBuffer();
+  xtest::testing::RedirectorContext stdout_redirector_context(
+      xtest::testing::RedirectorContextStream::kStdout);
+  stdout_redirector_context.ReplaceStreamWithContextBuffer();
   xtest::PrettyUnitTestResultPrinter::PrintTestName(currentTest->M_suiteName,
                                                     currentTest->M_testName);
-  stdout_redirector_context.RestoreStdout();
-  const std::string actual(stdout_redirector_context.m_output_buffer_);
+  stdout_redirector_context.RestoreStream();
+  const std::string actual(stdout_redirector_context.M_output_buffer_);
   const std::string expected(
       "PrettyUnitTestResultPrinterTest.StaticMethodPrintTestName");
+  EXPECT_EQ(actual, expected);
+}
+
+TEST(PrettyUnitTestResultPrinterTest, StaticMethodOnTestIterationStart) {
+  xtest::testing::RedirectorContext stdout_redirector_context(
+      xtest::testing::RedirectorContextStream::kStdout);
+  stdout_redirector_context.ReplaceStreamWithContextBuffer();
+  xtest::PrettyUnitTestResultPrinter::OnTestIterationStart();
+  stdout_redirector_context.RestoreStream();
+  const std::string actual(stdout_redirector_context.M_output_buffer_);
+  char expected[REDIRECTOR_BUFFER_SIZE];
+  std::snprintf(expected, REDIRECTOR_BUFFER_SIZE,
+                "[==========] Running %lu tests from %lu test suites.\n",
+                xtest::GetTestSuiteAndTestNumber().second,
+                xtest::GetTestSuiteAndTestNumber().first);
   EXPECT_EQ(actual, expected);
 }
 

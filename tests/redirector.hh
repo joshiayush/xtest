@@ -39,24 +39,55 @@
 
 namespace xtest {
 namespace testing {
-struct StdoutRedirectorContext {
- public:
-  void ReplaceStdoutWithContextBuffer();
-  void RestoreStdout();
-
- public:
-  int32_t m_stdout_;
-  char m_output_buffer_[REDIRECTOR_BUFFER_SIZE];
+enum class RedirectorContextStream {
+  kStdout,
+  kStderr,
 };
 
-struct StderrRedirectorContext {
+class RedirectorContext {
  public:
-  void ReplaceStderrWithContextBuffer();
-  void RestoreStderr();
+  // Construct a `RedirectorContext` instance for the given context stream.
+  //
+  // Filles `M_output_buffer_` variable with all `NULL` to over-write garbage
+  // values.
+  explicit RedirectorContext(const RedirectorContextStream& stream);
+
+  // Removes the file created for redirecting data from the standard streams.
+  ~RedirectorContext();
+
+  // Replaces given standard stream with context buffer for later retrieval of
+  // data.  This method is marked as `public` and meant to be used from the user
+  // code.
+  void ReplaceStreamWithContextBuffer();
+
+  // This method is used to restore the standard stream that was replaced by
+  // the context buffer.  This method is marked as `public` and meant to be used
+  // from the user code.
+  void RestoreStream();
+
+ private:
+  // Replaces given standard stream with context buffer for later retrieval of
+  // data.  This method is marked as `private` and meant to be used within the
+  // public methods.  This is the internal of `ReplaceStreamWithContextBuffer`
+  // method; allowing us to replace the given standard stream with the context
+  // buffer i.e., `M_output_buffer_`.
+  void ReplaceStreamWithContextBuffer(FILE*& stream);
+
+  // This method is used to restore the standard stream that was replaced by
+  // the context buffer.  This method is marked as `private` and meant to be
+  // used within the public methods.  This is the internal of `RestoreStream`
+  // method; allowing us to restore the standard streams at any point in our
+  // code.
+  void RestoreStream(FILE*& stream);
+
+ private:
+  RedirectorContextStream M_stream_;
+  int32_t M_out_err_fd_;
 
  public:
-  int32_t m_stderr_;
-  char m_output_buffer_[REDIRECTOR_BUFFER_SIZE];
+  char M_output_buffer_[REDIRECTOR_BUFFER_SIZE];
+  const char* M_redirector_file_name_;
+  const char* M_redirector_file_open_mode_;
 };
 }  // namespace testing
 }  // namespace xtest
