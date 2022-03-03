@@ -37,6 +37,13 @@
 #include "redirector.hh"
 #include "xtest.hh"
 
+// Verifies that the command line flag variables can be accessed in code once
+// `xtest.hh` has been included.
+TEST(CommandLineFlagsTest, CanBeAccessedInCodeOnceXTestHIsIncluded) {
+  bool dummy = XTEST_FLAG_GET(help) || XTEST_FLAG_GET(shuffle);
+  EXPECT_TRUE(dummy || !dummy);  // Suppresses warning that dummy is unused.
+}
+
 TEST(XtestDefaultSummaryStatusStrWidthTest, CheckIfVisible) {
   EXPECT_EQ(XTEST_DEFAULT_SUMMARY_STATUS_STR_WIDTH_, 10);
 }

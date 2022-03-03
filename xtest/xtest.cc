@@ -75,9 +75,6 @@ TimeInMillis Timer::Elapsed() {
 bool FLAG_xtest_help = false;
 bool FLAG_xtest_shuffle = false;
 
-#define XTEST_FLAG_GET(flagName) FLAG_xtest_##flagName
-#define XTEST_FLAG_SET(flagName, value) (void)(XTEST_FLAG_GET(flagName) = value)
-
 // Global counter for non-fatal test failures.
 //
 // This global counter is defined in the object file xtest.cc and incremented

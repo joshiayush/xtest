@@ -125,6 +125,12 @@ class MessageStream {
 #define MESSAGE() xtest::impl::MessageStream()
 }  // namespace impl
 
+extern bool FLAG_xtest_help;
+extern bool FLAG_xtest_shuffle;
+
+#define XTEST_FLAG_GET(flagName) ::xtest::FLAG_xtest_##flagName
+#define XTEST_FLAG_SET(flagName, value) (void)(XTEST_FLAG_GET(flagName) = value)
+
 // Global counter for non-fatal test failures.
 //
 // This global counter is defined in the object file xtest.cc and incremented
