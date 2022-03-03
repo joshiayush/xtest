@@ -114,4 +114,113 @@ TEST(PrettyUnitTestResultPrinterTest, StaticMethodOnTestIterationStart) {
   EXPECT_EQ(actual, expected);
 }
 
+// Testing static method `OnTestIterationEnd` is one of the most trickiest test
+// in library `xtest`.  You'll better understand it when you'll walk down the
+// test function.
+TEST(PrettyUnitTestResultPrinterTest, StaticMethodOnTestIterationEnd) {
+  xtest::testing::RedirectorContext stdout_redirector_context(
+      xtest::testing::RedirectorContextStream::kStdout);
+  stdout_redirector_context.ReplaceStreamWithContextBuffer();
+  xtest::PrettyUnitTestResultPrinter::OnTestIterationEnd();
+  stdout_redirector_context.RestoreStream();
+  const std::string actual(stdout_redirector_context.M_output_buffer_);
+
+  // We have to create a string identical to the result of
+  // `PrettyUnitTestResultPrinter::OnTestIterationEnd()` function.  Calling
+  // `PrettyUnitTestResultPrinter::OnTestIterationEnd()` function is going to
+  // produce a result for these tests so far with their passed and failed
+  // status so we have to simulate the behaviour of function
+  // `PrettyUnitTestResultPrinter::OnTestIterationEnd()` here inside this test
+  // suite.
+  char expected[REDIRECTOR_BUFFER_SIZE];
+
+  // Create the `expected` string with the summary of all the tests and passed
+  // tests.
+  std::snprintf(
+      expected, REDIRECTOR_BUFFER_SIZE,
+      "[%s] Ran %lu tests from %lu test suites.\n[%s] %lu test.\n",
+      xtest::GetStrFilledWith('=').c_str(),
+      xtest::GetTestSuiteAndTestNumber().second,
+      xtest::GetTestSuiteAndTestNumber().first,
+      xtest::GetStringAlignedTo("PASSED",
+                                XTEST_DEFAULT_SUMMARY_STATUS_STR_WIDTH_,
+                                xtest::StringAlignValues::ALIGN_CENTER)
+          .c_str(),
+      xtest::GetTestSuiteAndTestNumber().second - xtest::GetFailedTestCount());
+
+  // Now here comes the trickiest part of this test suite, we are going to
+  // simulate the behaviour of function
+  // `PrettyUnitTestResultPrinter::PrintFailedTests()` that is called inside of
+  // the function `PrettyUnitTestResultPrinter::OnTestIterationEnd()` when there
+  // are some failed tests.
+  if (xtest::GetFailedTestCount() != 0) {
+    // Because of limited memory
+    // `REDIRECTOR_BUFFER_SIZE - std::strlen(expected)` is going to be the
+    // amount of room left for failed tests output.
+    char* failed_tests_output =
+        new char[REDIRECTOR_BUFFER_SIZE - std::strlen(expected)];
+
+    // Create a string with the number of failed tests to later concatenate with
+    // the `expected` string.
+    std::snprintf(failed_tests_output,
+                  REDIRECTOR_BUFFER_SIZE - std::strlen(expected),
+                  "[%s] %lu test, listed below:\n",
+                  xtest::GetStringAlignedTo(
+                      "FAILED", XTEST_DEFAULT_SUMMARY_STATUS_STR_WIDTH_,
+                      xtest::StringAlignValues::ALIGN_CENTER)
+                      .c_str(),
+                  xtest::GetFailedTestCount());
+
+    xtest::UnitTest failedTests = xtest::GetFailedTests();
+    for (const xtest::UnitTestPair& testCase : failedTests) {
+      for (const xtest::TestRegistrar* const& test : testCase.second) {
+        // Because of limited memory
+        // `REDIRECTOR_BUFFER_SIZE - std::strlen(expected) -
+        // std::strlen(failed_tests_output)` is going to be the amount of room
+        // left for failed tests description.
+        char* failed_tests =
+            new char[REDIRECTOR_BUFFER_SIZE - std::strlen(expected) -
+                     std::strlen(failed_tests_output)];
+
+        // When there are failed tests we want to see the name of there test
+        // suite and there test name.
+        std::snprintf(failed_tests,
+                      REDIRECTOR_BUFFER_SIZE - std::strlen(expected) -
+                          std::strlen(failed_tests_output),
+                      "[%s] %s.%s\n",
+                      xtest::GetStringAlignedTo("FAILED").c_str(),
+                      test->M_suiteName, test->M_testName);
+
+        // Concatenate `failed_tests` string with `failed_tests_output` to see a
+        // complete description of tests that failed.
+        std::strcat(failed_tests_output, failed_tests);
+        delete[] failed_tests;
+      }
+    }
+
+    // Because of limited memory
+    // `REDIRECTOR_BUFFER_SIZE - std::strlen(expected) -
+    // std::strlen(failed_tests_output)` is going to be the amount of room left
+    // for failed tests summary.
+    char* summarize_failed_tests =
+        new char[REDIRECTOR_BUFFER_SIZE - std::strlen(expected) -
+                 std::strlen(failed_tests_output)];
+
+    // Create a summary string to see how many number of tests failed.
+    std::snprintf(summarize_failed_tests,
+                  REDIRECTOR_BUFFER_SIZE - std::strlen(expected) -
+                      std::strlen(failed_tests_output),
+                  "\n%lu FAILED %s\n", xtest::GetFailedTestCount(),
+                  (xtest::GetFailedTestCount() == 1 ? "TEST" : "TESTS"));
+
+    // Concatenate summary onto the `failed_tests_output` string.
+    std::strcat(failed_tests_output, summarize_failed_tests);
+    delete[] summarize_failed_tests;
+    // Finally concatenate `failed_tests_output` string onto `expected`.
+    std::strcat(expected, failed_tests_output);
+    delete[] failed_tests_output;
+  }
+  EXPECT_EQ(actual, expected);
+}
+
 #endif  // XTEST_TESTS_XTEST_TEST_HH_
