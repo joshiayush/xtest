@@ -207,15 +207,15 @@ std::string Message::GetString() const {
 //
 // The returned pair has the total number of test cases as its first element and
 // the total number of tests as its second element.
-static std::pair<std::uint64_t, std::uint64_t> GetTestSuiteAndTestsNumber() {
+TestSuiteAndTestNumberPair GetTestSuiteAndTestNumber() {
   if (G_n_testSuites != 0 && G_n_tests != 0)
-    return std::pair<std::uint64_t, std::uint64_t>{G_n_testSuites, G_n_tests};
+    return TestSuiteAndTestNumberPair{G_n_testSuites, G_n_tests};
   G_n_testSuites = G_n_tests = 0;
   for (const auto& testCase : GTestRegistryInst.M_testRegistryTable) {
     ++G_n_testSuites;
     G_n_tests += testCase.second.size();
   }
-  return std::pair<std::uint64_t, std::uint64_t>{G_n_testSuites, G_n_tests};
+  return TestSuiteAndTestNumberPair{G_n_testSuites, G_n_tests};
 }
 
 // Returns the `UnitTest` instance of failed tests.
@@ -327,8 +327,8 @@ void PrettyUnitTestResultPrinter::PrintFailedTests() {
 void PrettyUnitTestResultPrinter::OnTestIterationStart() {
   std::printf("[%s] ", GetStrFilledWith('=').c_str());
   std::printf("Running %lu tests from %lu test suites.\n",
-              GetTestSuiteAndTestsNumber().second,
-              GetTestSuiteAndTestsNumber().first);
+              GetTestSuiteAndTestNumber().second,
+              GetTestSuiteAndTestNumber().first);
   std::fflush(stdout);
 }
 
@@ -337,15 +337,15 @@ void PrettyUnitTestResultPrinter::OnTestIterationStart() {
 void PrettyUnitTestResultPrinter::OnTestIterationEnd() {
   std::printf("[%s] ", GetStrFilledWith('=').c_str());
   std::printf("Ran %lu tests from %lu test suites.\n",
-              GetTestSuiteAndTestsNumber().second,
-              GetTestSuiteAndTestsNumber().first);
+              GetTestSuiteAndTestNumber().second,
+              GetTestSuiteAndTestNumber().first);
 
   std::printf(
       "[%s] %lu test.\n",
       GetStringAlignedTo("PASSED", XTEST_DEFAULT_SUMMARY_STATUS_STR_WIDTH_,
                          ALIGN_CENTER)
           .c_str(),
-      GetTestSuiteAndTestsNumber().second - GetFailedTestCount());
+      GetTestSuiteAndTestNumber().second - GetFailedTestCount());
 
   if (GetFailedTestCount() == 0)
     goto fflushStream;

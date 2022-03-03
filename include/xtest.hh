@@ -177,6 +177,14 @@ std::string GetStringAlignedTo(
     const std::size_t& newStrWidth = XTEST_DEFAULT_SUMMARY_STATUS_STR_WIDTH_,
     const StringAlignValues& alignSide = ALIGN_CENTER);
 
+using TestSuiteAndTestNumberPair = std::pair<std::uint64_t, std::uint64_t>;
+
+// Returns the total number of test cases and tests registered.
+//
+// The returned pair has the total number of test cases as its first element and
+// the total number of tests as its second element.
+TestSuiteAndTestNumberPair GetTestSuiteAndTestNumber();
+
 // Runs all the registered test suites and returns the failure count.
 //
 // This function runs all the registered test suites in the
