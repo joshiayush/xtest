@@ -47,44 +47,6 @@ namespace impl {
 // suites.
 void SignalHandler(int param);
 
-// Special class to take the failure messages to the console.
-//
-// This class will print the streamable object in 'red' color as it depicts
-// 'ERROR'.  At this moment we don't have any functionality to colorify the
-// streamable object before putting it on the console.
-class AssertionFailure {
- private:
-  // The type of basic IO manipulators (endl, ends, and flush) for narrow
-  // streams.
-  //
-  // @TODO(joshiayush): Copy of the Message implementation of this type, if
-  // possible refactor into one single definition.
-  typedef std::ostream& (*BasicNarrowIoManip)(std::ostream&);
-
-  std::ostream& _M_stream;
-
- public:
-  AssertionFailure() : _M_stream(std::cerr) {}
-
-  template <typename Type>
-  AssertionFailure& operator<<(const Type& streamable) {
-    _M_stream << internal::StreamableToString(streamable);
-    return *this;
-  }
-
-  // Since the basic IO manipulators are overloaded for both narrow and wide
-  // streams, we have to provide this specialized definition of operator <<,
-  // even though its body is the same as the templatized version above.  Without
-  // this definition, streaming endl or other basic IO manipulators to Message
-  // will confuse the compiler.
-  AssertionFailure& operator<<(BasicNarrowIoManip val) {
-    _M_stream << val;
-    return *this;
-  }
-};
-
-#define FAIL() xtest::impl::AssertionFailure()
-
 // Special class to take streamables to the console and highlight them with
 // green color.
 //
