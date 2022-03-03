@@ -223,7 +223,7 @@ TestSuiteAndTestNumberPair GetTestSuiteAndTestNumber() {
 // Iterates over the `GTestRegistryInst.M_testRegistryTable` instance and adds
 // the pair who's `M_testResult` equals to `TestResult::FAILED` in the
 // `failed_tests` container.
-static UnitTest GetFailedTests() {
+UnitTest GetFailedTests() {
   UnitTest failed_tests;
   for (const UnitTestPair& testCase : GTestRegistryInst.M_testRegistryTable) {
     for (const auto& test : testCase.second) {
@@ -239,7 +239,7 @@ static UnitTest GetFailedTests() {
 //
 // This function keeps a count of the number of test suites that called the
 // `abort()` function in case of test failure assertion.
-static std::uint64_t GetFailedTestCount() {
+std::uint64_t GetFailedTestCount() {
   if (G_n_failedTests != 0)
     return G_n_failedTests;
   UnitTest failedTests = GetFailedTests();

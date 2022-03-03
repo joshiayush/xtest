@@ -185,6 +185,19 @@ using TestSuiteAndTestNumberPair = std::pair<std::uint64_t, std::uint64_t>;
 // the total number of tests as its second element.
 TestSuiteAndTestNumberPair GetTestSuiteAndTestNumber();
 
+// Returns the number of tests that failed during test execution.
+//
+// This function keeps a count of the number of test suites that called the
+// `abort()` function in case of test failure assertion.
+std::uint64_t GetFailedTestCount();
+
+// Returns the `UnitTest` instance of failed tests.
+//
+// Iterates over the `GTestRegistryInst.M_testRegistryTable` instance and adds
+// the pair who's `M_testResult` equals to `TestResult::FAILED` in the
+// `failed_tests` container.
+UnitTest GetFailedTests();
+
 // Runs all the registered test suites and returns the failure count.
 //
 // This function runs all the registered test suites in the
