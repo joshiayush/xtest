@@ -223,4 +223,32 @@ TEST(PrettyUnitTestResultPrinterTest, StaticMethodOnTestIterationEnd) {
   EXPECT_EQ(actual, expected);
 }
 
+TEST(PrettyUnitTestResultPrinterTest, StaticMethodOnEnvironmentsSetUpStart) {
+  xtest::testing::RedirectorContext stdout_redirector_context(
+      xtest::testing::RedirectorContextStream::kStdout);
+  stdout_redirector_context.ReplaceStreamWithContextBuffer();
+  xtest::PrettyUnitTestResultPrinter::OnEnvironmentsSetUpStart();
+  stdout_redirector_context.RestoreStream();
+  const std::string actual(stdout_redirector_context.M_output_buffer_);
+  char expected[REDIRECTOR_BUFFER_SIZE];
+  std::snprintf(expected, REDIRECTOR_BUFFER_SIZE,
+                "[%s] Global test environment set-up.",
+                xtest::GetStrFilledWith('-').c_str());
+  EXPECT_EQ(actual, expected);
+}
+
+TEST(PrettyUnitTestResultPrinterTest, StaticMethodOnEnvironmentsTearDownStart) {
+  xtest::testing::RedirectorContext stdout_redirector_context(
+      xtest::testing::RedirectorContextStream::kStdout);
+  stdout_redirector_context.ReplaceStreamWithContextBuffer();
+  xtest::PrettyUnitTestResultPrinter::OnEnvironmentsTearDownStart();
+  stdout_redirector_context.RestoreStream();
+  const std::string actual(stdout_redirector_context.M_output_buffer_);
+  char expected[REDIRECTOR_BUFFER_SIZE];
+  std::snprintf(expected, REDIRECTOR_BUFFER_SIZE,
+                "\n[%s] Global test environment tear-down.\n",
+                xtest::GetStrFilledWith('-').c_str());
+  EXPECT_EQ(actual, expected);
+}
+
 #endif  // XTEST_TESTS_XTEST_TEST_HH_
