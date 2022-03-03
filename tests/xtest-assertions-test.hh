@@ -47,8 +47,7 @@ TEST(AssertionContextTest, ReturnsFileNameAndLineNumber) {
   EXPECT_EQ(line, context.line());
 }
 
-TEST(AssertionContextTest,
-     ReturnsFileNameAndLineNumberAndPointerToCurrentTest) {
+TEST(AssertionContextTest, ReturnsFileNameLineNumberAndPointerToCurrentTest) {
   const char* file = "tests/xtest-assertions-test.hh";
   const uint64_t line = 42;
   xtest::internal::AssertionContext context(
