@@ -347,11 +347,9 @@ void PrettyUnitTestResultPrinter::OnTestIterationEnd() {
           .c_str(),
       GetTestSuiteAndTestNumber().second - GetFailedTestCount());
 
-  if (GetFailedTestCount() == 0)
-    goto fflushStream;
-  PrettyUnitTestResultPrinter::PrintFailedTests();
+  if (GetFailedTestCount() != 0)
+    PrettyUnitTestResultPrinter::PrintFailedTests();
 
-fflushStream:
   std::fflush(stdout);
 }
 
