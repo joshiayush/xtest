@@ -103,11 +103,9 @@ class TestRegistrar {
   const char* M_testName;   // Test name
   const char* M_suiteName;  // Test suite name
 
-  TestFunction M_testFunc;         // Test function to execute.
-  TestRegistrar* M_nextTestSuite;  // Pointer to the next TestRegistrar object
-                                   // i.e., to the next test suite.
-  TestResult M_testResult;         // Result of the test suite.
-  TimeInMillis M_elapsedTime;      // Elapsed time in milliseconds.
+  TestFunction M_testFunc;     // Test function to execute.
+  TestResult M_testResult;     // Result of the test suite.
+  TimeInMillis M_elapsedTime;  // Elapsed time in milliseconds.
 };
 
 // Constructs a 'map' object that links test suites to their test cases.

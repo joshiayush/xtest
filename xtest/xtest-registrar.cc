@@ -50,7 +50,6 @@ TestRegistrar::TestRegistrar(const char* suiteName, const char* testName,
     : M_suiteName(suiteName),
       M_testFunc(testFunc),
       M_testName(testName),
-      M_nextTestSuite(nullptr),
       M_testResult(TestResult::UNKNOWN) {
   GTestRegistryInst.M_testRegistryTable[M_suiteName].push_back(this);
 }
