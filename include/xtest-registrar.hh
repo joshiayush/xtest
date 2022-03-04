@@ -91,14 +91,6 @@ class TestRegistrar {
   TestRegistrar(const char* suiteName, const char* testName,
                 TestFunction testFunc);
 
-  // Destroys a TestRegistrar object.
-  //
-  // For now there is no certain code to destroy a TestRegistrar object.
-  //
-  // Note: Not marking as virtual because not sure if needed a v-table for
-  // destructor.
-  ~TestRegistrar() {}
-
  public:
   const char* M_testName;   // Test name
   const char* M_suiteName;  // Test suite name
