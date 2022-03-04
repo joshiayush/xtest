@@ -115,7 +115,8 @@ TEST(PrettyUnitTestResultPrinterTest, StaticMethodOnTestIterationStart) {
   const std::string actual(stdout_redirector_context.M_output_buffer_);
   char expected[REDIRECTOR_BUFFER_SIZE];
   std::snprintf(expected, REDIRECTOR_BUFFER_SIZE,
-                "[==========] Running %lu tests from %lu test suites.\n",
+                "[%s] Running %lu tests from %lu test suites.\n",
+                xtest::GetStrFilledWith('=').c_str(),
                 xtest::GetTestSuiteAndTestNumber().second,
                 xtest::GetTestSuiteAndTestNumber().first);
   EXPECT_EQ(actual, expected);
