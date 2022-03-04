@@ -37,20 +37,16 @@
 namespace xtest {
 // We initialize 'TestRegistry' instance here which then later gets served to
 // each file that include 'xtest-registrar.hh'.
-TestRegistry GTestRegistryInst = {{}, 0};
+XTestUnitTest GTestRegistryTable = {};
 
-// Construct a new TestRegistrar object.
-//
-// This constructor appends a new entry of test suite to GTestRegistryInst list.
-// We link the comming test suite to the TestRegistrar* type variable M_head
-// linked list declared inside of the struct TestRegistry to later traverse
-// through this list to execute each test suite.
+// Constructs a new TestRegistrar instance.  Also links test functions from
+// similar test suites together.
 TestRegistrar::TestRegistrar(const char* suiteName, const char* testName,
                              TestFunction testFunc)
     : M_suiteName(suiteName),
       M_testFunc(testFunc),
       M_testName(testName),
       M_testResult(TestResult::UNKNOWN) {
-  GTestRegistryInst.M_testRegistryTable[M_suiteName].push_back(this);
+  GTestRegistryTable[M_suiteName].push_back(this);
 }
 }  // namespace xtest

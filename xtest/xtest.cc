@@ -31,7 +31,6 @@
 
 #include <chrono>  // NOLINT
 #include <cinttypes>
-#include <csetjmp>
 #include <csignal>
 #include <cstdio>
 #include <cstring>
@@ -47,19 +46,6 @@
 #include "xtest-message.hh"
 
 namespace xtest {
-namespace impl {
-// Calls std::longjmp() with M_jumpOutOfTest instance as its first
-// argument.
-//
-// This function calls the std::longjmp() function with the std::jmp_buf
-// instance M_jumpOutOfTest as its first argument when the SIGABRT is raised
-// inside of the function run_registered_test() that runs the registered test
-// suites.
-void SignalHandler(int param) {
-  std::longjmp(GTestRegistryInst.M_jumpOutOfTest, 1);
-}
-}  // namespace impl
-
 namespace internal {
 Timer::Timer() : start_(std::chrono::steady_clock::now()) {}
 
@@ -208,21 +194,21 @@ TestSuiteAndTestNumberPair GetTestSuiteAndTestNumber() {
   if (G_n_testSuites != 0 && G_n_tests != 0)
     return TestSuiteAndTestNumberPair{G_n_testSuites, G_n_tests};
   G_n_testSuites = G_n_tests = 0;
-  for (const auto& testCase : GTestRegistryInst.M_testRegistryTable) {
+  for (const auto& testCase : GTestRegistryTable) {
     ++G_n_testSuites;
     G_n_tests += testCase.second.size();
   }
   return TestSuiteAndTestNumberPair{G_n_testSuites, G_n_tests};
 }
 
-// Returns the `UnitTest` instance of failed tests.
+// Returns the `XTestUnitTest` instance of failed tests.
 //
-// Iterates over the `GTestRegistryInst.M_testRegistryTable` instance and adds
-// the pair who's `M_testResult` equals to `TestResult::FAILED` in the
-// `failed_tests` container.
-UnitTest GetFailedTests() {
-  UnitTest failed_tests;
-  for (const UnitTestPair& testCase : GTestRegistryInst.M_testRegistryTable) {
+// Iterates over the `GTestRegistryTable` instance and adds the pair who's
+// `M_testResult` equals to `TestResult::FAILED` in the `failed_tests`
+// container.
+XTestUnitTest GetFailedTests() {
+  XTestUnitTest failed_tests;
+  for (const XTestUnitTestPair& testCase : GTestRegistryTable) {
     for (const auto& test : testCase.second) {
       if (test->M_testResult != TestResult::FAILED)
         continue;
@@ -239,8 +225,8 @@ UnitTest GetFailedTests() {
 std::uint64_t GetFailedTestCount() {
   if (G_n_failedTests != 0)
     return G_n_failedTests;
-  UnitTest failedTests = GetFailedTests();
-  for (const UnitTestPair& test_pair : failedTests)
+  XTestUnitTest failedTests = GetFailedTests();
+  for (const XTestUnitTestPair& test_pair : failedTests)
     for (const TestRegistrar* const& test : test_pair.second)
       ++G_n_failedTests;
   return G_n_failedTests;
@@ -269,7 +255,8 @@ void PrettyUnitTestResultPrinter::OnTestExecutionEnd() {
 
 // Prints out the information related to the number of tests a test suite
 // shares.
-void PrettyUnitTestResultPrinter::OnTestStart(const UnitTestPair& testSuite) {
+void PrettyUnitTestResultPrinter::OnTestStart(
+    const XTestUnitTestPair& testSuite) {
   std::printf("\n");
   std::printf("[%s] %lu tests from %s\n", GetStrFilledWith('-').c_str(),
               testSuite.second.size(), testSuite.first);
@@ -280,7 +267,8 @@ void PrettyUnitTestResultPrinter::OnTestStart(const UnitTestPair& testSuite) {
 // shares.  This function is very much similar to
 // `PrettyUnitTestResultPrinter::OnTestStart()` but should be ran after
 // executing all the tests of a test suite.
-void PrettyUnitTestResultPrinter::OnTestEnd(const UnitTestPair& testSuite) {
+void PrettyUnitTestResultPrinter::OnTestEnd(
+    const XTestUnitTestPair& testSuite) {
   std::printf("[%s] %lu tests from %s", GetStrFilledWith('-').c_str(),
               testSuite.second.size(), testSuite.first);
   TimeInMillis elapsedTime = 0;
@@ -303,8 +291,8 @@ void PrettyUnitTestResultPrinter::PrintFailedTests() {
           .c_str(),
       GetFailedTestCount());
 
-  UnitTest failedTests = GetFailedTests();
-  for (const UnitTestPair& testCase : failedTests) {
+  XTestUnitTest failedTests = GetFailedTests();
+  for (const XTestUnitTestPair& testCase : failedTests) {
     for (const TestRegistrar* const& test : testCase.second) {
       std::printf("[%s] ", GetStringAlignedTo("FAILED").c_str());
       PrettyUnitTestResultPrinter::PrintTestName(test->M_suiteName,
@@ -374,28 +362,17 @@ void PrettyUnitTestResultPrinter::OnEnvironmentsTearDownStart() {
 // Runs the registered test suite.
 //
 // This function runs the registered test suite in the
-// `xtest::GTestRegistryInst.M_head instance` while also handling the abort
-// signals raised by `ASSERT_*` assertions.
+// `xtest::GTestRegistryTable` instance while also handling the abort signals
+// raised by `ASSERT_*` assertions.
 //
 // In case an assertion fails then this function marks that test suite as
 // `FAILED` while silently continuing executing rest of the test suites.
 static void RunRegisteredTestSuite(const std::vector<TestRegistrar*>& tests) {
-  void (*SavedSignalHandler)(int);
-  SavedSignalHandler = std::signal(SIGABRT, impl::SignalHandler);
   for (TestRegistrar* const& test : tests) {
     if (test->M_testFunc == nullptr)
       continue;
     internal::Timer timer;
-    // We are setting a jump here to later mark the test result as `FAILED` in
-    // case the `test->M_testFunc` raised an abort signal result of an
-    // `ASSERT_*` assertion.
-    if (setjmp(GTestRegistryInst.M_jumpOutOfTest)) {
-      test->M_testResult = TestResult::FAILED;
-    } else {
-      test->M_testFunc(&GTestRegistryInst, test);
-      if (test->M_testResult == TestResult::UNKNOWN)
-        test->M_testResult = TestResult::PASSED;
-    }
+    test->M_testFunc(test);
     test->M_elapsedTime = timer.Elapsed();
   }
 }
@@ -403,11 +380,11 @@ static void RunRegisteredTestSuite(const std::vector<TestRegistrar*>& tests) {
 // Runs all the registered test suites and returns the failure count.
 //
 // This function runs all the registered test suites in the
-// `xtest::GTestRegistryInst.M_head instance` while also handling the abort
+// `xtest::GTestRegistryTable instance` while also handling the abort
 // signals raised by `ASSERT_*` assertions.
 uint64_t RunRegisteredTests() {
   PrettyUnitTestResultPrinter::OnTestExecutionStart();
-  for (const UnitTestPair& testSuite : GTestRegistryInst.M_testRegistryTable) {
+  for (const XTestUnitTestPair& testSuite : GTestRegistryTable) {
     PrettyUnitTestResultPrinter::OnTestStart(testSuite);
     RunRegisteredTestSuite(testSuite.second);
     PrettyUnitTestResultPrinter::OnTestEnd(testSuite);

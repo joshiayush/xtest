@@ -30,7 +30,6 @@
 #ifndef XTEST_INCLUDE_XTEST_REGISTRAR_HH_
 #define XTEST_INCLUDE_XTEST_REGISTRAR_HH_
 
-#include <csetjmp>
 #include <cstdint>
 #include <iostream>
 #include <map>
@@ -39,31 +38,28 @@
 
 #include "internal/xtest-port.hh"
 
+namespace xtest {
+struct TestRegistrar;
+
+using XTestUnitTest = std::map<const char*, std::vector<TestRegistrar*>>;
+using XTestUnitTestPair = std::pair<const char*, std::vector<TestRegistrar*>>;
+
 // Creates a test suite and register it using TestRegistrar.
 //
 // This macro expands to a function declaration and definition.
 // Declaration for registering your test suite for automatic test execution and
 // definition that contains your test suite body.
 //
-// Note: For the best usage of this macro avoid giving same suiteName and
-// testName to different test suites, otherwise compiler will complain
-// regarding the multiple definitions and declarations of the same function.
-//
-// Should we encapsulate `testRegistry` and `currentTest` into a test context
-// struct?
+// For the best usage of this macro avoid giving same suiteName and testName to
+// different test suites, otherwise compiler will complain regarding the
+// multiple definitions and declarations of the same function.
 #define TEST(suiteName, testName)                                              \
-  void TESTFUNCTION__##suiteName##testName(xtest::TestRegistry* testRegistry,  \
-                                           xtest::TestRegistrar* currentTest); \
+  void TESTFUNCTION__##suiteName##testName(xtest::TestRegistrar* currentTest); \
   namespace {                                                                  \
   xtest::TestRegistrar TESTREGISTRAR__##suiteName##testName(                   \
       #suiteName, #testName, TESTFUNCTION__##suiteName##testName);             \
   }                                                                            \
-  void TESTFUNCTION__##suiteName##testName(xtest::TestRegistry* testRegistry,  \
-                                           xtest::TestRegistrar* currentTest)
-
-namespace xtest {
-struct TestRegistrar;
-struct TestRegistry;
+  void TESTFUNCTION__##suiteName##testName(xtest::TestRegistrar* currentTest)
 
 typedef internal::TimeInMillis TimeInMillis;
 
@@ -71,58 +67,28 @@ typedef internal::TimeInMillis TimeInMillis;
 //
 // This typedef is required to pass the test suite to TestRegistrar constructor
 // to register as a test suite entry for automatic test execution.
-//
-// This function also takes in a pointer to the TestRegistry structure which is
-// a container for the pointer that points to the head of the test suites linked
-// list and a pointer to the current test i.e., TestRegistrar instance.
-typedef void (*TestFunction)(TestRegistry* testRegistry,
-                             TestRegistrar* currentTest);
+typedef void (*TestFunction)(TestRegistrar* currentTest);
 
 enum class TestResult { UNKNOWN, PASSED, FAILED };
 
 class TestRegistrar {
  public:
-  // Construct a new TestRegistrar object.
-  //
-  // This constructor appends a new entry of test suite to testRegistry list.
-  // We link the comming test suite to the TestRegistrar* type variable
-  // M_head linked list declared inside of the struct TestRegistry to
-  // later traverse through this list to execute each test suite.
+  // Constructs a new TestRegistrar instance.  Also links test functions from
+  // similar test suites together.
   TestRegistrar(const char* suiteName, const char* testName,
                 TestFunction testFunc);
 
  public:
-  const char* M_testName;   // Test name
-  const char* M_suiteName;  // Test suite name
+  const char* M_testName;   // Test name.
+  const char* M_suiteName;  // Test suite name.
 
   TestFunction M_testFunc;     // Test function to execute.
   TestResult M_testResult;     // Result of the test suite.
   TimeInMillis M_elapsedTime;  // Elapsed time in milliseconds.
 };
 
-// Constructs a 'map' object that links test suites to their test cases.
-//
-// This structure contains a 'map' instance that links test suites with their
-// test cases to traverse through all of the test cases and run them to later
-// group the result of test cases with their test suites.
-//
-// This structure also contains an instance of std::jmp_buf that stores the
-// environment information for the function xtest::run_registered_tests().
-struct TestRegistry {
- public:
-  std::map<const char*, std::vector<TestRegistrar*>> M_testRegistryTable;
-
-  // M_jumpOutOfTest instance stores the environment information for function
-  // run_registered_tests() to later make a long jump using function
-  // std::longjmp to register the test result as TestResult::FAILED.
-  std::jmp_buf M_jumpOutOfTest;
-};
-
-using UnitTest = std::map<const char*, std::vector<TestRegistrar*>>;
-using UnitTestPair = std::pair<const char*, std::vector<TestRegistrar*>>;
-
-// TestRegistry instance that links nodes of different test suites.
-extern TestRegistry GTestRegistryInst;
+// `XTestUnitTest` instance that links nodes of different test suites.
+extern XTestUnitTest GTestRegistryTable;
 }  // namespace xtest
 
 #endif  // XTEST_INCLUDE_XTEST_REGISTRAR_HH_

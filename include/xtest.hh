@@ -39,14 +39,6 @@
 
 namespace xtest {
 namespace impl {
-// Calls `std::longjmp()` with `M_jumpOutOfTest` instance as its first argument.
-//
-// This function calls the `std::longjmp()` function with the `std::jmp_buf`
-// instance `M_jumpOutOfTest` as its first argument when the `SIGABRT` is raised
-// inside of the function `RunRegisteredTests()` that runs the registered test
-// suites.
-void SignalHandler(int param);
-
 // Special class to take streamables to the console and highlight them with
 // green color.
 //
@@ -164,7 +156,7 @@ std::uint64_t GetFailedTestCount();
 // Iterates over the `GTestRegistryInst.M_testRegistryTable` instance and adds
 // the pair who's `M_testResult` equals to `TestResult::FAILED` in the
 // `failed_tests` container.
-UnitTest GetFailedTests();
+XTestUnitTest GetFailedTests();
 
 // Runs all the registered test suites and returns the failure count.
 //
@@ -186,7 +178,7 @@ class PrettyUnitTestResultPrinter {
 
   // Prints out the information related to the number of tests a test suite
   // shares.
-  static void OnTestStart(const UnitTestPair& testSuite);
+  static void OnTestStart(const XTestUnitTestPair& testSuite);
 
   // Prints the number of test suites and tests to run.  Should only be called
   // before starting iteration over the registered test suites.
@@ -206,7 +198,7 @@ class PrettyUnitTestResultPrinter {
   // shares.  This function is very much similar to
   // `PrettyUnitTestResultPrinter::OnTestStart()` but should be ran after
   // executing all the tests of a test suite.
-  static void OnTestEnd(const UnitTestPair& testSuite);
+  static void OnTestEnd(const XTestUnitTestPair& testSuite);
 
   // Prints number of test suites and tests ran.  Should only be called after
   // iterating over all the registered test suites.

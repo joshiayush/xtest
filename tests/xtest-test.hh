@@ -179,8 +179,8 @@ TEST(PrettyUnitTestResultPrinterTest, StaticMethodOnTestIterationEnd) {
                       .c_str(),
                   xtest::GetFailedTestCount());
 
-    xtest::UnitTest failedTests = xtest::GetFailedTests();
-    for (const xtest::UnitTestPair& testCase : failedTests) {
+    xtest::XTestUnitTest failedTests = xtest::GetFailedTests();
+    for (const xtest::XTestUnitTestPair& testCase : failedTests) {
       for (const xtest::TestRegistrar* const& test : testCase.second) {
         // Because of limited memory
         // `REDIRECTOR_BUFFER_SIZE - std::strlen(expected) -
