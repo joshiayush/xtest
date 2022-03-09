@@ -87,12 +87,12 @@ std::uint64_t G_n_testSuites = 0;
 std::uint64_t G_n_failedTests = 0;
 
 static const char kHelpMessage[] =
-    "This program contains tests written using xtest. You can use the\n"
+    "This program contains tests written using xtest.  You can use the\n"
     "following command line flags to control its behaviour:\n"
     "\n"
     "Test Execution:\n"
     "   --shuffle\n"
-    "     Randomize tests' orders. (In development)\n";
+    "     Randomize tests' order. (In development)\n";
 
 // A copy of all command line arguments.  Set by InitXTest().
 static std::vector<std::string> G_argvs;
