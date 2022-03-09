@@ -39,6 +39,14 @@
 
 namespace xtest {
 namespace impl {
+// Calls `std::longjmp()` with `M_jumpOutOfTest` instance as its first argument.
+//
+// This function calls the `std::longjmp()` function with the `std::jmp_buf`
+// instance `M_jumpOutOfTest` as its first argument when the `SIGABRT` is raised
+// inside of the function `RunRegisteredTests()` that runs the registered test
+// suites.
+void SignalHandler(int param);
+
 // Special class to take streamables to the console and highlight them with
 // green color.
 //

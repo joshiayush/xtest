@@ -31,6 +31,7 @@
 
 #include <chrono>  // NOLINT
 #include <cinttypes>
+#include <csetjmp>
 #include <csignal>
 #include <cstdio>
 #include <cstring>
@@ -46,6 +47,19 @@
 #include "xtest-message.hh"
 
 namespace xtest {
+namespace impl {
+// Calls std::longjmp() with M_jumpOutOfTest instance as its first
+// argument.
+//
+// This function calls the std::longjmp() function with the std::jmp_buf
+// instance M_jumpOutOfTest as its first argument when the SIGABRT is raised
+// inside of the function run_registered_test() that runs the registered test
+// suites.
+void SignalHandler(int param) {
+  std::longjmp(XTestRegistryInstance.M_jumpOutOfTest, 1);
+}
+}  // namespace impl
+
 namespace internal {
 Timer::Timer() : start_(std::chrono::steady_clock::now()) {}
 
@@ -194,7 +208,7 @@ TestSuiteAndTestNumberPair GetTestSuiteAndTestNumber() {
   if (G_n_testSuites != 0 && G_n_tests != 0)
     return TestSuiteAndTestNumberPair{G_n_testSuites, G_n_tests};
   G_n_testSuites = G_n_tests = 0;
-  for (const auto& testCase : GTestRegistryTable) {
+  for (const auto& testCase : XTestRegistryInstance.M_testRegistryTable) {
     ++G_n_testSuites;
     G_n_tests += testCase.second.size();
   }
@@ -203,12 +217,13 @@ TestSuiteAndTestNumberPair GetTestSuiteAndTestNumber() {
 
 // Returns the `XTestUnitTest` instance of failed tests.
 //
-// Iterates over the `GTestRegistryTable` instance and adds the pair who's
-// `M_testResult` equals to `TestResult::FAILED` in the `failed_tests`
-// container.
+// Iterates over the `XTestRegistryInstance.M_testRegistryTable` instance and
+// adds the pair who's `M_testResult` equals to `TestResult::FAILED` in the
+// `failed_tests` container.
 XTestUnitTest GetFailedTests() {
   XTestUnitTest failed_tests;
-  for (const XTestUnitTestPair& testCase : GTestRegistryTable) {
+  for (const XTestUnitTestPair& testCase :
+       XTestRegistryInstance.M_testRegistryTable) {
     for (const auto& test : testCase.second) {
       if (test->M_testResult != TestResult::FAILED)
         continue;
@@ -362,17 +377,30 @@ void PrettyUnitTestResultPrinter::OnEnvironmentsTearDownStart() {
 // Runs the registered test suite.
 //
 // This function runs the registered test suite in the
-// `xtest::GTestRegistryTable` instance while also handling the abort signals
-// raised by `ASSERT_*` assertions.
+// `xtest::XTestRegistryInstance.M_testRegistryTable` instance while also
+// handling the abort signals raised by `ASSERT_*` assertions.
 //
 // In case an assertion fails then this function marks that test suite as
 // `FAILED` while silently continuing executing rest of the test suites.
 static void RunRegisteredTestSuite(const std::vector<TestRegistrar*>& tests) {
+  void (*SavedSignalHandler)(int);
+  SavedSignalHandler = std::signal(SIGABRT, impl::SignalHandler);
   for (TestRegistrar* const& test : tests) {
     if (test->M_testFunc == nullptr)
       continue;
     internal::Timer timer;
-    test->M_testFunc(test);
+    // We are setting a jump here to later mark the test result as `FAILED` in
+    // case the `test->M_testFunc` raised an abort signal result of an
+    // `ASSERT_*` assertion.  This step is reduntant but it is done to make
+    // readers understand that the `abort` signal will be caught here and the
+    // test suite will be exited.
+    if (setjmp(XTestRegistryInstance.M_jumpOutOfTest)) {
+      test->M_testResult = TestResult::FAILED;
+    } else {
+      test->M_testFunc(test);
+      if (test->M_testResult == TestResult::UNKNOWN)
+        test->M_testResult = TestResult::PASSED;
+    }
     test->M_elapsedTime = timer.Elapsed();
   }
 }
@@ -380,11 +408,12 @@ static void RunRegisteredTestSuite(const std::vector<TestRegistrar*>& tests) {
 // Runs all the registered test suites and returns the failure count.
 //
 // This function runs all the registered test suites in the
-// `xtest::GTestRegistryTable instance` while also handling the abort
-// signals raised by `ASSERT_*` assertions.
+// `xtest::XTestRegistryInstance.M_testRegistryTable` instance while also
+// handling the abort signals raised by `ASSERT_*` assertions.
 uint64_t RunRegisteredTests() {
   PrettyUnitTestResultPrinter::OnTestExecutionStart();
-  for (const XTestUnitTestPair& testSuite : GTestRegistryTable) {
+  for (const XTestUnitTestPair& testSuite :
+       XTestRegistryInstance.M_testRegistryTable) {
     PrettyUnitTestResultPrinter::OnTestStart(testSuite);
     RunRegisteredTestSuite(testSuite.second);
     PrettyUnitTestResultPrinter::OnTestEnd(testSuite);

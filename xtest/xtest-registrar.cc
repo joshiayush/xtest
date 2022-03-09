@@ -37,7 +37,7 @@
 namespace xtest {
 // We initialize 'TestRegistry' instance here which then later gets served to
 // each file that include 'xtest-registrar.hh'.
-XTestUnitTest GTestRegistryTable = {};
+TestRegistry XTestRegistryInstance = {{}, 0};
 
 // Constructs a new TestRegistrar instance.  Also links test functions from
 // similar test suites together.
@@ -47,6 +47,6 @@ TestRegistrar::TestRegistrar(const char* suiteName, const char* testName,
       M_testFunc(testFunc),
       M_testName(testName),
       M_testResult(TestResult::UNKNOWN) {
-  GTestRegistryTable[M_suiteName].push_back(this);
+  XTestRegistryInstance.M_testRegistryTable[M_suiteName].push_back(this);
 }
 }  // namespace xtest

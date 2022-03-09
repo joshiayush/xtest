@@ -30,6 +30,7 @@
 #ifndef XTEST_INCLUDE_XTEST_REGISTRAR_HH_
 #define XTEST_INCLUDE_XTEST_REGISTRAR_HH_
 
+#include <csetjmp>
 #include <cstdint>
 #include <iostream>
 #include <map>
@@ -87,8 +88,26 @@ class TestRegistrar {
   TimeInMillis M_elapsedTime;  // Elapsed time in milliseconds.
 };
 
+// Constructs a `map` object that links test suites to their test cases.
+//
+// This structure contains a `map` instance that links test suites with their
+// test cases to traverse through all of the test cases and run them to later
+// group the result of test cases with their test suites.
+//
+// This structure also contains an instance of `std::jmp_buf` that stores the
+// environment information for the function `xtest::RunRegisteredTests()`.
+struct TestRegistry {
+ public:
+  XTestUnitTest M_testRegistryTable;
+
+  // M_jumpOutOfTest instance stores the environment information for function
+  // run_registered_tests() to later make a long jump using function
+  // std::longjmp to register the test result as TestResult::FAILED.
+  std::jmp_buf M_jumpOutOfTest;
+};
+
 // `XTestUnitTest` instance that links nodes of different test suites.
-extern XTestUnitTest GTestRegistryTable;
+extern TestRegistry XTestRegistryInstance;
 }  // namespace xtest
 
 #endif  // XTEST_INCLUDE_XTEST_REGISTRAR_HH_
