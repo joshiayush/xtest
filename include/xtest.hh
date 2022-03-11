@@ -100,58 +100,6 @@ extern bool FLAG_xtest_shuffle;
 // Google Test decide.
 extern bool FLAG_xtest_color;
 
-// Global counter for non-fatal test failures.
-//
-// This global counter is defined in the object file xtest.cc and incremented
-// every time a non-fatal test assertion fails.
-extern uint64_t G_n_testFailures;
-
-// New string width for the aligned string returned by the function
-// `GetStringAlignedTo()`.
-#define XTEST_DEFAULT_SUMMARY_STATUS_STR_WIDTH_ 10
-
-// Returns a string of length `width` all filled with the character `chr`.
-//
-// This function is mainly used to decorate the box used in the test summary
-// like show below where we are filling the boxes with either `-` or `=`
-// character,
-//
-// ```shell
-// [‑‑‑‑‑‑‑‑‑‑] Global test environment tear‑down
-// [==========] 2 tests from 1 test case ran. (10 ms total)
-// [  PASSED  ] 1 test.
-// [  FAILED  ] 1 test, listed below:
-// [  FAILED  ] SquareRootTest.PositiveNos
-//
-// 1 FAILED TEST
-// ```
-std::string GetStrFilledWith(
-    const char& chr,
-    std::size_t width = XTEST_DEFAULT_SUMMARY_STATUS_STR_WIDTH_);
-
-enum StringAlignValues { ALIGN_RIGHT, ALIGN_LEFT, ALIGN_CENTER };
-
-// Align the original string to the given alignment inside of the new sized
-// buffer.
-//
-// This function is mainly used to print out nice visual representation of the
-// test results like the following,
-//
-// ```shell
-// [  FAILED  ] SquareRootTest.PositiveNos
-// ```
-//
-// In order to align the letter `FAILED` to the center we use this function with
-// a 'alignSide' of 'ALIGN_CENTER'.
-//
-// If not given this function will use the default values for `newStrWidth` and
-// `alignSide` i.e., `XTEST_DEFAULT_SUMMARY_STATUS_STR_WIDTH_` and
-// `ALIGN_CENTER` respectively.
-std::string GetStringAlignedTo(
-    const std::string& str,
-    const std::size_t& newStrWidth = XTEST_DEFAULT_SUMMARY_STATUS_STR_WIDTH_,
-    const StringAlignValues& alignSide = ALIGN_CENTER);
-
 using TestSuiteAndTestNumberPair = std::pair<std::uint64_t, std::uint64_t>;
 
 // Returns the total number of test cases and tests registered.

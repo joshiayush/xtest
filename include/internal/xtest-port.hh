@@ -90,14 +90,73 @@ class Timer {
  private:
   std::chrono::steady_clock::time_point start_;
 };
+}  // namespace internal
 
+// clang-format off
 #define XTEST_NAME_ "Xtest"
 #define XTEST_FLAG_PREFIX_ "xtest_"
 
-#define XTEST_FLAG(flagName) ::xtest::FLAG_xtest_##flagName
-#define XTEST_FLAG_GET(flagName) XTEST_FLAG(flagName)
+#define XTEST_FLAG(flagName)            ::xtest::FLAG_xtest_##flagName
+#define XTEST_FLAG_GET(flagName)        XTEST_FLAG(flagName)
 #define XTEST_FLAG_SET(flagName, value) (void)(XTEST_FLAG(flagName) = (value))
-}  // namespace internal
+
+#define XTEST_GLOBAL_INSTANCE_PREFIX_           xtest_global_
+#define XTEST_GLOBAL_INSTANCE_(name)            XTEST_GLOBAL_INSTANCE_PREFIX_##name
+#define XTEST_GLOBAL_INSTANCE_GET_(name)        ::xtest::XTEST_GLOBAL_INSTANCE_(name)
+#define XTEST_GLOBAL_INSTANCE_SET_(name, value) (void)(::xtest::XTEST_GLOBAL_INSTANCE_(name) = (value))
+// clang-format on
+
+// Global counter for non-fatal test failures.
+//
+// This global counter is defined in the object file xtest.cc and incremented
+// every time a non-fatal test assertion fails.
+extern uint64_t G_n_testFailures;
+
+// New string width for the aligned string returned by the function
+// `GetStringAlignedTo()`.
+#define XTEST_DEFAULT_SUMMARY_STATUS_STR_WIDTH_ 10
+
+// Returns a string of length `width` all filled with the character `chr`.
+//
+// This function is mainly used to decorate the box used in the test summary
+// like show below where we are filling the boxes with either `-` or `=`
+// character,
+//
+// ```shell
+// [‑‑‑‑‑‑‑‑‑‑] Global test environment tear‑down
+// [==========] 2 tests from 1 test case ran. (10 ms total)
+// [  PASSED  ] 1 test.
+// [  FAILED  ] 1 test, listed below:
+// [  FAILED  ] SquareRootTest.PositiveNos
+//
+// 1 FAILED TEST
+// ```
+std::string GetStrFilledWith(
+    const char& chr,
+    std::size_t width = XTEST_DEFAULT_SUMMARY_STATUS_STR_WIDTH_);
+
+enum StringAlignValues { ALIGN_RIGHT, ALIGN_LEFT, ALIGN_CENTER };
+
+// Align the original string to the given alignment inside of the new sized
+// buffer.
+//
+// This function is mainly used to print out nice visual representation of the
+// test results like the following,
+//
+// ```shell
+// [  FAILED  ] SquareRootTest.PositiveNos
+// ```
+//
+// In order to align the letter `FAILED` to the center we use this function with
+// a 'alignSide' of 'ALIGN_CENTER'.
+//
+// If not given this function will use the default values for `newStrWidth` and
+// `alignSide` i.e., `XTEST_DEFAULT_SUMMARY_STATUS_STR_WIDTH_` and
+// `ALIGN_CENTER` respectively.
+std::string GetStringAlignedTo(
+    const std::string& str,
+    const std::size_t& newStrWidth = XTEST_DEFAULT_SUMMARY_STATUS_STR_WIDTH_,
+    const StringAlignValues& alignSide = ALIGN_CENTER);
 }  // namespace xtest
 
 #endif  // XTEST_INCLUDE_INTERNAL_XTEST_PORT_HH_

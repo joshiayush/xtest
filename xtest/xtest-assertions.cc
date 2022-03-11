@@ -35,7 +35,6 @@
 #include "internal/xtest-port.hh"
 #include "internal/xtest-printers.hh"
 #include "xtest-registrar.hh"
-#include "xtest.hh"
 
 namespace xtest {
 namespace internal {
