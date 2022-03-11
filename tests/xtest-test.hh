@@ -34,6 +34,7 @@
 #include <cstring>
 #include <string>
 
+#include "internal/xtest-printers.hh"
 #include "redirector.hh"
 #include "xtest.hh"
 
@@ -114,11 +115,14 @@ TEST(PrettyUnitTestResultPrinterTest, StaticMethodOnTestIterationStart) {
   stdout_redirector_context.RestoreStream();
   const std::string actual(stdout_redirector_context.M_output_buffer_);
   char expected[REDIRECTOR_BUFFER_SIZE];
-  std::snprintf(expected, REDIRECTOR_BUFFER_SIZE,
-                "[%s] Running %lu tests from %lu test suites.\n",
-                xtest::GetStrFilledWith('=').c_str(),
-                xtest::GetTestSuiteAndTestNumber().second,
-                xtest::GetTestSuiteAndTestNumber().first);
+  std::snprintf(
+      expected, REDIRECTOR_BUFFER_SIZE,
+      "\033[0;3%sm[%s] \033[mRunning %lu tests from %lu test suites.\n",
+      xtest::internal::GetAnsiColorCode(xtest::internal::XTestColor::kGreen)
+          .c_str(),
+      xtest::GetStrFilledWith('=').c_str(),
+      xtest::GetTestSuiteAndTestNumber().second,
+      xtest::GetTestSuiteAndTestNumber().first);
   EXPECT_EQ(actual, expected);
 }
 
@@ -146,7 +150,10 @@ TEST(PrettyUnitTestResultPrinterTest, StaticMethodOnTestIterationEnd) {
   // tests.
   std::snprintf(
       expected, REDIRECTOR_BUFFER_SIZE,
-      "[%s] Ran %lu tests from %lu test suites.\n[%s] %lu test.\n",
+      "\033[0;3%sm[%s] \033[mRan %lu tests from %lu test suites.\n[%s] %lu "
+      "test.\n",
+      xtest::internal::GetAnsiColorCode(xtest::internal::XTestColor::kGreen)
+          .c_str(),
       xtest::GetStrFilledWith('=').c_str(),
       xtest::GetTestSuiteAndTestNumber().second,
       xtest::GetTestSuiteAndTestNumber().first,
@@ -239,9 +246,12 @@ TEST(PrettyUnitTestResultPrinterTest, StaticMethodOnEnvironmentsSetUpStart) {
   stdout_redirector_context.RestoreStream();
   const std::string actual(stdout_redirector_context.M_output_buffer_);
   char expected[REDIRECTOR_BUFFER_SIZE];
-  std::snprintf(expected, REDIRECTOR_BUFFER_SIZE,
-                "[%s] Global test environment set-up.",
-                xtest::GetStrFilledWith('-').c_str());
+  std::snprintf(
+      expected, REDIRECTOR_BUFFER_SIZE,
+      "\033[0;3%sm[%s] \033[mGlobal test environment set-up.",
+      xtest::internal::GetAnsiColorCode(xtest::internal::XTestColor::kGreen)
+          .c_str(),
+      xtest::GetStrFilledWith('-').c_str());
   EXPECT_EQ(actual, expected);
 }
 
@@ -253,9 +263,12 @@ TEST(PrettyUnitTestResultPrinterTest, StaticMethodOnEnvironmentsTearDownStart) {
   stdout_redirector_context.RestoreStream();
   const std::string actual(stdout_redirector_context.M_output_buffer_);
   char expected[REDIRECTOR_BUFFER_SIZE];
-  std::snprintf(expected, REDIRECTOR_BUFFER_SIZE,
-                "\n[%s] Global test environment tear-down.\n",
-                xtest::GetStrFilledWith('-').c_str());
+  std::snprintf(
+      expected, REDIRECTOR_BUFFER_SIZE,
+      "\n\033[0;3%sm[%s] \033[mGlobal test environment tear-down.\n",
+      xtest::internal::GetAnsiColorCode(xtest::internal::XTestColor::kGreen)
+          .c_str(),
+      xtest::GetStrFilledWith('-').c_str());
   EXPECT_EQ(actual, expected);
 }
 

@@ -33,6 +33,7 @@
 #include <cstdio>
 
 #include "internal/xtest-port.hh"
+#include "internal/xtest-printers.hh"
 #include "xtest-registrar.hh"
 #include "xtest.hh"
 
@@ -67,11 +68,11 @@ AssertionResult AssertionFailure(const bool& is_fatal) {
 // Prints out the information of the test suite and the test name.
 void PrettyAssertionResultPrinter::OnTestAssertionStart(
     const TestRegistrar* const& test) {
-  std::printf("[%s] %s.%s",
-              ::xtest::GetStringAlignedTo(
-                  "RUN", XTEST_DEFAULT_SUMMARY_STATUS_STR_WIDTH_, ALIGN_LEFT)
-                  .c_str(),
-              test->M_suiteName, test->M_testName);
+  ColoredPrintf(XTestColor::kGreen, "[%s] ",
+                ::xtest::GetStringAlignedTo(
+                    "RUN", XTEST_DEFAULT_SUMMARY_STATUS_STR_WIDTH_, ALIGN_LEFT)
+                    .c_str());
+  std::printf("%s.%s", test->M_suiteName, test->M_testName);
   std::printf("\n");
   std::fflush(stdout);
 }
@@ -80,16 +81,20 @@ void PrettyAssertionResultPrinter::OnTestAssertionStart(
 // assertion result.
 void PrettyAssertionResultPrinter::OnTestAssertionEnd(
     const TestRegistrar* const& test, const TimeInMillis& elapsed_time) {
-  std::printf(
-      "[%s] %s.%s (%lu ms)",
-      test->M_testResult == ::xtest::TestResult::PASSED
-          ? ::xtest::GetStringAlignedTo(
-                "OK", XTEST_DEFAULT_SUMMARY_STATUS_STR_WIDTH_, ALIGN_RIGHT)
-                .c_str()
-          : ::xtest::GetStringAlignedTo(
-                "FALIED", XTEST_DEFAULT_SUMMARY_STATUS_STR_WIDTH_, ALIGN_CENTER)
-                .c_str(),
-      test->M_suiteName, test->M_testName, elapsed_time);
+  if (test->M_testResult == ::xtest::TestResult::PASSED)
+    ColoredPrintf(
+        XTestColor::kGreen, "[%s] ",
+        ::xtest::GetStringAlignedTo(
+            "OK", XTEST_DEFAULT_SUMMARY_STATUS_STR_WIDTH_, ALIGN_RIGHT)
+            .c_str());
+  else
+    ColoredPrintf(
+        XTestColor::kRed, "[%s] ",
+        ::xtest::GetStringAlignedTo(
+            "FALIED", XTEST_DEFAULT_SUMMARY_STATUS_STR_WIDTH_, ALIGN_CENTER)
+            .c_str());
+  std::printf("%s.%s (%lu ms)", test->M_suiteName, test->M_testName,
+              elapsed_time);
   std::printf("\n");
   std::fflush(stdout);
 }

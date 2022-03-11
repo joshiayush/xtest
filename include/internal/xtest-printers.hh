@@ -1,4 +1,4 @@
-// Copyright 2021, xtest Inc.
+// Copyright 2021, The xtest authors Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -11,7 +11,7 @@
 // copyright notice, this list of conditions and the following disclaimer
 // in the documentation and/or other materials provided with the
 // distribution.
-//     * Neither the name of xtest Inc. nor the names of its
+//     * Neither the name of The xtest authors Inc. nor the names of its
 // contributors may be used to endorse or promote products derived from
 // this software without specific prior written permission.
 //
@@ -27,43 +27,20 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "internal/xtest-port.hh"
+#ifndef XTEST_INCLUDE_INTERNAL_XTEST_PRINTERS_HH_
+#define XTEST_INCLUDE_INTERNAL_XTEST_PRINTERS_HH_
 
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-#include <iostream>
+#include <cstdarg>
 #include <string>
-
-#include "xtest-message.hh"
 
 namespace xtest {
 namespace internal {
-const char kUnknownFile[] = "unknown file";
+enum class XTestColor { kDefault, kRed, kGreen, kYellow };
 
-// Formats a source file path and a line number as they would appear
-// in an error message from the compiler used to compile this code.
-std::string FormatFileLocation(const char* file, const uint64_t& line) {
-  const std::string fileName(file == nullptr ? kUnknownFile : file);
-  return fileName + ":" + StreamableToString(line) + ":";
-}
+std::string GetAnsiColorCode(const XTestColor& color);
 
-// Logs the file and line number to the stderr.
-XTestLog::XTestLog(const XTestLogSeverity& severity, const char* file,
-                   const uint64_t& line)
-    : _M_severity(severity) {
-  const char* const marker = severity == XTEST_INFO      ? "[  INFO ]"
-                             : severity == XTEST_WARNING ? "[WARNING]"
-                             : severity == XTEST_ERROR   ? "[ ERROR ]"
-                                                         : "[ FATAL ]";
-  GetStream() << marker << " " << FormatFileLocation(file, line) << ": ";
-}
-
-// Flushes the buffers and, if severity is XTEST_FATAL, aborts the program.
-XTestLog::~XTestLog() {
-  GetStream() << std::endl;
-  if (_M_severity == XTEST_FATAL)
-    std::abort();
-}
+void ColoredPrintf(const XTestColor& color, const char* fmt, ...);
 }  // namespace internal
 }  // namespace xtest
+
+#endif  // XTEST_INCLUDE_INTERNAL_XTEST_PRINTERS_HH_

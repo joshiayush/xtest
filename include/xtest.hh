@@ -34,6 +34,7 @@
 #include <iostream>
 #include <string>
 
+#include "internal/xtest-port.hh"
 #include "xtest-message.hh"
 #include "xtest-registrar.hh"
 
@@ -84,14 +85,20 @@ class MessageStream {
   }
 };
 
-#define MESSAGE() xtest::impl::MessageStream()
+#define MESSAGE() ::xtest::impl::MessageStream()
 }  // namespace impl
 
+// When this flag is specified, the xtest's help message is printed on the
+// console.
 extern bool FLAG_xtest_help;
+
+// When this flag is specified, tests' order is randomized on every iteration.
 extern bool FLAG_xtest_shuffle;
 
-#define XTEST_FLAG_GET(flagName) ::xtest::FLAG_xtest_##flagName
-#define XTEST_FLAG_SET(flagName, value) (void)(XTEST_FLAG_GET(flagName) = value)
+// This flag enables using colors in terminal output. Available values are "yes"
+// to enable colors, "no" (disable colors), or "auto" (the default) to let
+// Google Test decide.
+extern bool FLAG_xtest_color;
 
 // Global counter for non-fatal test failures.
 //

@@ -35,6 +35,7 @@
 #include <csignal>
 #include <cstdio>
 #include <cstring>
+#include <cwchar>
 #include <iomanip>
 #include <iostream>
 #include <limits>
@@ -44,6 +45,7 @@
 #include <vector>
 
 #include "internal/xtest-port.hh"
+#include "internal/xtest-printers.hh"
 #include "xtest-message.hh"
 
 namespace xtest {
@@ -71,9 +73,17 @@ TimeInMillis Timer::Elapsed() {
 }
 }  // namespace internal
 
-// Filled with true if user provides '--help' flag over the command line.
+// When this flag is specified, the xtest's help message is printed on the
+// console.
 bool FLAG_xtest_help = false;
+
+// When this flag is specified, tests' order is randomized on every iteration.
 bool FLAG_xtest_shuffle = false;
+
+// This flag enables using colors in terminal output. Available values are "yes"
+// to enable colors, "no" (disable colors), or "auto" (the default) to let
+// Google Test decide.
+bool FLAG_xtest_color = false;
 
 // Global counter for non-fatal test failures.
 //
@@ -175,8 +185,7 @@ std::string GetStringAlignedTo(const std::string& str,
 //
 // We allocate the stringstream separately because otherwise each use of
 // ASSERT_* or EXPECT_* in a procedure adds over 200 bytes to the procedure's
-// stack frame leading to huge stack frames in some cases; gcc does not reuse
-// the stack space.
+// stack frame leading to huge the stack space.
 Message::Message() : _M_sstream(new std::stringstream) {
   // By default, we want there to be enough precision when printing a double to
   // a Message.
@@ -273,8 +282,9 @@ void PrettyUnitTestResultPrinter::OnTestExecutionEnd() {
 void PrettyUnitTestResultPrinter::OnTestStart(
     const XTestUnitTestPair& testSuite) {
   std::printf("\n");
-  std::printf("[%s] %lu tests from %s\n", GetStrFilledWith('-').c_str(),
-              testSuite.second.size(), testSuite.first);
+  internal::ColoredPrintf(internal::XTestColor::kGreen, "[%s] ",
+                          GetStrFilledWith('-').c_str());
+  std::printf("%lu tests from %s\n", testSuite.second.size(), testSuite.first);
   std::fflush(stdout);
 }
 
@@ -284,8 +294,9 @@ void PrettyUnitTestResultPrinter::OnTestStart(
 // executing all the tests of a test suite.
 void PrettyUnitTestResultPrinter::OnTestEnd(
     const XTestUnitTestPair& testSuite) {
-  std::printf("[%s] %lu tests from %s", GetStrFilledWith('-').c_str(),
-              testSuite.second.size(), testSuite.first);
+  internal::ColoredPrintf(internal::XTestColor::kGreen, "[%s] ",
+                          GetStrFilledWith('-').c_str());
+  std::printf("%lu tests from %s", testSuite.second.size(), testSuite.first);
   TimeInMillis elapsedTime = 0;
   for (const TestRegistrar* const& test : testSuite.second)
     elapsedTime += test->M_elapsedTime;
@@ -299,12 +310,12 @@ void PrettyUnitTestResultPrinter::OnTestEnd(
 // then this function prints `0 FAILED TESTS` and flushes the stream buffer.
 // This function should only be called when there are failed tests.
 void PrettyUnitTestResultPrinter::PrintFailedTests() {
-  std::printf(
-      "[%s] %lu test, listed below:\n",
+  internal::ColoredPrintf(
+      internal::XTestColor::kRed, "[%s] ",
       GetStringAlignedTo("FAILED", XTEST_DEFAULT_SUMMARY_STATUS_STR_WIDTH_,
                          ALIGN_CENTER)
-          .c_str(),
-      GetFailedTestCount());
+          .c_str());
+  std::printf("%lu test, listed below:\n", GetFailedTestCount());
 
   XTestUnitTest failedTests = GetFailedTests();
   for (const XTestUnitTestPair& testCase : failedTests) {
@@ -325,7 +336,8 @@ void PrettyUnitTestResultPrinter::PrintFailedTests() {
 // Prints the number of test suites and tests to run.  Should only be called
 // before starting iteration over the registered test suites.
 void PrettyUnitTestResultPrinter::OnTestIterationStart() {
-  std::printf("[%s] ", GetStrFilledWith('=').c_str());
+  internal::ColoredPrintf(internal::XTestColor::kGreen, "[%s] ",
+                          GetStrFilledWith('=').c_str());
   std::printf("Running %lu tests from %lu test suites.\n",
               GetTestSuiteAndTestNumber().second,
               GetTestSuiteAndTestNumber().first);
@@ -335,7 +347,8 @@ void PrettyUnitTestResultPrinter::OnTestIterationStart() {
 // Prints number of test suites and tests ran.  Should only be called after
 // iterating over all the registered test suites.
 void PrettyUnitTestResultPrinter::OnTestIterationEnd() {
-  std::printf("[%s] ", GetStrFilledWith('=').c_str());
+  internal::ColoredPrintf(internal::XTestColor::kGreen, "[%s] ",
+                          GetStrFilledWith('=').c_str());
   std::printf("Ran %lu tests from %lu test suites.\n",
               GetTestSuiteAndTestNumber().second,
               GetTestSuiteAndTestNumber().first);
@@ -358,7 +371,8 @@ void PrettyUnitTestResultPrinter::OnTestIterationEnd() {
 // line and flushes the output stream).  This line is needed to give our users a
 // complete feel of `googletest`.
 void PrettyUnitTestResultPrinter::OnEnvironmentsSetUpStart() {
-  std::printf("[%s] ", GetStrFilledWith('-').c_str());
+  internal::ColoredPrintf(internal::XTestColor::kGreen, "[%s] ",
+                          GetStrFilledWith('-').c_str());
   std::printf("Global test environment set-up.");
   std::fflush(stdout);
 }
@@ -369,7 +383,8 @@ void PrettyUnitTestResultPrinter::OnEnvironmentsSetUpStart() {
 // a complete feel of `googletest`.
 void PrettyUnitTestResultPrinter::OnEnvironmentsTearDownStart() {
   std::printf("\n");
-  std::printf("[%s] ", GetStrFilledWith('-').c_str());
+  internal::ColoredPrintf(internal::XTestColor::kGreen, "[%s] ",
+                          GetStrFilledWith('-').c_str());
   std::printf("Global test environment tear-down.\n");
   std::fflush(stdout);
 }

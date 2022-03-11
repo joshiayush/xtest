@@ -34,14 +34,14 @@
 #include <cstdint>
 #include <iostream>
 
+namespace xtest {
+namespace internal {
 // Disallow copy constructor and operator=
 // This should be used in the private: declarations for a class.
 #define XTEST_DISALLOW_COPY_AND_ASSIGN_(type) \
   type(type const&) = delete;                 \
   type& operator=(type const&) = delete
 
-namespace xtest {
-namespace internal {
 using TimeInMillis = int64_t;
 
 // The biggest signed integer type the compiler supports.
@@ -90,7 +90,14 @@ class Timer {
  private:
   std::chrono::steady_clock::time_point start_;
 };
+
+#define XTEST_NAME_ "Xtest"
+#define XTEST_FLAG_PREFIX_ "xtest_"
+
+#define XTEST_FLAG(flagName) ::xtest::FLAG_xtest_##flagName
+#define XTEST_FLAG_GET(flagName) XTEST_FLAG(flagName)
+#define XTEST_FLAG_SET(flagName, value) (void)(XTEST_FLAG(flagName) = (value))
 }  // namespace internal
-};  // namespace xtest
+}  // namespace xtest
 
 #endif  // XTEST_INCLUDE_INTERNAL_XTEST_PORT_HH_

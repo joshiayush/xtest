@@ -90,15 +90,15 @@ class PrettyAssertionResultPrinter {
   static void OnTestAssertionFailure(
       const char* lhs_expr, const char* rhs_expr, const T1& lhs, const T2& rhs,
       const AssertionContext& assertion_context) {
-    std::fprintf(stderr,
-                 "%s(%lu): error: Value of: %s\n  Actual: %s\nExpected: %s\n",
-                 assertion_context.file(), assertion_context.line(), lhs_expr,
-                 xtest::internal::StreamableToString(lhs).c_str(),
-                 xtest::internal::StreamableToString(rhs).c_str());
+    std::fprintf(
+        stderr, "%s(%lu): error: Value of: %s\n  Actual: %s\nExpected: %s\n",
+        assertion_context.file(), assertion_context.line(), lhs_expr,
+        StreamableToString(lhs).c_str(), StreamableToString(rhs).c_str());
     std::fflush(stderr);
 
     // Mark the current test as `xtest::TestResult::FAILED` on failure.
-    assertion_context.current_test()->M_testResult = xtest::TestResult::FAILED;
+    assertion_context.current_test()->M_testResult =
+        ::xtest::TestResult::FAILED;
     // Add this test in the global test failure counter.
     ++::xtest::G_n_testFailures;
   }
@@ -121,8 +121,7 @@ class AssertionResult {
   template <typename Streamable>
   AssertionResult operator<<(const Streamable& streamable) {
     if (!success_) {
-      std::fprintf(stderr, "%s\n",
-                   xtest::internal::StreamableToString(streamable).c_str());
+      std::fprintf(stderr, "%s\n", StreamableToString(streamable).c_str());
       std::fflush(stderr);
     }
     return *this;
