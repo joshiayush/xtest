@@ -48,6 +48,28 @@
 #include "internal/xtest-printers.hh"
 #include "xtest-message.hh"
 
+// When this flag is specified, the xtest's help message is printed on the
+// console.
+XTEST_FLAG_DEFINE_bool_(help, false, "Prints the help message for xtest.");
+
+// When this flag is specified, tests' order is randomized on every iteration.
+XTEST_FLAG_DEFINE_bool_(shuffle, false,
+                        "True if and only if " XTEST_NAME_
+                        " should randomize tests' order on every run.");
+
+// This flag enables using colors in terminal output. Available values are "yes"
+// to enable colors, "no" (disable colors), or "auto" (the default) to let XTest
+// decide.
+XTEST_FLAG_DEFINE_bool_(
+    color, false,
+    "Whether to use colors in the output.  Valid values: yes, no, "
+    "and auto.  'auto' means to use colors if the output is "
+    "being sent to a terminal and the TERM environment variable "
+    "is set to a terminal type that supports colors.");
+
+XTEST_GLOBAL_DEFINE_uint64_(failure_count, 0,
+                            "Global counter for the number of failed tests.");
+
 namespace xtest {
 namespace impl {
 // Calls std::longjmp() with M_jumpOutOfTest instance as its first
@@ -73,24 +95,6 @@ TimeInMillis Timer::Elapsed() {
 }
 }  // namespace internal
 
-// When this flag is specified, the xtest's help message is printed on the
-// console.
-bool FLAG_xtest_help = false;
-
-// When this flag is specified, tests' order is randomized on every iteration.
-bool FLAG_xtest_shuffle = false;
-
-// This flag enables using colors in terminal output. Available values are "yes"
-// to enable colors, "no" (disable colors), or "auto" (the default) to let
-// Google Test decide.
-bool FLAG_xtest_color = false;
-
-// Global counter for non-fatal test failures.
-//
-// This global counter is defined in the object file xtest.cc and incremented
-// every time a non-fatal test assertion fails.
-std::uint64_t G_n_testFailures = 0;
-
 std::uint64_t G_n_tests = 0;
 std::uint64_t G_n_testSuites = 0;
 
@@ -108,8 +112,8 @@ static const char kHelpMessage[] =
 static std::vector<std::string> G_argvs;
 
 // XTestIsInitialized() returns true if and only if the user has initialized
-// xtest.  Useful for catching the user mistake of not initializing xtest before
-// calling RUN_ALL_TESTS().
+// xtest.  Useful for catching the user mistake of not initializing xtest
+// before calling RUN_ALL_TESTS().
 static bool XTestIsInitialized() { return G_argvs.size() > 0; }
 
 // Returns a string of length `width` all filled with the character `chr`.
@@ -144,11 +148,11 @@ std::string GetStrFilledWith(const char& chr, std::size_t width) {
 // [  FAILED  ] SquareRootTest.PositiveNos
 // ```
 //
-// In order to align the letter `FAILED` to the center we use this function with
-// a 'alignSide' of 'ALIGN_CENTER'.
+// In order to align the letter `FAILED` to the center we use this function
+// with a 'alignSide' of 'ALIGN_CENTER'.
 //
-// If not given this function will use the default values for `newStrWidth` and
-// `alignSide` i.e., `XTEST_DEFAULT_SUMMARY_STATUS_STR_WIDTH_` and
+// If not given this function will use the default values for `newStrWidth`
+// and `alignSide` i.e., `XTEST_DEFAULT_SUMMARY_STATUS_STR_WIDTH_` and
 // `ALIGN_CENTER` respectively.
 std::string GetStringAlignedTo(const std::string& str,
                                const std::size_t& newStrWidth,
@@ -187,8 +191,8 @@ std::string GetStringAlignedTo(const std::string& str,
 // ASSERT_* or EXPECT_* in a procedure adds over 200 bytes to the procedure's
 // stack frame leading to huge the stack space.
 Message::Message() : _M_sstream(new std::stringstream) {
-  // By default, we want there to be enough precision when printing a double to
-  // a Message.
+  // By default, we want there to be enough precision when printing a double
+  // to a Message.
   *_M_sstream << std::setprecision(std::numeric_limits<double>::digits10 + 2);
 }
 
@@ -211,8 +215,8 @@ std::string Message::GetString() const {
 
 // Returns the total number of test cases and tests registered.
 //
-// The returned pair has the total number of test cases as its first element and
-// the total number of tests as its second element.
+// The returned pair has the total number of test cases as its first element
+// and the total number of tests as its second element.
 TestSuiteAndTestNumberPair GetTestSuiteAndTestNumber() {
   if (G_n_testSuites != 0 && G_n_tests != 0)
     return TestSuiteAndTestNumberPair{G_n_testSuites, G_n_tests};
@@ -263,15 +267,15 @@ void PrettyUnitTestResultPrinter::PrintTestName(const char* test_suite,
   std::printf("%s.%s", test_suite, test_name);
 }
 
-// Prints out information related to the number of test suites and tests before
-// executing the registered tests.
+// Prints out information related to the number of test suites and tests
+// before executing the registered tests.
 void PrettyUnitTestResultPrinter::OnTestExecutionStart() {
   PrettyUnitTestResultPrinter::OnTestIterationStart();
   PrettyUnitTestResultPrinter::OnEnvironmentsSetUpStart();
 }
 
-// Prints out information related to the number of test failed ans passed after
-// executing all the registered tests.
+// Prints out information related to the number of test failed ans passed
+// after executing all the registered tests.
 void PrettyUnitTestResultPrinter::OnTestExecutionEnd() {
   PrettyUnitTestResultPrinter::OnEnvironmentsTearDownStart();
   PrettyUnitTestResultPrinter::OnTestIterationEnd();
@@ -367,9 +371,9 @@ void PrettyUnitTestResultPrinter::OnTestIterationEnd() {
 }
 
 // Should be called for printing the status of the global environment set-up.
-// (Global environment set-up in `xtest` is a myth, this function just prints a
-// line and flushes the output stream).  This line is needed to give our users a
-// complete feel of `googletest`.
+// (Global environment set-up in `xtest` is a myth, this function just prints
+// a line and flushes the output stream).  This line is needed to give our
+// users a complete feel of `googletest`.
 void PrettyUnitTestResultPrinter::OnEnvironmentsSetUpStart() {
   internal::ColoredPrintf(internal::XTestColor::kGreen, "[%s] ",
                           GetStrFilledWith('-').c_str());
@@ -377,10 +381,10 @@ void PrettyUnitTestResultPrinter::OnEnvironmentsSetUpStart() {
   std::fflush(stdout);
 }
 
-// Should be called for printing the status of the global environment tear-down.
-// (Global environment tear-down in `xtest` is a myth, this function just prints
-// a line and flushes the output stream).  This line is needed to give our users
-// a complete feel of `googletest`.
+// Should be called for printing the status of the global environment
+// tear-down. (Global environment tear-down in `xtest` is a myth, this
+// function just prints a line and flushes the output stream).  This line is
+// needed to give our users a complete feel of `googletest`.
 void PrettyUnitTestResultPrinter::OnEnvironmentsTearDownStart() {
   std::printf("\n");
   internal::ColoredPrintf(internal::XTestColor::kGreen, "[%s] ",
@@ -434,13 +438,13 @@ uint64_t RunRegisteredTests() {
     PrettyUnitTestResultPrinter::OnTestEnd(testSuite);
   }
   PrettyUnitTestResultPrinter::OnTestExecutionEnd();
-  return G_n_testFailures;
+  return XTEST_GLOBAL_INSTANCE_GET_(failure_count);
 }
 
 // Checks if the string given is preffixed by valid characters or not.
 //
-// This function is maily used to validate command line flags given to the main
-// executable.
+// This function is maily used to validate command line flags given to the
+// main executable.
 static uint8_t ValidFlagPreffixLength(const char* flag) {
   if (std::strncmp(flag, "--", 2) == 0)
     return 2;
@@ -451,8 +455,9 @@ static uint8_t ValidFlagPreffixLength(const char* flag) {
 
 // Returns the value of the xtest command line flag.
 //
-// Parses the value after '=' character over the command line.  If `defOptional`
-// is given then the flag value is treated as a boolen true and returend.
+// Parses the value after '=' character over the command line.  If
+// `defOptional` is given then the flag value is treated as a boolen true and
+// returend.
 static const std::string ParseFlagValue(const char* const flag,
                                         const char* flagName,
                                         bool defOptional) {
@@ -473,15 +478,15 @@ static const std::string ParseFlagValue(const char* const flag,
   return ++flagEnd;
 }
 
-// Parses the given flag i.e., `flagName` from the command line argument string
-// i.e., `flag`.
+// Parses the given flag i.e., `flagName` from the command line argument
+// string i.e., `flag`.
 //
-// Parses the given `flagName` from the string `flag` and sets the value in the
-// address `value`.
+// Parses the given `flagName` from the string `flag` and sets the value in
+// the address `value`.
 //
 // Note: This function is just an overload for the boolean type command line
-// flags like `--help`, `--debug`, etc in this case the address that the `value`
-// is holding will have a bool value set at the end of parsing.
+// flags like `--help`, `--debug`, etc in this case the address that the
+// `value` is holding will have a bool value set at the end of parsing.
 static bool ParseFlag(const char* const flag, const char* const flagName,
                       bool* value) {
   const std::string valueStr = ParseFlagValue(flag, flagName, true);
@@ -499,9 +504,9 @@ static bool ParseFlag(const char* const flag, const char* const flagName,
 static void ParseXTestFlag(const char* const flag) {
 #define XTEST_INTERNAL_PARSE_FLAG(flagName)   \
   do {                                        \
-    auto value = XTEST_FLAG_GET(flagName);    \
+    auto value = XTEST_FLAG_GET_(flagName);   \
     if (ParseFlag(flag, #flagName, &value)) { \
-      XTEST_FLAG_SET(flagName, value);        \
+      XTEST_FLAG_SET_(flagName, value);       \
     }                                         \
   } while (false)
 
@@ -524,7 +529,7 @@ void ParseXTestFlags(int32_t* argc, char** argv) {
 //
 // This function should be called after the `ParseXTestFlags()` function.
 void PostFlagParsing() {
-  if (XTEST_FLAG_GET(help)) {
+  if (XTEST_FLAG_GET_(help)) {
     MESSAGE() << kHelpMessage;
     std::exit(EXIT_SUCCESS);
   }
@@ -532,10 +537,10 @@ void PostFlagParsing() {
 
 // Initializes xtest.  This must be called before calling `RUN_ALL_TESTS()`.
 //
-// In particular, it parses a command line for the flags that xtest recognizes.
-// Whenever a Google Test flag is seen, it is removed from argv, and *argc is
-// decremented.  Calling the function for the second time has no user-visible
-// effect.
+// In particular, it parses a command line for the flags that xtest
+// recognizes. Whenever a Google Test flag is seen, it is removed from argv,
+// and *argc is decremented.  Calling the function for the second time has no
+// user-visible effect.
 void InitXTest(int32_t* argc, char** argv) {
   if (XTestIsInitialized())
     return;

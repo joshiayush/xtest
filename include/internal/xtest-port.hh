@@ -33,6 +33,7 @@
 #include <chrono>  // NOLINT
 #include <cstdint>
 #include <iostream>
+#include <string>
 
 namespace xtest {
 namespace internal {
@@ -92,26 +93,6 @@ class Timer {
 };
 }  // namespace internal
 
-// clang-format off
-#define XTEST_NAME_ "Xtest"
-#define XTEST_FLAG_PREFIX_ "xtest_"
-
-#define XTEST_FLAG(flagName)            ::xtest::FLAG_xtest_##flagName
-#define XTEST_FLAG_GET(flagName)        XTEST_FLAG(flagName)
-#define XTEST_FLAG_SET(flagName, value) (void)(XTEST_FLAG(flagName) = (value))
-
-#define XTEST_GLOBAL_INSTANCE_PREFIX_           xtest_global_
-#define XTEST_GLOBAL_INSTANCE_(name)            XTEST_GLOBAL_INSTANCE_PREFIX_##name
-#define XTEST_GLOBAL_INSTANCE_GET_(name)        ::xtest::XTEST_GLOBAL_INSTANCE_(name)
-#define XTEST_GLOBAL_INSTANCE_SET_(name, value) (void)(::xtest::XTEST_GLOBAL_INSTANCE_(name) = (value))
-// clang-format on
-
-// Global counter for non-fatal test failures.
-//
-// This global counter is defined in the object file xtest.cc and incremented
-// every time a non-fatal test assertion fails.
-extern uint64_t G_n_testFailures;
-
 // New string width for the aligned string returned by the function
 // `GetStringAlignedTo()`.
 #define XTEST_DEFAULT_SUMMARY_STATUS_STR_WIDTH_ 10
@@ -158,5 +139,77 @@ std::string GetStringAlignedTo(
     const std::size_t& newStrWidth = XTEST_DEFAULT_SUMMARY_STATUS_STR_WIDTH_,
     const StringAlignValues& alignSide = ALIGN_CENTER);
 }  // namespace xtest
+
+#define XTEST_NAME_ "Xtest"
+#define XTEST_FLAG_PREFIX_STRING_ "xtest_"
+
+#define XTEST_FLAG_(flagName) flag_xtest_##flagName
+#define XTEST_FLAG_GET_(flagName) ::xtest::XTEST_FLAG_(flagName)
+#define XTEST_FLAG_SET_(flagName, value) (void)(XTEST_FLAG_(flagName) = (value))
+
+#define XTEST_FLAG_DECLARE_bool_(flagName) \
+  namespace xtest {                        \
+  extern bool XTEST_FLAG_(flagName);       \
+  }                                        \
+  static_assert(true, "no-op to require trailing semicolon")
+#define XTEST_FLAG_DECLARE_int32_(flagName) \
+  namespace xtest {                         \
+  extern int32_t XTEST_FLAG_(flagName);     \
+  }                                         \
+  static_assert(true, "no-op to require trailing semicolon")
+#define XTEST_FLAG_DECLARE_uint32_(flagName) \
+  namespace xtest {                          \
+  extern uint32_t XTEST_FLAG_(flagName);     \
+  }                                          \
+  static_assert(true, "no-op to require trailing semicolon")
+#define XTEST_FLAG_DECLARE_string_(flagName) \
+  namespace xtest {                          \
+  extern std::string XTEST_FLAG_(flagName);  \
+  }                                          \
+  static_assert(true, "no-op to require trailing semicolon")
+
+#define XTEST_FLAG_DEFINE_bool_(flagName, value, doc) \
+  namespace xtest {                                   \
+  bool XTEST_FLAG_(flagName) = (value);               \
+  }                                                   \
+  static_assert(true, "no-op to require trailing semicolon")
+#define XTEST_FLAG_DEFINE_int32_(flagName, value, doc) \
+  namespace xtest {                                    \
+  int32_t XTEST_FLAG_(flagName) = (value);             \
+  }                                                    \
+  static_assert(true, "no-op to require trailing semicolon")
+#define XTEST_FLAG_DEFINE_uint32_(flagName, value, doc) \
+  namespace xtest {                                     \
+  uint32_t XTEST_FLAG_(flagName) = (value);             \
+  }                                                     \
+  static_assert(true, "no-op to require trailing semicolon")
+#define XTEST_FLAG_DEFINE_string_(flagName, value, doc) \
+  namespace xtest {                                     \
+  std::string XTEST_FLAG_(flagName) = (value);          \
+  }                                                     \
+  static_assert(true, "no-op to require trailing semicolon")
+
+#define XTEST_GLOBAL_INSTANCE_(name) xtest_global_##name
+#define XTEST_GLOBAL_INSTANCE_GET_(name) XTEST_GLOBAL_INSTANCE_(name)
+#define XTEST_GLOBAL_INSTANCE_SET_(name, value) \
+  (void)(XTEST_GLOBAL_INSTANCE_(name) = (value))
+
+#define XTEST_GLOBAL_DECLARE_uint64_(name)      \
+  namespace xtest {                             \
+  extern uint64_t XTEST_GLOBAL_INSTANCE_(name); \
+  }                                             \
+  static_assert(true, "no-op to require trailing semicolon")
+
+#define XTEST_GLOBAL_DEFINE_uint64_(name, value, doc) \
+  namespace xtest {                                   \
+  uint64_t XTEST_GLOBAL_INSTANCE_(name) = (value);    \
+  }                                                   \
+  static_assert(true, "no-op to require trailing semicolon")
+
+// Global counter for non-fatal test failures.
+//
+// This global counter is defined in the object file xtest.cc and incremented
+// every time a non-fatal test assertion fails.
+XTEST_GLOBAL_DECLARE_uint64_(failure_count);
 
 #endif  // XTEST_INCLUDE_INTERNAL_XTEST_PORT_HH_

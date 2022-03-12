@@ -38,6 +38,18 @@
 #include "xtest-message.hh"
 #include "xtest-registrar.hh"
 
+// When this flag is specified, the xtest's help message is printed on the
+// console.
+XTEST_FLAG_DECLARE_bool_(help);
+
+// When this flag is specified, tests' order is randomized on every iteration.
+XTEST_FLAG_DECLARE_bool_(shuffle);
+
+// This flag enables using colors in terminal output. Available values are "yes"
+// to enable colors, "no" (disable colors), or "auto" (the default) to let XTest
+// decide.
+XTEST_FLAG_DECLARE_bool_(color);
+
 namespace xtest {
 namespace impl {
 // Calls `std::longjmp()` with `M_jumpOutOfTest` instance as its first argument.
@@ -87,18 +99,6 @@ class MessageStream {
 
 #define MESSAGE() ::xtest::impl::MessageStream()
 }  // namespace impl
-
-// When this flag is specified, the xtest's help message is printed on the
-// console.
-extern bool FLAG_xtest_help;
-
-// When this flag is specified, tests' order is randomized on every iteration.
-extern bool FLAG_xtest_shuffle;
-
-// This flag enables using colors in terminal output. Available values are "yes"
-// to enable colors, "no" (disable colors), or "auto" (the default) to let
-// Google Test decide.
-extern bool FLAG_xtest_color;
 
 using TestSuiteAndTestNumberPair = std::pair<std::uint64_t, std::uint64_t>;
 

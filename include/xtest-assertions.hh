@@ -99,7 +99,7 @@ class PrettyAssertionResultPrinter {
     assertion_context.current_test()->M_testResult =
         ::xtest::TestResult::FAILED;
     // Add this test in the global test failure counter.
-    ++::xtest::G_n_testFailures;
+    ++XTEST_GLOBAL_INSTANCE_GET_(failure_count);
   }
 };
 
