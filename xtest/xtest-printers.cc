@@ -55,9 +55,13 @@ void ColoredPrintf(const XTestColor& color, const char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
 
+#if defined(__linux__)
   printf("\033[0;3%sm", GetAnsiColorCode(color).c_str());
+#endif
   vprintf(fmt, args);
+#if defined(__linux__)
   printf("\033[m");  // Resets the terminal to default.
+#endif
 
   va_end(args);
 }

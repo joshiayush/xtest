@@ -115,6 +115,7 @@ TEST(PrettyUnitTestResultPrinterTest, StaticMethodOnTestIterationStart) {
   stdout_redirector_context.RestoreStream();
   const std::string actual(stdout_redirector_context.M_output_buffer_);
   char expected[REDIRECTOR_BUFFER_SIZE];
+#if defined(__linux__)
   std::snprintf(
       expected, REDIRECTOR_BUFFER_SIZE,
       "\033[0;3%sm[%s] \033[mRunning %lu tests from %lu test suites.\n",
@@ -123,6 +124,13 @@ TEST(PrettyUnitTestResultPrinterTest, StaticMethodOnTestIterationStart) {
       xtest::GetStrFilledWith('=').c_str(),
       xtest::GetTestSuiteAndTestNumber().second,
       xtest::GetTestSuiteAndTestNumber().first);
+#else
+  std::snprintf(expected, REDIRECTOR_BUFFER_SIZE,
+                "[%s] Running %lu tests from %lu test suites.\n",
+                xtest::GetStrFilledWith('=').c_str(),
+                xtest::GetTestSuiteAndTestNumber().second,
+                xtest::GetTestSuiteAndTestNumber().first);
+#endif
   EXPECT_EQ(actual, expected);
 }
 
@@ -148,6 +156,7 @@ TEST(PrettyUnitTestResultPrinterTest, StaticMethodOnTestIterationEnd) {
 
   // Create the `expected` string with the summary of all the tests and passed
   // tests.
+#if defined(__linux__)
   std::snprintf(
       expected, REDIRECTOR_BUFFER_SIZE,
       "\033[0;3%sm[%s] \033[mRan %lu tests from %lu test "
@@ -165,6 +174,19 @@ TEST(PrettyUnitTestResultPrinterTest, StaticMethodOnTestIterationEnd) {
                                 xtest::StringAlignValues::ALIGN_CENTER)
           .c_str(),
       xtest::GetTestSuiteAndTestNumber().second - xtest::GetFailedTestCount());
+#else
+  std::snprintf(
+      expected, REDIRECTOR_BUFFER_SIZE,
+      "[%s] Ran %lu tests from %lu test suites.\n[%s] %lu test.\n",
+      xtest::GetStrFilledWith('=').c_str(),
+      xtest::GetTestSuiteAndTestNumber().second,
+      xtest::GetTestSuiteAndTestNumber().first,
+      xtest::GetStringAlignedTo("PASSED",
+                                XTEST_DEFAULT_SUMMARY_STATUS_STR_WIDTH_,
+                                xtest::StringAlignValues::ALIGN_CENTER)
+          .c_str(),
+      xtest::GetTestSuiteAndTestNumber().second - xtest::GetFailedTestCount());
+#endif
 
   // Now here comes the trickiest part of this test suite, we are going to
   // simulate the behaviour of function
@@ -180,6 +202,18 @@ TEST(PrettyUnitTestResultPrinterTest, StaticMethodOnTestIterationEnd) {
 
     // Create a string with the number of failed tests to later concatenate with
     // the `expected` string.
+#if defined(__linux__)
+    std::snprintf(
+        failed_tests_output, REDIRECTOR_BUFFER_SIZE - std::strlen(expected),
+        "\033[0;3%sm[%s] \033[m%lu test, listed below:\n",
+        xtest::internal::GetAnsiColorCode(xtest::internal::XTestColor::kRed)
+            .c_str(),
+        xtest::GetStringAlignedTo("FAILED",
+                                  XTEST_DEFAULT_SUMMARY_STATUS_STR_WIDTH_,
+                                  xtest::StringAlignValues::ALIGN_CENTER)
+            .c_str(),
+        xtest::GetFailedTestCount());
+#else
     std::snprintf(failed_tests_output,
                   REDIRECTOR_BUFFER_SIZE - std::strlen(expected),
                   "[%s] %lu test, listed below:\n",
@@ -188,6 +222,7 @@ TEST(PrettyUnitTestResultPrinterTest, StaticMethodOnTestIterationEnd) {
                       xtest::StringAlignValues::ALIGN_CENTER)
                       .c_str(),
                   xtest::GetFailedTestCount());
+#endif
 
     xtest::XTestUnitTest failedTests = xtest::GetFailedTests();
     for (const xtest::XTestUnitTestPair& testCase : failedTests) {
@@ -202,12 +237,24 @@ TEST(PrettyUnitTestResultPrinterTest, StaticMethodOnTestIterationEnd) {
 
         // When there are failed tests we want to see the name of there test
         // suite and there test name.
+#if defined(__linux__)
+        std::snprintf(
+            failed_tests,
+            REDIRECTOR_BUFFER_SIZE - std::strlen(expected) -
+                std::strlen(failed_tests_output),
+            "\033[0;3%sm[%s] \033[m%s.%s\n",
+            xtest::internal::GetAnsiColorCode(xtest::internal::XTestColor::kRed)
+                .c_str(),
+            xtest::GetStringAlignedTo("FAILED").c_str(), test->M_suiteName,
+            test->M_testName);
+#else
         std::snprintf(failed_tests,
                       REDIRECTOR_BUFFER_SIZE - std::strlen(expected) -
                           std::strlen(failed_tests_output),
                       "[%s] %s.%s\n",
                       xtest::GetStringAlignedTo("FAILED").c_str(),
                       test->M_suiteName, test->M_testName);
+#endif
 
         // Concatenate `failed_tests` string with `failed_tests_output` to see a
         // complete description of tests that failed.
