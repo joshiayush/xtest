@@ -324,7 +324,11 @@ void PrettyUnitTestResultPrinter::PrintFailedTests() {
   XTestUnitTest failedTests = GetFailedTests();
   for (const XTestUnitTestPair& testCase : failedTests) {
     for (const TestRegistrar* const& test : testCase.second) {
-      std::printf("[%s] ", GetStringAlignedTo("FAILED").c_str());
+      internal::ColoredPrintf(
+          internal::XTestColor::kRed, "[%s] ",
+          GetStringAlignedTo("FAILED", XTEST_DEFAULT_SUMMARY_STATUS_STR_WIDTH_,
+                             ALIGN_CENTER)
+              .c_str());
       PrettyUnitTestResultPrinter::PrintTestName(test->M_suiteName,
                                                  test->M_testName);
       std::printf("\n");
@@ -357,12 +361,13 @@ void PrettyUnitTestResultPrinter::OnTestIterationEnd() {
               GetTestSuiteAndTestNumber().second,
               GetTestSuiteAndTestNumber().first);
 
-  std::printf(
-      "[%s] %lu test.\n",
+  internal::ColoredPrintf(
+      internal::XTestColor::kGreen, "[%s] ",
       GetStringAlignedTo("PASSED", XTEST_DEFAULT_SUMMARY_STATUS_STR_WIDTH_,
                          ALIGN_CENTER)
-          .c_str(),
-      GetTestSuiteAndTestNumber().second - GetFailedTestCount());
+          .c_str());
+  std::printf("%lu test.\n",
+              GetTestSuiteAndTestNumber().second - GetFailedTestCount());
 
   if (GetFailedTestCount() != 0)
     PrettyUnitTestResultPrinter::PrintFailedTests();

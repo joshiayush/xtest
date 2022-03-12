@@ -150,13 +150,16 @@ TEST(PrettyUnitTestResultPrinterTest, StaticMethodOnTestIterationEnd) {
   // tests.
   std::snprintf(
       expected, REDIRECTOR_BUFFER_SIZE,
-      "\033[0;3%sm[%s] \033[mRan %lu tests from %lu test suites.\n[%s] %lu "
+      "\033[0;3%sm[%s] \033[mRan %lu tests from %lu test "
+      "suites.\n\033[0;3%sm[%s] \033[m%lu "
       "test.\n",
       xtest::internal::GetAnsiColorCode(xtest::internal::XTestColor::kGreen)
           .c_str(),
       xtest::GetStrFilledWith('=').c_str(),
       xtest::GetTestSuiteAndTestNumber().second,
       xtest::GetTestSuiteAndTestNumber().first,
+      xtest::internal::GetAnsiColorCode(xtest::internal::XTestColor::kGreen)
+          .c_str(),
       xtest::GetStringAlignedTo("PASSED",
                                 XTEST_DEFAULT_SUMMARY_STATUS_STR_WIDTH_,
                                 xtest::StringAlignValues::ALIGN_CENTER)
