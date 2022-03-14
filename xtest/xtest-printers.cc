@@ -30,6 +30,7 @@
 #include "internal/xtest-printers.hh"
 
 #include <cstdarg>
+#include <cstring>
 #include <string>
 
 #include "internal/xtest-port.hh"
@@ -47,9 +48,11 @@ std::string GetAnsiColorCode(const XTestColor& color) {
     case XTestColor::kYellow:
       return "3";
     default:
-      return nullptr;
+      return "";
   }
 }
+
+bool ShouldUseColor() { return posix::IsAtty(posix::FileNo(stdout)) != 0; }
 
 void ColoredPrintf(const XTestColor& color, const char* fmt, ...) {
   va_list args;
@@ -64,6 +67,48 @@ void ColoredPrintf(const XTestColor& color, const char* fmt, ...) {
 #endif
 
   va_end(args);
+}
+
+// Prints a string containing code-encoded text.  The following escape sequences
+// can be used in the string to control the text color:
+//
+//   @@    prints a single '@' character.
+//   @R    changes the color to red.
+//   @G    changes the color to green.
+//   @Y    changes the color to yellow.
+//   @D    changes to the default terminal text color.
+//
+void PrintColorEncoded(const char* str) {
+  XTestColor color = XTestColor::kDefault;  // The current color.
+
+  // Conceptually, we split the string into segments divided by escape
+  // sequences.  Then we print one segment at a time.  At the end of each
+  // iteration, the str pointer advances to the beginning of the next segment.
+  for (;;) {
+    const char* p = std::strchr(str, '@');
+    if (p == nullptr) {
+      ColoredPrintf(color, "%s", str);
+      return;
+    }
+
+    ColoredPrintf(color, "%s", std::string(str, p).c_str());
+
+    const char ch = p[1];
+    str = p + 2;
+    if (ch == '@') {
+      ColoredPrintf(color, "@");
+    } else if (ch == 'D') {
+      color = XTestColor::kDefault;
+    } else if (ch == 'R') {
+      color = XTestColor::kRed;
+    } else if (ch == 'G') {
+      color = XTestColor::kGreen;
+    } else if (ch == 'Y') {
+      color = XTestColor::kYellow;
+    } else {
+      --str;
+    }
+  }
 }
 }  // namespace internal
 }  // namespace xtest

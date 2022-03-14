@@ -35,6 +35,12 @@
 #include <iostream>
 #include <string>
 
+#if defined(__linux__)
+#include <unistd.h>
+#elif defined(_WIN32) || defined(_WIN64) || defined(__CYGWIN__)
+#include <io.h>
+#endif
+
 namespace xtest {
 namespace internal {
 // Disallow copy constructor and operator=
@@ -138,6 +144,12 @@ std::string GetStringAlignedTo(
     const std::string& str,
     const std::size_t& newStrWidth = XTEST_DEFAULT_SUMMARY_STATUS_STR_WIDTH_,
     const StringAlignValues& alignSide = ALIGN_CENTER);
+
+namespace posix {
+int32_t FileNo(FILE* stream);
+
+int32_t IsAtty(int32_t fd);
+}  // namespace posix
 }  // namespace xtest
 
 #define XTEST_NAME_ "Xtest"

@@ -37,9 +37,13 @@ namespace xtest {
 namespace internal {
 enum class XTestColor { kDefault, kRed, kGreen, kYellow };
 
+bool ShouldUseColor();
+
 std::string GetAnsiColorCode(const XTestColor& color);
 
 void ColoredPrintf(const XTestColor& color, const char* fmt, ...);
+
+void PrintColorEncoded(const char* str);
 }  // namespace internal
 }  // namespace xtest
 
