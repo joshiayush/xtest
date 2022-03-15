@@ -58,6 +58,12 @@ void ColoredPrintf(const XTestColor& color, const char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
 
+  if (!ShouldUseColor()) {
+    vprintf(fmt, args);
+    va_end(args);
+    return;
+  }
+
 #if defined(__linux__)
   printf("\033[0;3%sm", GetAnsiColorCode(color).c_str());
 #endif
