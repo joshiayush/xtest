@@ -30,16 +30,68 @@
 #include "internal/xtest-printers.hh"
 
 #include <cstdarg>
+#include <cstdint>
 #include <cstring>
 #include <string>
 
 #include "internal/xtest-port.hh"
 
+#if _WIN32 || _WIN64 || __CYGWIN__
+#include <windows.h>
+#endif
+
 namespace xtest {
 namespace internal {
+#if _WIN32 || _WIN64 || __CYGWIN__
+// Returns the character attribute for the given color.
+static WORD GetColorAttribute(XTestColor color) {
+  switch (color) {
+    case XTestColor::kRed:
+      return FOREGROUND_RED;
+    case XTestColor::kGreen:
+      return FOREGROUND_GREEN;
+    case XTestColor::kYellow:
+      return FOREGROUND_RED | FOREGROUND_GREEN;
+    default:
+      return 0;
+  }
+}
+
+static int32_t GetBitOffset(WORD color_mask) {
+  if (color_mask == 0)
+    return 0;
+
+  int32_t bitOffset = 0;
+  while ((color_mask & 1) == 0) {
+    color_mask >>= 1;
+    ++bitOffset;
+  }
+  return bitOffset;
+}
+
+static WORD GetNewColor(XTestColor color, WORD old_color_attrs) {
+  // Let's reuse the BG
+  static const WORD background_mask = BACKGROUND_BLUE | BACKGROUND_GREEN |
+                                      BACKGROUND_RED | BACKGROUND_INTENSITY;
+  static const WORD foreground_mask = FOREGROUND_BLUE | FOREGROUND_GREEN |
+                                      FOREGROUND_RED | FOREGROUND_INTENSITY;
+  const WORD existing_bg = old_color_attrs & background_mask;
+
+  WORD new_color =
+      GetColorAttribute(color) | existing_bg | FOREGROUND_INTENSITY;
+  static const int32_t bg_bitOffset = GetBitOffset(background_mask);
+  static const int32_t fg_bitOffset = GetBitOffset(foreground_mask);
+
+  if (((new_color & background_mask) >> bg_bitOffset) ==
+      ((new_color & foreground_mask) >> fg_bitOffset)) {
+    new_color ^= FOREGROUND_INTENSITY;  // invert intensity
+  }
+  return new_color;
+}
+#else
 // Returns the ANSI color code for the given color.  `XTestColor::kDefault` is
 // an invalid input.
-std::string GetAnsiColorCode(const XTestColor& color) {
+static std::string GetAnsiColorCode(const XTestColor& color) {
   switch (color) {
     case XTestColor::kRed:
       return "1";
@@ -51,6 +103,7 @@ std::string GetAnsiColorCode(const XTestColor& color) {
       return "";
   }
 }
+#endif
 
 bool ShouldUseColor() { return posix::IsAtty(posix::FileNo(stdout)) != 0; }
 
@@ -59,17 +112,35 @@ void ColoredPrintf(const XTestColor& color, const char* fmt, ...) {
   va_start(args, fmt);
 
   if (!ShouldUseColor()) {
-    vprintf(fmt, args);
+    std::vprintf(fmt, args);
     va_end(args);
     return;
   }
 
-#if defined(__linux__)
-  printf("\033[0;3%sm", GetAnsiColorCode(color).c_str());
-#endif
-  vprintf(fmt, args);
-#if defined(__linux__)
-  printf("\033[m");  // Resets the terminal to default.
+#if _WIN32 || _WIN64 || __CYGWIN__
+  const HANDLE stdout_handle = GetStdHandle(STD_OUTPUT_HANDLE);
+
+  // Gets the current text color.
+  CONSOLE_SCREEN_BUFFER_INFO buffer_info;
+  GetConsoleScreenBufferInfo(stdout_handle, &buffer_info);
+  const WORD old_color_attrs = buffer_info.wAttributes;
+  const WORD new_color = GetNewColor(color, old_color_attrs);
+
+  // We need to flush the stream buffers into the console before each
+  // SetConsoleTextAttribute call lest it affect the text that is already
+  // printed but has not yet reached the console.
+  std::fflush(stdout);
+  SetConsoleTextAttribute(stdout_handle, new_color);
+
+  std::vprintf(fmt, args);
+
+  std::fflush(stdout);
+  // Restores the text color.
+  SetConsoleTextAttribute(stdout_handle, old_color_attrs);
+#else
+  std::printf("\033[0;3%sm", GetAnsiColorCode(color).c_str());
+  std::vprintf(fmt, args);
+  std::printf("\033[m");  // Resets the terminal to default.
 #endif
 
   va_end(args);
