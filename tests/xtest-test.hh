@@ -41,7 +41,8 @@
 // Verifies that the command line flag variables can be accessed in code once
 // `xtest.hh` has been included.
 TEST(CommandLineFlagsTest, CanBeAccessedInCodeOnceXTestHIsIncluded) {
-  bool dummy = XTEST_FLAG_GET_(help) || XTEST_FLAG_GET_(shuffle);
+  bool dummy = XTEST_FLAG_GET_(help) || XTEST_FLAG_GET_(shuffle) ||
+               XTEST_FLAG_GET_(color) != "unknown";
   EXPECT_TRUE(dummy || !dummy);  // Suppresses warning that dummy is unused.
 }
 

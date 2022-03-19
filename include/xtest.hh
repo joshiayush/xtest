@@ -48,7 +48,7 @@ XTEST_FLAG_DECLARE_bool_(shuffle);
 // This flag enables using colors in terminal output. Available values are "yes"
 // to enable colors, "no" (disable colors), or "auto" (the default) to let XTest
 // decide.
-XTEST_FLAG_DECLARE_bool_(color);
+XTEST_FLAG_DECLARE_string_(color);
 
 namespace xtest {
 namespace impl {

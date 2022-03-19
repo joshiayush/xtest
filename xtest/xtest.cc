@@ -60,8 +60,8 @@ XTEST_FLAG_DEFINE_bool_(shuffle, false,
 // This flag enables using colors in terminal output. Available values are "yes"
 // to enable colors, "no" (disable colors), or "auto" (the default) to let XTest
 // decide.
-XTEST_FLAG_DEFINE_bool_(
-    color, false,
+XTEST_FLAG_DEFINE_string_(
+    color, "auto",
     "Whether to use colors in the output.  Valid values: yes, no, "
     "and auto.  'auto' means to use colors if the output is "
     "being sent to a terminal and the TERM environment variable "
