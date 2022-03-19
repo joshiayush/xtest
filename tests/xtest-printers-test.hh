@@ -27,13 +27,24 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <cstdint>
+#ifndef XTEST_TESTS_XTEST_PRINTERS_HH_
+#define XTEST_TESTS_XTEST_PRINTERS_HH_
 
-#include "xtest-assertions-test.hh"
-#include "xtest-test.hh"
+#include "internal/xtest-printers.hh"
+#include "redirector.hh"
 #include "xtest.hh"
 
-int32_t main(int32_t argc, char** argv) {
-  xtest::InitXTest(&argc, argv);
-  return RUN_ALL_TESTS();
+TEST(ShouldUseColorTest, TestBeforeAndAfterRedirection) {
+  // Test before redirecting `stdout`; `ShouldUseColor()` must return `true`.
+  EXPECT_TRUE(xtest::internal::ShouldUseColor());
+  xtest::testing::RedirectorContext stdout_redirector_context(
+      xtest::testing::RedirectorContextStream::kStdout);
+  stdout_redirector_context.ReplaceStreamWithContextBuffer();
+  // Test after redirecting `stdout`; `ShouldUseColor()` must return `false`.
+  EXPECT_FALSE(xtest::internal::ShouldUseColor());
+  stdout_redirector_context.RestoreStream();
+  // Test after restoring `stdout`; `ShouldUseColor()` must return `true`.
+  EXPECT_TRUE(xtest::internal::ShouldUseColor());
 }
+
+#endif  // XTEST_TESTS_XTEST_PRINTERS_HH_
