@@ -35,9 +35,11 @@
 #include <iostream>
 #include <string>
 
-#if defined(__linux__)
+#include "internal/xtest-port-arch.hh"
+
+#if XTEST_OS_LINUX || XTEST_OS_MAC
 #include <unistd.h>
-#elif defined(_WIN32) || defined(_WIN64) || defined(__CYGWIN__)
+#elif XTEST_OS_WINDOWS
 #include <io.h>
 #endif
 

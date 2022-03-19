@@ -34,15 +34,16 @@
 #include <cstring>
 #include <string>
 
+#include "internal/xtest-port-arch.hh"
 #include "internal/xtest-port.hh"
 
-#if _WIN32 || _WIN64 || __CYGWIN__
+#if XTEST_OS_WINDOWS
 #include <windows.h>
 #endif
 
 namespace xtest {
 namespace internal {
-#if _WIN32 || _WIN64 || __CYGWIN__
+#if XTEST_OS_WINDOWS
 // Returns the character attribute for the given color.
 static WORD GetColorAttribute(XTestColor color) {
   switch (color) {
@@ -117,7 +118,7 @@ void ColoredPrintf(const XTestColor& color, const char* fmt, ...) {
     return;
   }
 
-#if _WIN32 || _WIN64 || __CYGWIN__
+#if XTEST_OS_WINDOWS
   const HANDLE stdout_handle = GetStdHandle(STD_OUTPUT_HANDLE);
 
   // Gets the current text color.

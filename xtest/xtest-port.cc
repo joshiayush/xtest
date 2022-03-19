@@ -69,18 +69,18 @@ XTestLog::~XTestLog() {
 
 namespace posix {
 int32_t FileNo(FILE* stream) {
-#if defined(__linux__)
-  return fileno(stream);
-#elif defined(_WIN32) || defined(_WIN64) || defined(__CYGWIN__)
+#if XTEST_OS_WINDOWS
   return _fileno(stream);
+#else
+  return fileno(stream);
 #endif
 }
 
 int32_t IsAtty(int32_t fd) {
-#if defined(__linux__)
-  return isatty(fd);
-#elif defined(_WIN32) || defined(_WIN64) || defined(__CYGWIN__)
+#if XTEST_OS_WINDOWS
   return _isatty(fd);
+#else
+  return isatty(fd);
 #endif
 }
 }  // namespace posix
