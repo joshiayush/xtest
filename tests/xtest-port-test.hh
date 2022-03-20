@@ -1,4 +1,4 @@
-// Copyright 2021, The xtest authors.
+// Copyright 2022, The xtest authors.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -27,17 +27,18 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <cstdint>
+#ifndef XTEST_TESTS_XTEST_PORT_TEST_HH_
+#define XTEST_TESTS_XTEST_PORT_TEST_HH_
 
+#include "internal/xtest-port.hh"
 #include "xtest.hh"
 
-// Include header files containing unit tests.
-#include "xtest-assertions-test.hh"
-#include "xtest-port-test.hh"
-#include "xtest-printers-test.hh"
-#include "xtest-test.hh"
-
-int32_t main(int32_t argc, char** argv) {
-  xtest::InitXTest(&argc, argv);
-  return RUN_ALL_TESTS();
+TEST(GlobalCountersTest, CanBeAccessInCodeOnceXTestPortIsIncluded) {
+  uint64_t dummy = XTEST_GLOBAL_INSTANCE_GET_(failure_count) ||
+                   XTEST_GLOBAL_INSTANCE_GET_(test_count) ||
+                   XTEST_GLOBAL_INSTANCE_GET_(test_suite_count) ||
+                   XTEST_GLOBAL_INSTANCE_GET_(failed_test_count);
+  EXPECT_TRUE(dummy || !dummy);  // Suppresses warning that dummy is unused.
 }
+
+#endif  // XTEST_TESTS_XTEST_PORT_TEST_HH_

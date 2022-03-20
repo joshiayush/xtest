@@ -204,7 +204,7 @@ int32_t IsAtty(int32_t fd);
   static_assert(true, "no-op to require trailing semicolon")
 
 #define XTEST_GLOBAL_INSTANCE_(name) xtest_global_##name
-#define XTEST_GLOBAL_INSTANCE_GET_(name) XTEST_GLOBAL_INSTANCE_(name)
+#define XTEST_GLOBAL_INSTANCE_GET_(name) ::xtest::XTEST_GLOBAL_INSTANCE_(name)
 #define XTEST_GLOBAL_INSTANCE_SET_(name, value) \
   (void)(XTEST_GLOBAL_INSTANCE_(name) = (value))
 
