@@ -69,6 +69,12 @@ XTEST_FLAG_DEFINE_string_(
 
 XTEST_GLOBAL_DEFINE_uint64_(failure_count, 0,
                             "Global counter for the number of failed tests.");
+XTEST_GLOBAL_DEFINE_uint64_(test_count, 0,
+                            "Global counter for the number of tests run.");
+XTEST_GLOBAL_DEFINE_uint64_(test_suite_count, 0,
+                            "Global counter for the number of test suites.");
+XTEST_GLOBAL_DEFINE_uint64_(failed_test_count, 0,
+                            "Global counter for the number of failed tests.");
 
 namespace xtest {
 namespace impl {
@@ -94,11 +100,6 @@ TimeInMillis Timer::Elapsed() {
       .count();
 }
 }  // namespace internal
-
-std::uint64_t G_n_tests = 0;
-std::uint64_t G_n_testSuites = 0;
-
-std::uint64_t G_n_failedTests = 0;
 
 static const char kColorEncodedHelpMessage[] =
     "This program contains tests written using xtest.  You can use the\n"
@@ -218,14 +219,20 @@ std::string Message::GetString() const {
 // The returned pair has the total number of test cases as its first element
 // and the total number of tests as its second element.
 TestSuiteAndTestNumberPair GetTestSuiteAndTestNumber() {
-  if (G_n_testSuites != 0 && G_n_tests != 0)
-    return TestSuiteAndTestNumberPair{G_n_testSuites, G_n_tests};
-  G_n_testSuites = G_n_tests = 0;
+  if (XTEST_GLOBAL_INSTANCE_GET_(test_suite_count) != 0 &&
+      XTEST_GLOBAL_INSTANCE_GET_(test_count) != 0)
+    return TestSuiteAndTestNumberPair{
+        XTEST_GLOBAL_INSTANCE_GET_(test_suite_count),
+        XTEST_GLOBAL_INSTANCE_GET_(test_count)};
+  XTEST_GLOBAL_INSTANCE_GET_(test_suite_count) =
+      XTEST_GLOBAL_INSTANCE_GET_(test_count) = 0;
   for (const auto& testCase : XTestRegistryInstance.M_testRegistryTable) {
-    ++G_n_testSuites;
-    G_n_tests += testCase.second.size();
+    ++XTEST_GLOBAL_INSTANCE_GET_(test_suite_count);
+    XTEST_GLOBAL_INSTANCE_GET_(test_count) += testCase.second.size();
   }
-  return TestSuiteAndTestNumberPair{G_n_testSuites, G_n_tests};
+  return TestSuiteAndTestNumberPair{
+      XTEST_GLOBAL_INSTANCE_GET_(test_suite_count),
+      XTEST_GLOBAL_INSTANCE_GET_(test_count)};
 }
 
 // Returns the `XTestUnitTest` instance of failed tests.
@@ -251,13 +258,13 @@ XTestUnitTest GetFailedTests() {
 // This function keeps a count of the number of test suites that called the
 // `abort()` function in case of test failure assertion.
 std::uint64_t GetFailedTestCount() {
-  if (G_n_failedTests != 0)
-    return G_n_failedTests;
+  if (XTEST_GLOBAL_INSTANCE_GET_(failed_test_count) != 0)
+    return XTEST_GLOBAL_INSTANCE_GET_(failed_test_count);
   XTestUnitTest failedTests = GetFailedTests();
   for (const XTestUnitTestPair& test_pair : failedTests)
     for (const TestRegistrar* const& test : test_pair.second)
-      ++G_n_failedTests;
-  return G_n_failedTests;
+      ++XTEST_GLOBAL_INSTANCE_GET_(failed_test_count);
+  return XTEST_GLOBAL_INSTANCE_GET_(failed_test_count);
 }
 
 // Joins the test suite and test name at `.` and prints on the console using

@@ -226,4 +226,8 @@ int32_t IsAtty(int32_t fd);
 // every time a non-fatal test assertion fails.
 XTEST_GLOBAL_DECLARE_uint64_(failure_count);
 
+XTEST_GLOBAL_DECLARE_uint64_(test_count);
+XTEST_GLOBAL_DECLARE_uint64_(test_suite_count);
+XTEST_GLOBAL_DECLARE_uint64_(failed_test_count);
+
 #endif  // XTEST_INCLUDE_INTERNAL_XTEST_PORT_HH_
