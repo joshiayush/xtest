@@ -76,6 +76,10 @@ XTEST_GLOBAL_DEFINE_uint64_(test_suite_count, 0,
 XTEST_GLOBAL_DEFINE_uint64_(failed_test_count, 0,
                             "Global counter for the number of failed tests.");
 
+XTEST_STATIC_DECLARE_vector_(argvs, std::string,
+                             "Copy of command line arguments passed to the "
+                             "main executable.  Set by InitXTest().");
+
 namespace xtest {
 namespace impl {
 // Calls std::longjmp() with M_jumpOutOfTest instance as its first
@@ -109,13 +113,12 @@ static const char kColorEncodedHelpMessage[] =
     "   @G--shuffle@D\n"
     "     Randomize tests' order. (In development)\n";
 
-// A copy of all command line arguments.  Set by InitXTest().
-static std::vector<std::string> G_argvs;
-
 // XTestIsInitialized() returns true if and only if the user has initialized
 // xtest.  Useful for catching the user mistake of not initializing xtest
 // before calling RUN_ALL_TESTS().
-static bool XTestIsInitialized() { return G_argvs.size() > 0; }
+static bool XTestIsInitialized() {
+  return XTEST_GLOBAL_INSTANCE_GET_(argvs).size() > 0;
+}
 
 // Returns a string of length `width` all filled with the character `chr`.
 //
@@ -224,8 +227,8 @@ TestSuiteAndTestNumberPair GetTestSuiteAndTestNumber() {
     return TestSuiteAndTestNumberPair{
         XTEST_GLOBAL_INSTANCE_GET_(test_suite_count),
         XTEST_GLOBAL_INSTANCE_GET_(test_count)};
-  XTEST_GLOBAL_INSTANCE_GET_(test_suite_count) =
-      XTEST_GLOBAL_INSTANCE_GET_(test_count) = 0;
+  XTEST_GLOBAL_INSTANCE_SET_(test_suite_count, 0);
+  XTEST_GLOBAL_INSTANCE_SET_(test_count, 0);
   for (const auto& testCase : XTestRegistryInstance.M_testRegistryTable) {
     ++XTEST_GLOBAL_INSTANCE_GET_(test_suite_count);
     XTEST_GLOBAL_INSTANCE_GET_(test_count) += testCase.second.size();
@@ -560,9 +563,10 @@ void InitXTest(int32_t* argc, char** argv) {
   if (*argc <= 0)
     return;
 
-  G_argvs.clear();
+  XTEST_GLOBAL_INSTANCE_GET_(argvs).clear();
   for (int32_t i = 0; i < *argc; ++i)
-    G_argvs.push_back(internal::StreamableToString(argv[i]));
+    XTEST_GLOBAL_INSTANCE_GET_(argvs).push_back(
+        internal::StreamableToString(argv[i]));
 
   ParseXTestFlags(argc, argv);
   PostFlagParsing();

@@ -34,6 +34,7 @@
 #include <cstdint>
 #include <iostream>
 #include <string>
+#include <vector>
 
 #include "internal/xtest-port-arch.hh"
 
@@ -219,6 +220,11 @@ int32_t IsAtty(int32_t fd);
   uint64_t XTEST_GLOBAL_INSTANCE_(name) = (value);    \
   }                                                   \
   static_assert(true, "no-op to require trailing semicolon")
+
+#define XTEST_STATIC_DECLARE_vector_(name, T, doc)    \
+  namespace xtest {                                   \
+  static std::vector<T> XTEST_GLOBAL_INSTANCE_(name); \
+  }
 
 // Global counter for non-fatal test failures.
 //
