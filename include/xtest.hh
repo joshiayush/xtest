@@ -59,45 +59,6 @@ namespace impl {
 // inside of the function `RunRegisteredTests()` that runs the registered test
 // suites.
 void SignalHandler(int param);
-
-// Special class to take streamables to the console and highlight them with
-// green color.
-//
-// This class will print the streamable object in 'green' color,  At this moment
-// we don't have any functionality to colorify the streamable object before
-// putting it on the console.
-class MessageStream {
- private:
-  // The type of basic IO manipulators (endl, ends, and flush) for narrow
-  // streams.
-  //
-  // @TODO(joshiayush): Copy of the Message implementation of this type, if
-  // possible refactor into one single definition.
-  typedef std::ostream& (*BasicNarrowIoManip)(std::ostream&);
-
-  std::ostream& _M_stream;
-
- public:
-  MessageStream() : _M_stream(std::cout) {}
-
-  template <typename Type>
-  MessageStream operator<<(const Type& streamable) {
-    std::cout << internal::StreamableToString(streamable);
-    return *this;
-  }
-
-  // Since the basic IO manipulators are overloaded for both narrow and wide
-  // streams, we have to provide this specialized definition of operator <<,
-  // even though its body is the same as the templatized version above.  Without
-  // this definition, streaming endl or other basic IO manipulators to Message
-  // will confuse the compiler.
-  MessageStream& operator<<(BasicNarrowIoManip val) {
-    std::cout << val;
-    return *this;
-  }
-};
-
-#define MESSAGE() ::xtest::impl::MessageStream()
 }  // namespace impl
 
 using TestSuiteAndTestNumberPair = std::pair<std::uint64_t, std::uint64_t>;
