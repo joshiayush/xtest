@@ -527,6 +527,7 @@ static void ParseXTestFlag(const char* const flag) {
 
   XTEST_INTERNAL_PARSE_FLAG(help);
   XTEST_INTERNAL_PARSE_FLAG(shuffle);
+#undef XTEST_INTERNAL_PARSE_FLAG
 }
 
 // Parses all the xtest command line flags.

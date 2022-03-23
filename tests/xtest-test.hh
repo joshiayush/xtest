@@ -50,51 +50,6 @@ TEST(XtestDefaultSummaryStatusStrWidthTest, CheckIfVisible) {
   EXPECT_EQ(XTEST_DEFAULT_SUMMARY_STATUS_STR_WIDTH_, 10);
 }
 
-TEST(GetStrFilledWithTest, WithoutPassingWidthExplicitly) {
-  const std::string actual = xtest::GetStrFilledWith(
-      '-');  // Default width passed should be
-             // `XTEST_DEFAULT_SUMMARY_STATUS_STR_WIDTH_`.
-  const std::string expected("----------");
-  EXPECT_EQ(actual, expected);
-}
-
-TEST(GetStrFilledWithTest, WhenPassedDefaultSummaryStatusStrWidthExplicitly) {
-  const std::string actual =
-      xtest::GetStrFilledWith('-', XTEST_DEFAULT_SUMMARY_STATUS_STR_WIDTH_);
-  const std::string expected("----------");
-  EXPECT_EQ(actual, expected);
-}
-
-TEST(GetStrFilledWithTest, WhenPassedAnArbitraryNumber) {
-  const std::string actual = xtest::GetStrFilledWith('-', 20);
-  const std::string expected("--------------------");
-  EXPECT_EQ(actual, expected);
-}
-
-TEST(GetStringAlignedToTest, AlignCenterWithDefaultSummaryStatusWidth) {
-  const std::string actual = xtest::GetStringAlignedTo(
-      "FAILED", XTEST_DEFAULT_SUMMARY_STATUS_STR_WIDTH_,
-      xtest::StringAlignValues::ALIGN_CENTER);
-  const std::string expected("  FAILED  ");
-  EXPECT_EQ(actual, expected);
-}
-
-TEST(GetStringAlignedToTest, AlignLeftWithDefaultSummaryStatusWidth) {
-  const std::string actual = xtest::GetStringAlignedTo(
-      "FAILED", XTEST_DEFAULT_SUMMARY_STATUS_STR_WIDTH_,
-      xtest::StringAlignValues::ALIGN_LEFT);
-  const std::string expected("FAILED    ");
-  EXPECT_EQ(actual, expected);
-}
-
-TEST(GetStringAlignedToTest, AlignRightWithDefaultSummaryStatusWidth) {
-  const std::string actual = xtest::GetStringAlignedTo(
-      "FAILED", XTEST_DEFAULT_SUMMARY_STATUS_STR_WIDTH_,
-      xtest::StringAlignValues::ALIGN_RIGHT);
-  const std::string expected("    FAILED");
-  EXPECT_EQ(actual, expected);
-}
-
 TEST(PrettyUnitTestResultPrinterTest, StaticMethodPrintTestName) {
   xtest::testing::RedirectorContext stdout_redirector_context(
       xtest::testing::RedirectorContextStream::kStdout);
