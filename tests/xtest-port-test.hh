@@ -31,6 +31,7 @@
 #define XTEST_TESTS_XTEST_PORT_TEST_HH_
 
 #include "internal/xtest-port.hh"
+#include "redirector.hh"
 #include "xtest.hh"
 
 TEST(GlobalCountersTest, CanBeAccessInCodeOnceXTestPortIsIncluded) {
@@ -84,6 +85,29 @@ TEST(GetStringAlignedToTest, AlignRightWithDefaultSummaryStatusWidth) {
       xtest::StringAlignValues::ALIGN_RIGHT);
   const std::string expected("    FAILED");
   EXPECT_EQ(actual, expected);
+}
+
+TEST(PosixFileNoTest, WithStdinStdoutAndStderrStreams) {
+  EXPECT_EQ(xtest::posix::FileNo(stdin), 0);
+  EXPECT_EQ(xtest::posix::FileNo(stdout), 1);
+  EXPECT_EQ(xtest::posix::FileNo(stderr), 2);
+}
+
+TEST(PosixIsAttyTest, WithStdoutAndStderrStreams) {
+  EXPECT_TRUE(xtest::posix::IsAtty(xtest::posix::FileNo(stdout)));
+  EXPECT_TRUE(xtest::posix::IsAtty(xtest::posix::FileNo(stderr)));
+
+  xtest::testing::RedirectorContext stdout_redirector_context(
+      xtest::testing::RedirectorContextStream::kStdout);
+  stdout_redirector_context.ReplaceStreamWithContextBuffer();
+  EXPECT_FALSE(xtest::posix::IsAtty(xtest::posix::FileNo(stdout)));
+  stdout_redirector_context.RestoreStream();
+
+  xtest::testing::RedirectorContext stderr_redirector_context(
+      xtest::testing::RedirectorContextStream::kStderr);
+  stderr_redirector_context.ReplaceStreamWithContextBuffer();
+  EXPECT_FALSE(xtest::posix::IsAtty(xtest::posix::FileNo(stderr)));
+  stderr_redirector_context.RestoreStream();
 }
 
 #endif  // XTEST_TESTS_XTEST_PORT_TEST_HH_
