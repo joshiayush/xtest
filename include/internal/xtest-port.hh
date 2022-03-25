@@ -149,8 +149,19 @@ std::string GetStringAlignedTo(
     const StringAlignValues& alignSide = ALIGN_CENTER);
 
 namespace posix {
+// Posix compatible function to return the file number associated with the given
+// stream.
+//
+// Returns the integer value of the file descriptor associated with `stream`.
+// Otherwise, the value -1 shall be returned and `errno` set to indicate the
+// error.
 int32_t FileNo(FILE* stream);
 
+// Posix compatible function to test whether `fd` is an open file descriptor
+// referring to a terminal.
+//
+// Returns 1 if fd is an open file descriptor referring to a terminal; otherwise
+// 0 is returned, and `errno` is set to indicate the error.
 int32_t IsAtty(int32_t fd);
 }  // namespace posix
 }  // namespace xtest
