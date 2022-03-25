@@ -37,6 +37,10 @@ namespace xtest {
 namespace internal {
 enum class XTestColor { kDefault, kRed, kGreen, kYellow };
 
+// Returns true only if the output stream is a TTY.
+//
+// Uses posix compatible functions `IsAtty()` and `FileNo()` to check if the
+// output stream is a TTY.
 bool ShouldUseColor();
 
 void ColoredPrintf(const XTestColor& color, const char* fmt, ...);

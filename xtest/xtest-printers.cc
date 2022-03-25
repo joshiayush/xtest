@@ -106,6 +106,10 @@ static std::string GetAnsiColorCode(const XTestColor& color) {
 }
 #endif
 
+// Returns true only if the output stream is a TTY.
+//
+// Uses posix compatible functions `IsAtty()` and `FileNo()` to check if the
+// output stream is a TTY.
 bool ShouldUseColor() { return posix::IsAtty(posix::FileNo(stdout)) != 0; }
 
 void ColoredPrintf(const XTestColor& color, const char* fmt, ...) {
@@ -155,7 +159,6 @@ void ColoredPrintf(const XTestColor& color, const char* fmt, ...) {
 //   @G    changes the color to green.
 //   @Y    changes the color to yellow.
 //   @D    changes to the default terminal text color.
-//
 void PrintColorEncoded(const char* str) {
   XTestColor color = XTestColor::kDefault;  // The current color.
 
