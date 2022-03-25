@@ -43,6 +43,9 @@ enum class XTestColor { kDefault, kRed, kGreen, kYellow };
 // output stream is a TTY.
 bool ShouldUseColor();
 
+// Prints text with colors in both Windows and Unix-like systems by setting the
+// console text attributes and emitting colors respectively.  If the output is
+// redirected to a file then we disable color output.
 void ColoredPrintf(const XTestColor& color, const char* fmt, ...);
 
 void PrintColorEncoded(const char* str);
