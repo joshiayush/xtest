@@ -91,7 +91,8 @@ static WORD GetNewColor(XTestColor color, WORD old_color_attrs) {
 }
 #else
 // Returns the ANSI color code for the given color.  `XTestColor::kDefault`
-// result in an empty string.
+// result in an empty string.  This function should only be used in Unix-like
+// operating systems where color output just requires emitting escape codes.
 static std::string GetAnsiColorCode(const XTestColor& color) {
   switch (color) {
     case XTestColor::kRed:
