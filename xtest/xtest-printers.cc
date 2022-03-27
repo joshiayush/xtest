@@ -71,8 +71,9 @@ static int32_t GetBitOffset(WORD color_mask) {
   return bitOffset;
 }
 
+// Returns the character attribute for the given color.
 static WORD GetNewColor(XTestColor color, WORD old_color_attrs) {
-  // Let's reuse the BG
+  // Let's reuse the BG and the FG.
   static const WORD background_mask = BACKGROUND_BLUE | BACKGROUND_GREEN |
                                       BACKGROUND_RED | BACKGROUND_INTENSITY;
   static const WORD foreground_mask = FOREGROUND_BLUE | FOREGROUND_GREEN |
@@ -85,9 +86,8 @@ static WORD GetNewColor(XTestColor color, WORD old_color_attrs) {
   static const int32_t fg_bitOffset = GetBitOffset(foreground_mask);
 
   if (((new_color & background_mask) >> bg_bitOffset) ==
-      ((new_color & foreground_mask) >> fg_bitOffset)) {
+      ((new_color & foreground_mask) >> fg_bitOffset))
     new_color ^= FOREGROUND_INTENSITY;  // invert intensity
-  }
   return new_color;
 }
 #else
