@@ -31,6 +31,7 @@
 
 #include <cstdarg>
 #include <cstdint>
+#include <cstdlib>
 #include <cstring>
 #include <string>
 
@@ -127,7 +128,11 @@ void ColoredPrintf(const XTestColor& color, const char* fmt, ...) {
   }
 
 #if XTEST_OS_WINDOWS
+  // Get a `HANDLE` type to `STD_OUTPUT_HANDLE` which is 4294967285 and later is
+  // cast to (signed) integer.
   const HANDLE stdout_handle = GetStdHandle(STD_OUTPUT_HANDLE);
+  if (stdout_handle == INVALID_HANDLE_VALUE)
+    std::exit(GetLastError());
 
   // Gets the current text color.
   CONSOLE_SCREEN_BUFFER_INFO buffer_info;
