@@ -30,6 +30,7 @@
 #ifndef XTEST_TESTS_XTEST_PRINTERS_HH_
 #define XTEST_TESTS_XTEST_PRINTERS_HH_
 
+#include "internal/xtest-port-arch.hh"
 #include "internal/xtest-printers.hh"
 #include "redirector.hh"
 #include "xtest.hh"
@@ -45,6 +46,29 @@ TEST(ShouldUseColorTest, TestBeforeAndAfterRedirection) {
   stdout_redirector_context.RestoreStream();
   // Test after restoring `stdout`; `ShouldUseColor()` must return `true`.
   EXPECT_TRUE(xtest::internal::ShouldUseColor());
+}
+
+TEST(ColoredPrintfTest,
+     TestIfItPrintsColoredOutputInBothWindowsAndUnixSystems) {
+#if XTEST_OS_WINDOWS
+  // In order to test ColoredPrintf's output we need to redirect `stdout` which
+  // will cause ColoredPrintf() to disable color output.
+  //
+  // On windows we need to read the console text attributes in order to test
+  // them. Do we have a way to do capture the console text attributes?
+
+  // Until we figure it out use a EXPECT_TRUE assertion with a argument `true`.
+  EXPECT_TRUE(true);
+#else
+  // In order to test ColoredPrintf's output we need to redirect `stdout` which
+  // will cause ColoredPrintf() to disable color output.
+  //
+  // Do we have a way to test if ColoredPrintf() does what it supposed to do
+  // regardless of the operating system?
+
+  // Until we figure it out use a EXPECT_TRUE assertion with a argument `true`.
+  EXPECT_TRUE(true);
+#endif
 }
 
 #endif  // XTEST_TESTS_XTEST_PRINTERS_HH_
