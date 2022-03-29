@@ -52,11 +52,8 @@ TEST(ShouldUseColorTest, TestBeforeAndAfterRedirection) {
 
 TEST(ColoredPrintfTest, TestWhenDefaultIsUsedInBothWindowsAndUnixSystems) {
 #if XTEST_OS_WINDOWS
-  // In order to test ColoredPrintf's output we need to redirect `stdout` which
-  // will cause ColoredPrintf() to disable color output.
-  //
   // On windows we need to read the console text attributes in order to test
-  // them. Do we have a way to do capture the console text attributes?
+  // them. Do we have a way to capture the console text attributes?
 
   // Until we figure it out use a EXPECT_TRUE assertion with a argument `true`.
   EXPECT_TRUE(true);
@@ -75,11 +72,8 @@ TEST(ColoredPrintfTest, TestWhenDefaultIsUsedInBothWindowsAndUnixSystems) {
 
 TEST(ColoredPrintfTest, TestWhenRedIsUsedInBothWindowsAndUnixSystems) {
 #if XTEST_OS_WINDOWS
-  // In order to test ColoredPrintf's output we need to redirect `stdout` which
-  // will cause ColoredPrintf() to disable color output.
-  //
   // On windows we need to read the console text attributes in order to test
-  // them. Do we have a way to do capture the console text attributes?
+  // them. Do we have a way to capture the console text attributes?
 
   // Until we figure it out use a EXPECT_TRUE assertion with a argument `true`.
   EXPECT_TRUE(true);
@@ -98,11 +92,8 @@ TEST(ColoredPrintfTest, TestWhenRedIsUsedInBothWindowsAndUnixSystems) {
 
 TEST(ColoredPrintfTest, TestWhenGreenIsUsedInBothWindowsAndUnixSystems) {
 #if XTEST_OS_WINDOWS
-  // In order to test ColoredPrintf's output we need to redirect `stdout` which
-  // will cause ColoredPrintf() to disable color output.
-  //
   // On windows we need to read the console text attributes in order to test
-  // them. Do we have a way to do capture the console text attributes?
+  // them. Do we have a way to capture the console text attributes?
 
   // Until we figure it out use a EXPECT_TRUE assertion with a argument `true`.
   EXPECT_TRUE(true);
@@ -120,11 +111,8 @@ TEST(ColoredPrintfTest, TestWhenGreenIsUsedInBothWindowsAndUnixSystems) {
 }
 TEST(ColoredPrintfTest, TestWhenYellowIsUsedInBothWindowsAndUnixSystems) {
 #if XTEST_OS_WINDOWS
-  // In order to test ColoredPrintf's output we need to redirect `stdout` which
-  // will cause ColoredPrintf() to disable color output.
-  //
   // On windows we need to read the console text attributes in order to test
-  // them. Do we have a way to do capture the console text attributes?
+  // them. Do we have a way to capture the console text attributes?
 
   // Until we figure it out use a EXPECT_TRUE assertion with a argument `true`.
   EXPECT_TRUE(true);
