@@ -1,4 +1,4 @@
-// Copyright 2021, The xtest authors.
+// Copyright 2022, The xtest authors Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -11,7 +11,7 @@
 // copyright notice, this list of conditions and the following disclaimer
 // in the documentation and/or other materials provided with the
 // distribution.
-//     * Neither the name of The xtest authors. nor the names of its
+//     * Neither the name of The xtest authors Inc. nor the names of its
 // contributors may be used to endorse or promote products derived from
 // this software without specific prior written permission.
 //
@@ -27,18 +27,30 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <cstdint>
+#ifndef XTEST_TESTS_XTEST_STRING_TEST_HH_
+#define XTEST_TESTS_XTEST_STRING_TEST_HH_
 
+#include "internal/xtest-string.hh"
 #include "xtest.hh"
 
-// Include header files containing unit tests.
-#include "xtest-assertions-test.hh"
-#include "xtest-port-test.hh"
-#include "xtest-printers-test.hh"
-#include "xtest-string-test.hh"
-#include "xtest-test.hh"
+TEST(ReprTest, Empty) { EXPECT_EQ(xtest::String::Repr(""), ""); }
 
-int32_t main(int32_t argc, char** argv) {
-  xtest::InitXTest(&argc, argv);
-  return RUN_ALL_TESTS();
+TEST(ReprTest, TestWithCommonControlCharacters) {
+  EXPECT_EQ(xtest::String::Repr("\a"), "\\a");
+  EXPECT_EQ(xtest::String::Repr("\b"), "\\b");
+  EXPECT_EQ(xtest::String::Repr("\f"), "\\f");
+  EXPECT_EQ(xtest::String::Repr("\n"), "\\n");
+  EXPECT_EQ(xtest::String::Repr("\r"), "\\r");
+  EXPECT_EQ(xtest::String::Repr("\t"), "\\t");
+  EXPECT_EQ(xtest::String::Repr("\v"), "\\v");
+  EXPECT_EQ(xtest::String::Repr("\\"), "\\\\");
+  EXPECT_EQ(xtest::String::Repr("\'"), "\\'");
+  EXPECT_EQ(xtest::String::Repr("\""), "\\\"");
 }
+
+TEST(ReprTest, TestWithNumbers) {
+  EXPECT_EQ(xtest::String::Repr("\001"), "\\0x01");
+  EXPECT_EQ(xtest::String::Repr("\x01"), "\\0x01");
+}
+
+#endif  // XTEST_TESTS_XTEST_STRING_TEST_HH_

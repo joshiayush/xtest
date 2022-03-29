@@ -73,9 +73,9 @@ void String::ChrCStrLiteral(const char ch, std::string* const buffer) {
         *buffer += "\\\"";
         break;
       default: {
-        char buffer_[5];
+        char buffer_[6];
         std::snprintf(
-            buffer_, 5, "\\x%02x",
+            buffer_, 6, "\\0x%02x",
             static_cast<unsigned char>(ch));  // This handles control
                                               // characters that are not
                                               // printable and does not
