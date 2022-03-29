@@ -71,11 +71,12 @@ TEST(PrettyUnitTestResultPrinterTest, StaticMethodOnTestIterationStart) {
   stdout_redirector_context.RestoreStream();
   const std::string actual(stdout_redirector_context.M_output_buffer_);
   char expected[REDIRECTOR_BUFFER_SIZE];
-  std::snprintf(expected, REDIRECTOR_BUFFER_SIZE,
-                "[%s] Running %lu tests from %lu test suites.\n",
-                xtest::GetStrFilledWith('=').c_str(),
-                xtest::GetTestSuiteAndTestNumber().second,
-                xtest::GetTestSuiteAndTestNumber().first);
+  std::snprintf(
+      expected, REDIRECTOR_BUFFER_SIZE,
+      "\x1b[0;32m[%s] \x1b[mRunning %lu tests from %lu test suites.\n",
+      xtest::GetStrFilledWith('=').c_str(),
+      xtest::GetTestSuiteAndTestNumber().second,
+      xtest::GetTestSuiteAndTestNumber().first);
   EXPECT_EQ(actual, expected);
 }
 
@@ -103,7 +104,9 @@ TEST(PrettyUnitTestResultPrinterTest, StaticMethodOnTestIterationEnd) {
   // tests.
   std::snprintf(
       expected, REDIRECTOR_BUFFER_SIZE,
-      "[%s] Ran %lu tests from %lu test suites.\n[%s] %lu test.\n",
+      "\x1b[0;32m[%s] \x1b[mRan %lu tests from %lu test "
+      "suites.\n\x1b[0;32m[%s] \x1b[m%lu "
+      "test.\n",
       xtest::GetStrFilledWith('=').c_str(),
       xtest::GetTestSuiteAndTestNumber().second,
       xtest::GetTestSuiteAndTestNumber().first,
@@ -129,7 +132,7 @@ TEST(PrettyUnitTestResultPrinterTest, StaticMethodOnTestIterationEnd) {
     // the `expected` string.
     std::snprintf(failed_tests_output,
                   REDIRECTOR_BUFFER_SIZE - std::strlen(expected),
-                  "[%s] %lu test, listed below:\n",
+                  "\x1b[0;31m[%s] \x1b[m%lu test, listed below:\n",
                   xtest::GetStringAlignedTo(
                       "FAILED", XTEST_DEFAULT_SUMMARY_STATUS_STR_WIDTH_,
                       xtest::StringAlignValues::ALIGN_CENTER)
@@ -152,7 +155,7 @@ TEST(PrettyUnitTestResultPrinterTest, StaticMethodOnTestIterationEnd) {
         std::snprintf(failed_tests,
                       REDIRECTOR_BUFFER_SIZE - std::strlen(expected) -
                           std::strlen(failed_tests_output),
-                      "[%s] %s.%s\n",
+                      "\x1b[0;31m[%s] \x1b[m%s.%s\n",
                       xtest::GetStringAlignedTo("FAILED").c_str(),
                       test->M_suiteName, test->M_testName);
 
@@ -197,7 +200,7 @@ TEST(PrettyUnitTestResultPrinterTest, StaticMethodOnEnvironmentsSetUpStart) {
   const std::string actual(stdout_redirector_context.M_output_buffer_);
   char expected[REDIRECTOR_BUFFER_SIZE];
   std::snprintf(expected, REDIRECTOR_BUFFER_SIZE,
-                "[%s] Global test environment set-up.",
+                "\x1b[0;32m[%s] \x1b[mGlobal test environment set-up.",
                 xtest::GetStrFilledWith('-').c_str());
   EXPECT_EQ(actual, expected);
 }
@@ -211,7 +214,7 @@ TEST(PrettyUnitTestResultPrinterTest, StaticMethodOnEnvironmentsTearDownStart) {
   const std::string actual(stdout_redirector_context.M_output_buffer_);
   char expected[REDIRECTOR_BUFFER_SIZE];
   std::snprintf(expected, REDIRECTOR_BUFFER_SIZE,
-                "\n[%s] Global test environment tear-down.\n",
+                "\n\x1b[0;32m[%s] \x1b[mGlobal test environment tear-down.\n",
                 xtest::GetStrFilledWith('-').c_str());
   EXPECT_EQ(actual, expected);
 }

@@ -30,6 +30,8 @@
 #ifndef XTEST_TESTS_XTEST_PRINTERS_HH_
 #define XTEST_TESTS_XTEST_PRINTERS_HH_
 
+#include <string>
+
 #include "internal/xtest-port-arch.hh"
 #include "internal/xtest-printers.hh"
 #include "redirector.hh"
@@ -48,8 +50,7 @@ TEST(ShouldUseColorTest, TestBeforeAndAfterRedirection) {
   EXPECT_TRUE(xtest::internal::ShouldUseColor());
 }
 
-TEST(ColoredPrintfTest,
-     TestIfItPrintsColoredOutputInBothWindowsAndUnixSystems) {
+TEST(ColoredPrintfTest, TestWhenDefaultIsUsedInBothWindowsAndUnixSystems) {
 #if XTEST_OS_WINDOWS
   // In order to test ColoredPrintf's output we need to redirect `stdout` which
   // will cause ColoredPrintf() to disable color output.
@@ -60,14 +61,83 @@ TEST(ColoredPrintfTest,
   // Until we figure it out use a EXPECT_TRUE assertion with a argument `true`.
   EXPECT_TRUE(true);
 #else
+  xtest::testing::RedirectorContext stdout_redirector_context(
+      xtest::testing::RedirectorContextStream::kStdout);
+  stdout_redirector_context.ReplaceStreamWithContextBuffer();
+  xtest::internal::ColoredPrintf(xtest::internal::XTestColor::kDefault,
+                                 "Testing for %s color.", "default");
+  stdout_redirector_context.RestoreStream();
+  std::string actual(stdout_redirector_context.M_output_buffer_);
+  std::string expected("\x1b[0;3mTesting for default color.\x1b[m");
+  EXPECT_EQ(actual, expected);
+#endif
+}
+
+TEST(ColoredPrintfTest, TestWhenRedIsUsedInBothWindowsAndUnixSystems) {
+#if XTEST_OS_WINDOWS
   // In order to test ColoredPrintf's output we need to redirect `stdout` which
   // will cause ColoredPrintf() to disable color output.
   //
-  // Do we have a way to test if ColoredPrintf() does what it supposed to do
-  // regardless of the operating system?
+  // On windows we need to read the console text attributes in order to test
+  // them. Do we have a way to do capture the console text attributes?
 
   // Until we figure it out use a EXPECT_TRUE assertion with a argument `true`.
   EXPECT_TRUE(true);
+#else
+  xtest::testing::RedirectorContext stdout_redirector_context(
+      xtest::testing::RedirectorContextStream::kStdout);
+  stdout_redirector_context.ReplaceStreamWithContextBuffer();
+  xtest::internal::ColoredPrintf(xtest::internal::XTestColor::kRed,
+                                 "Testing for %s color.", "default");
+  stdout_redirector_context.RestoreStream();
+  std::string actual(stdout_redirector_context.M_output_buffer_);
+  std::string expected("\x1b[0;31mTesting for default color.\x1b[m");
+  EXPECT_EQ(actual, expected);
+#endif
+}
+
+TEST(ColoredPrintfTest, TestWhenGreenIsUsedInBothWindowsAndUnixSystems) {
+#if XTEST_OS_WINDOWS
+  // In order to test ColoredPrintf's output we need to redirect `stdout` which
+  // will cause ColoredPrintf() to disable color output.
+  //
+  // On windows we need to read the console text attributes in order to test
+  // them. Do we have a way to do capture the console text attributes?
+
+  // Until we figure it out use a EXPECT_TRUE assertion with a argument `true`.
+  EXPECT_TRUE(true);
+#else
+  xtest::testing::RedirectorContext stdout_redirector_context(
+      xtest::testing::RedirectorContextStream::kStdout);
+  stdout_redirector_context.ReplaceStreamWithContextBuffer();
+  xtest::internal::ColoredPrintf(xtest::internal::XTestColor::kGreen,
+                                 "Testing for %s color.", "default");
+  stdout_redirector_context.RestoreStream();
+  std::string actual(stdout_redirector_context.M_output_buffer_);
+  std::string expected("\x1b[0;32mTesting for default color.\x1b[m");
+  EXPECT_EQ(actual, expected);
+#endif
+}
+TEST(ColoredPrintfTest, TestWhenYellowIsUsedInBothWindowsAndUnixSystems) {
+#if XTEST_OS_WINDOWS
+  // In order to test ColoredPrintf's output we need to redirect `stdout` which
+  // will cause ColoredPrintf() to disable color output.
+  //
+  // On windows we need to read the console text attributes in order to test
+  // them. Do we have a way to do capture the console text attributes?
+
+  // Until we figure it out use a EXPECT_TRUE assertion with a argument `true`.
+  EXPECT_TRUE(true);
+#else
+  xtest::testing::RedirectorContext stdout_redirector_context(
+      xtest::testing::RedirectorContextStream::kStdout);
+  stdout_redirector_context.ReplaceStreamWithContextBuffer();
+  xtest::internal::ColoredPrintf(xtest::internal::XTestColor::kYellow,
+                                 "Testing for %s color.", "default");
+  stdout_redirector_context.RestoreStream();
+  std::string actual(stdout_redirector_context.M_output_buffer_);
+  std::string expected("\x1b[0;33mTesting for default color.\x1b[m");
+  EXPECT_EQ(actual, expected);
 #endif
 }
 

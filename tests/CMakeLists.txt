@@ -31,3 +31,4 @@ file(GLOB XTEST_TEST_SRC_FILES "*.cc")
 
 add_executable(tests ${XTEST_TEST_SRC_FILES})
 target_link_libraries(tests ${PROJECT_NAME})
+add_compile_definitions(XTEST_TESTING_ENABLED)
