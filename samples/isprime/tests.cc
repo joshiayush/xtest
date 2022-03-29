@@ -33,7 +33,7 @@
 #include "isprime/isprime.hh"
 #include "xtest.hh"
 
-TEST(TestWithPositiveLowPrimes, TestIsPrime) {
+TEST(TestIsPrime, TestWithPositiveLowPrimes) {
   std::vector<std::int64_t> positive_low_primes = {
       2,   3,   5,   7,   11,  13,  17,  19,  23,  29,  31,  37,  41,  43,
       47,  53,  59,  61,  67,  71,  73,  79,  83,  89,  97,  101, 103, 107,
@@ -51,7 +51,7 @@ TEST(TestWithPositiveLowPrimes, TestIsPrime) {
     EXPECT_TRUE(IsPrime(prime));
 }
 
-TEST(TestWithPositiveBalancedPrimes, TestIsPrime) {
+TEST(TestIsPrime, TestWithPositiveBalancedPrimes) {
   std::vector<std::int64_t> positive_balanced_primes = {
       5,    53,   157,  173,  211,  257,  263,  373,  563,  593,  607,  653,
       733,  947,  977,  1103, 1123, 1187, 1223, 1367, 1511, 1747, 1753, 1907,
@@ -61,7 +61,7 @@ TEST(TestWithPositiveBalancedPrimes, TestIsPrime) {
     EXPECT_TRUE(IsPrime(prime));
 }
 
-TEST(DoomedToBeFailedTests, TestIsPrime) {
+TEST(TestIsPrime, DoomedToBeFailedTests) {
   std::vector<std::int64_t> positive_bell_primes = {
       2,   3,   5,   7,   11,  13,  17,  19,  23,  29,  31,  37,  41,  47,  53,
       59,  67,  71,  83,  89,  101, 107, 109, 113, 127, 131, 137, 139, 149, 157,

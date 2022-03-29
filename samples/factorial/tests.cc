@@ -32,32 +32,32 @@
 #include "factorial/factorial.hh"
 #include "xtest.hh"
 
-TEST(TestWithNegativeNumbers, TestFactorial) {
+TEST(TestFactorial, TestWithNegativeNumbers) {
   EXPECT_EQ(Factorial(std::numeric_limits<int64_t>::lowest()), 1);
 }
 
-TEST(TestWithNegativePrimeNumbers, TestFactorial) {
+TEST(TestFactorial, TestWithNegativePrimeNumbers) {
   EXPECT_EQ(Factorial(-2), 1);
   EXPECT_EQ(Factorial(-5), 1);
   EXPECT_EQ(Factorial(-7), 1);
   EXPECT_EQ(Factorial(-13), 1);
 }
 
-TEST(TestWithNegativeEvenCompositeNumbers, TestFactorial) {
+TEST(TestFactorial, TestWithNegativeEvenCompositeNumbers) {
   EXPECT_EQ(Factorial(-4), 1);
   EXPECT_EQ(Factorial(-6), 1);
   EXPECT_EQ(Factorial(-8), 1);
   EXPECT_EQ(Factorial(-10), 1);
 }
 
-TEST(TestWithNegativeOddCompositeNumbers, TestFactorial) {
+TEST(TestFactorial, TestWithNegativeOddCompositeNumbers) {
   EXPECT_EQ(Factorial(-4), 1);
   EXPECT_EQ(Factorial(-6), 1);
   EXPECT_EQ(Factorial(-8), 1);
   EXPECT_EQ(Factorial(-10), 1);
 }
 
-TEST(DoomedToBeFailedTestsPrimary, TestFactorial) {
+TEST(TestFactorial, DoomedToBeFailedTestsPrimary) {
   EXPECT_EQ(Factorial(2), 1);
   EXPECT_EQ(Factorial(5), 1);
   EXPECT_EQ(Factorial(7), 1);
@@ -68,7 +68,7 @@ TEST(DoomedToBeFailedTestsPrimary, TestFactorial) {
   EXPECT_EQ(Factorial(-10), 6227020800);
 }
 
-TEST(DoomedToBeFailedTestsSecondary, TestFactorial) {
+TEST(TestFactorial, DoomedToBeFailedTestsSecondary) {
   EXPECT_EQ(Factorial(2), 21);
   EXPECT_EQ(Factorial(5), 21);
   EXPECT_EQ(Factorial(7), 21);
@@ -79,21 +79,21 @@ TEST(DoomedToBeFailedTestsSecondary, TestFactorial) {
   EXPECT_EQ(Factorial(-10), 26227020800);
 }
 
-TEST(TestWithPrimeNumbers, TestFactorial) {
+TEST(TestFactorial, TestWithPrimeNumbers) {
   EXPECT_EQ(Factorial(2), 2);
   EXPECT_EQ(Factorial(5), 120);
   EXPECT_EQ(Factorial(7), 5040);
   EXPECT_EQ(Factorial(13), 6227020800);
 }
 
-TEST(TestWithEvenCompositeNumbers, TestFactorial) {
+TEST(TestFactorial, TestWithEvenCompositeNumbers) {
   EXPECT_EQ(Factorial(4), 24);
   EXPECT_EQ(Factorial(6), 720);
   EXPECT_EQ(Factorial(8), 40320);
   EXPECT_EQ(Factorial(10), 3628800);
 }
 
-TEST(TestWithOddCompositeNumbers, TestFactorial) {
+TEST(TestFactorial, TestWithOddCompositeNumbers) {
   EXPECT_EQ(Factorial(9), 362880);
   EXPECT_EQ(Factorial(15), 1307674368000);
 }
