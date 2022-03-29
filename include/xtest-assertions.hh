@@ -93,8 +93,8 @@ class PrettyAssertionResultPrinter {
     std::fprintf(stderr,
                  "%s(%lu): error: Value of: %s\n  Actual: %s\nExpected: %s\n",
                  assertion_context.file(), assertion_context.line(), lhs_expr,
-                 ::xtest::string::Repr(StreamableToString(lhs)).c_str(),
-                 ::xtest::string::Repr(StreamableToString(rhs)).c_str());
+                 ::xtest::String::Repr(StreamableToString(lhs)).c_str(),
+                 ::xtest::String::Repr(StreamableToString(rhs)).c_str());
     std::fflush(stderr);
 
     // Mark the current test as `xtest::TestResult::FAILED` on failure.

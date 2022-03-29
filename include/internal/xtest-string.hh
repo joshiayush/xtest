@@ -35,10 +35,18 @@
 #include <string>
 
 namespace xtest {
-namespace string {
-void ChrCStrLiteral(const char ch, std::string& buffer);
-std::string Repr(std::string str);
-}  // namespace string
+class String {
+ private:
+  // Escapes control characters and quotes in a string and appends it to the
+  // given buffer.
+  static void ChrCStrLiteral(const char ch, std::string *const buffer);
+
+ public:
+  String() = delete;
+
+  // Returns a string with printable representation of escape sequences.
+  static std::string Repr(std::string str);
+};
 }  // namespace xtest
 
 #endif

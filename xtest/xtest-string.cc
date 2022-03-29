@@ -34,66 +34,67 @@
 #include <string>
 
 namespace xtest {
-namespace string {
-void ChrCStrLiteral(const char ch, std::string& buffer) {
+// Escapes control characters and quotes in a string and appends it to the given
+// buffer.
+void String::ChrCStrLiteral(const char ch, std::string* const buffer) {
   if ((ch >= 0x20 && ch <= 0x7E) && ch != '\'' && ch != '\"' && ch != '\\') {
-    buffer +=
-        ch;  // opposite of control characters can be saved just as they are
+    *buffer +=
+        ch;  // Opposite of control characters can be saved just as they are.
   } else {
     switch (ch) {
       case '\a':
-        buffer += "\\a";
+        *buffer += "\\a";
         break;
       case '\b':
-        buffer += "\\b";
+        *buffer += "\\b";
         break;
       case '\f':
-        buffer += "\\f";
+        *buffer += "\\f";
         break;
       case '\n':
-        buffer += "\\n";
+        *buffer += "\\n";
         break;
       case '\r':
-        buffer += "\\r";
+        *buffer += "\\r";
         break;
       case '\t':
-        buffer += "\\t";
+        *buffer += "\\t";
         break;
       case '\v':
-        buffer += "\\v";
+        *buffer += "\\v";
         break;
       case '\\':
-        buffer += "\\\\";
+        *buffer += "\\\\";
         break;
       case '\'':
-        buffer += "\\'";
+        *buffer += "\\'";
         break;
       case '\"':
-        buffer += "\\\"";
+        *buffer += "\\\"";
         break;
       default: {
         char buffer_[5];
         std::snprintf(
             buffer_, 5, "\\x%02x",
-            static_cast<unsigned char>(ch));  // this handles control
+            static_cast<unsigned char>(ch));  // This handles control
                                               // characters that are not
                                               // printable and does not
-                                              // meet any case
-        buffer += buffer_;
+                                              // meet any case.
+        *buffer += buffer_;
       } break;
     }
   }
 }
 
-std::string Repr(std::string str) {
+// Returns a string with printable representation of escape sequences.
+std::string String::Repr(std::string str) {
   std::string buffer;
-  buffer.reserve(str.size());  // reserve 'reserved_bits' bytes for buffer
+  buffer.reserve(str.size());  // Reserve bytes for buffer.
   for (const auto& chr : str)
     ChrCStrLiteral(
         chr,
-        buffer);  // escape the character that we took out in this iteration
+        &buffer);  // Escape the character that we took out in this iteration.
   str = buffer;
   return str;
 }
-}  // namespace string
 }  // namespace xtest
