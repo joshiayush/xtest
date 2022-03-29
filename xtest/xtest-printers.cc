@@ -161,9 +161,9 @@ void ColoredPrintf(const XTestColor& color, const char* fmt, ...) {
   // Restores the text color.
   SetConsoleTextAttribute(stdout_handle, old_color_attrs);
 #else
-  std::printf("\033[0;3%sm", GetAnsiColorCode(color).c_str());
+  std::printf("\x1b[0;3%sm", GetAnsiColorCode(color).c_str());
   std::vprintf(fmt, args);
-  std::printf("\033[m");  // Resets the terminal to default.
+  std::printf("\x1b[m");  // Resets the terminal to default.
 #endif
 
   va_end(args);
