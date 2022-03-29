@@ -48,9 +48,34 @@ TEST(ReprTest, TestWithCommonControlCharacters) {
   EXPECT_EQ(xtest::String::Repr("\""), "\\\"");
 }
 
-TEST(ReprTest, TestWithNumbers) {
+TEST(ReprTest, TestWithPositiveNumbersOfOctalAndHexaximalDigits) {
   EXPECT_EQ(xtest::String::Repr("\001"), "\\0x01");
   EXPECT_EQ(xtest::String::Repr("\x01"), "\\0x01");
+}
+
+TEST(StartsWithTest, WhenStringIsEmpty) {
+  EXPECT_TRUE(xtest::String::StartsWith("", ""));
+  EXPECT_FALSE(xtest::String::StartsWith("", "a"));
+}
+
+TEST(StartsWithTest, WhenPreffixIsEmpty) {
+  EXPECT_TRUE(xtest::String::StartsWith("a", ""));
+}
+
+TEST(StartsWithTest, WhenStringIsShorterThanPreffix) {
+  EXPECT_FALSE(xtest::String::StartsWith("a", "ab"));
+}
+
+TEST(StartsWithTest, WhenStringIsEqualToPreffix) {
+  EXPECT_TRUE(xtest::String::StartsWith("ab", "ab"));
+}
+
+TEST(StartsWithTest, WhenStringStartsWithPreffix) {
+  EXPECT_TRUE(xtest::String::StartsWith("abc", "ab"));
+}
+
+TEST(StartsWithTest, WhenStringDoesNotStartWithPreffix) {
+  EXPECT_FALSE(xtest::String::StartsWith("abc", "bc"));
 }
 
 #endif  // XTEST_TESTS_XTEST_STRING_TEST_HH_

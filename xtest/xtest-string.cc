@@ -97,4 +97,9 @@ std::string String::Repr(std::string str) {
   str = buffer;
   return str;
 }
+
+// Checks if the given string starts with the given prefix.
+bool String::StartsWith(const std::string& str, const std::string& prefix) {
+  return str.compare(0, prefix.size(), prefix) == 0;
+}
 }  // namespace xtest

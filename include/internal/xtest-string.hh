@@ -46,6 +46,9 @@ class String {
 
   // Returns a string with printable representation of escape sequences.
   static std::string Repr(std::string str);
+
+  // Checks if the given string starts with the given prefix.
+  static bool StartsWith(const std::string &str, const std::string &prefix);
 };
 }  // namespace xtest
 
