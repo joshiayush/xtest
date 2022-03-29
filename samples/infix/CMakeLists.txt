@@ -1,4 +1,4 @@
-# Copyright 2021, xtest Inc.
+# Copyright 2022, xtest Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,10 +27,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# Include samples directory in header search path because unittests
-# inside samples directory uses this path to include headers.
-include_directories(${CMAKE_SOURCE_DIR}/samples)
+file(GLOB INFIX_SRC_FILES "*.cc")
 
-add_subdirectory(factorial)
-add_subdirectory(isprime)
-add_subdirectory(infix)
+add_executable(infix ${INFIX_SRC_FILES})
+target_link_libraries(infix ${PROJECT_NAME})
