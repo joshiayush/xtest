@@ -129,4 +129,28 @@ TEST(ColoredPrintfTest, TestWhenYellowIsUsedInBothWindowsAndUnixSystems) {
 #endif
 }
 
+TEST(PrintColorEncodedTest, TestWithXTestColorEncodedHelpMessage) {
+  xtest::testing::RedirectorContext stdout_redirector_context(
+      xtest::testing::RedirectorContextStream::kStdout);
+  stdout_redirector_context.ReplaceStreamWithContextBuffer();
+  xtest::internal::PrintColorEncoded(
+      "This program contains tests written using xtest.  You can use the\n"
+      "following command line flags to control its behaviour:\n"
+      "\n"
+      "Test Execution:\n"
+      "   @G--shuffle@D\n"
+      "     Randomize tests' order. (In development)\n");
+  stdout_redirector_context.RestoreStream();
+  std::string actual(stdout_redirector_context.M_output_buffer_);
+  std::string expected(
+      "\x1b[0;3mThis program contains tests written using xtest.  You can use "
+      "the\n"
+      "following command line flags to control its behaviour:\n"
+      "\n"
+      "Test Execution:\n"
+      "   \x1b[m\x1b[0;32m--shuffle\x1b[m\x1b[0;3m\n"
+      "     Randomize tests' order. (In development)\n\x1b[m");
+  EXPECT_EQ(actual, expected);
+}
+
 #endif  // XTEST_TESTS_XTEST_PRINTERS_HH_
