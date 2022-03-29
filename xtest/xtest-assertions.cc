@@ -38,7 +38,7 @@
 
 namespace xtest {
 namespace internal {
-//  Constructs a AssertionContext.
+// Constructs a AssertionContext.
 AssertionContext::AssertionContext(const char* file, uint64_t line,
                                    TestRegistrar* const& current_test)
     : file_(file), line_(line), current_test_(current_test) {}
