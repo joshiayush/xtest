@@ -90,7 +90,7 @@ void PrettyAssertionResultPrinter::OnTestAssertionEnd(
     ColoredPrintf(
         XTestColor::kRed, "[%s] ",
         ::xtest::GetStringAlignedTo(
-            "FALIED", XTEST_DEFAULT_SUMMARY_STATUS_STR_WIDTH_, ALIGN_CENTER)
+            "FAILED", XTEST_DEFAULT_SUMMARY_STATUS_STR_WIDTH_, ALIGN_CENTER)
             .c_str());
   std::printf("%s.%s (%lu ms)", test->M_suiteName, test->M_testName,
               elapsed_time);
