@@ -252,7 +252,10 @@ XTEST_IMPL_CHECK_HELPER_(False, false)
                                  assertion_context, is_fatal);                 \
     }                                                                          \
                                                                                \
-    template <typename T1, typename T2>                                        \
+    template <                                                                 \
+        typename T1, typename T2,                                              \
+        typename std::enable_if<!std::is_integral<T1>::value ||                \
+                                !std::is_pointer<T2>::value>::type* = nullptr> \
     static internal::AssertionResult Compare(                                  \
         const char* lhs_expr, const char* rhs_expr, const T1& lhs,             \
         const T2& rhs, internal::AssertionContext& assertion_context,          \
