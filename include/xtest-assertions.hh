@@ -132,7 +132,7 @@ class AssertionResult {
     // We raise an abort signal in case `is_fatal` is true; this is to catch the
     // abort signal later and mark the result of the test suite as
     // `xtest::TestResult::FAILED`.
-    if (fatal_)
+    if (!success_ && fatal_)
       std::abort();
   }
 
