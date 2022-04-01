@@ -27,19 +27,59 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <cstdint>
+#ifndef XTEST_TESTS_XTEST_MESSAGE_TEST_HH_
+#define XTEST_TESTS_XTEST_MESSAGE_TEST_HH_
 
+#include "xtest-message.hh"
 #include "xtest.hh"
 
-// Include header files containing unit tests.
-#include "xtest-assertions-test.hh"
-#include "xtest-message-test.hh"
-#include "xtest-port-test.hh"
-#include "xtest-printers-test.hh"
-#include "xtest-string-test.hh"
-#include "xtest-test.hh"
-
-int32_t main(int32_t argc, char** argv) {
-  xtest::InitXTest(&argc, argv);
-  return RUN_ALL_TESTS();
+TEST(MessageTest, WhenConstructedAEmptyMessage) {
+  xtest::Message msg;
+  EXPECT_EQ("", msg.GetString());
+  msg << "foo";
+  EXPECT_EQ("foo", msg.GetString());
 }
+
+TEST(MessageTest, TestFloatingPointPrecisionWhenConstructedAEmptyMessage) {
+  xtest::Message msg;
+  msg << 1.0000000000000004;
+  EXPECT_EQ("1.0000000000000004", msg.GetString());
+}
+
+TEST(MessageTest, WhenConstructedWithAConstCharPointer) {
+  const char* const_char_ptr = "foo";
+  xtest::Message msg(const_char_ptr);
+  EXPECT_EQ("foo", msg.GetString());
+}
+
+TEST(MessageTest, WhenStreamedMultipleNonPointerValues) {
+  xtest::Message msg;
+  msg << 1 << " " << 2.6 << " " << 3 << " and " << 4 << '\n';
+  EXPECT_EQ("1 2.6000000000000001 3 and 4\n", msg.GetString());
+}
+
+TEST(MessageTest, WhenStreamedANullPointer) {
+  xtest::Message msg;
+  msg << static_cast<void*>(nullptr);
+  EXPECT_EQ("(null)", msg.GetString());
+}
+
+TEST(MessageTest, WhenStreamedBasicNarrowIoManip) {
+  xtest::Message msg;
+  msg << std::endl;
+  EXPECT_EQ("\n", msg.GetString());
+}
+
+TEST(MessageTest, WhenStreamedBooleans) {
+  xtest::Message msg;
+  msg << true << " and " << false;
+  EXPECT_EQ("true and false", msg.GetString());
+}
+
+TEST(MessageTest, WhenStreamedMultipleNullCharacters) {
+  xtest::Message msg;
+  msg << '\0' << '\0' << '\0' << '\0';
+  EXPECT_EQ(msg.GetString(), "\\0\\0\\0\\0");
+}
+
+#endif  // XTEST_TESTS_XTEST_MESSAGE_TEST_HH_
