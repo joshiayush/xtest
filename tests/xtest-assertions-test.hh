@@ -126,4 +126,75 @@ TEST(PrettyAssertionResultPrinterTest, OnTestAssertionFailureTest) {
   EXPECT_EQ(actual, expected);
 }
 
+TEST(AssertionResultTest, WhenAssertionResultIsTrue) {
+  xtest::testing::RedirectorContext stderr_redirector_context(
+      xtest::testing::RedirectorContextStream::kStderr);
+  stderr_redirector_context.ReplaceStreamWithContextBuffer();
+  xtest::internal::AssertionResult(true) << "Failed AssertionResult";
+  stderr_redirector_context.RestoreStream();
+  EXPECT_EQ(stderr_redirector_context.M_output_buffer_[0], '\0');
+}
+
+TEST(AssertionResultTest, WhenAssertionResultAndIsFatalIsTrue) {
+  xtest::testing::RedirectorContext stderr_redirector_context(
+      xtest::testing::RedirectorContextStream::kStderr);
+  stderr_redirector_context.ReplaceStreamWithContextBuffer();
+  // AssertionResult instance must not raise `abort` signal.
+  xtest::internal::AssertionResult(true, true) << "Failed AssertionResult";
+  stderr_redirector_context.RestoreStream();
+  EXPECT_EQ(stderr_redirector_context.M_output_buffer_[0], '\0');
+}
+
+TEST(AssertionResultTest, WhenAssertionResultIsTrueButFatalIsFalse) {
+  xtest::testing::RedirectorContext stderr_redirector_context(
+      xtest::testing::RedirectorContextStream::kStderr);
+  stderr_redirector_context.ReplaceStreamWithContextBuffer();
+  // AssertionResult instance must not raise `abort` signal.
+  xtest::internal::AssertionResult(true, false) << "Failed AssertionResult";
+  stderr_redirector_context.RestoreStream();
+  EXPECT_EQ(stderr_redirector_context.M_output_buffer_[0], '\0');
+}
+
+TEST(AssertionResultTest, WhenAssertionResultIsFalse) {
+  xtest::testing::RedirectorContext stderr_redirector_context(
+      xtest::testing::RedirectorContextStream::kStderr);
+  stderr_redirector_context.ReplaceStreamWithContextBuffer();
+  xtest::internal::AssertionResult(false) << "Failed AssertionResult";
+  stderr_redirector_context.RestoreStream();
+  std::string actual(stderr_redirector_context.M_output_buffer_);
+  std::string expected("Failed AssertionResult\n");
+  EXPECT_EQ(actual, expected);
+}
+
+TEST(AssertionResultTest, WhenAssertionResultAndIsFatalIsFalse) {
+  xtest::testing::RedirectorContext stderr_redirector_context(
+      xtest::testing::RedirectorContextStream::kStderr);
+  stderr_redirector_context.ReplaceStreamWithContextBuffer();
+  xtest::internal::AssertionResult(false, false) << "Failed AssertionResult";
+  stderr_redirector_context.RestoreStream();
+  std::string actual(stderr_redirector_context.M_output_buffer_);
+  std::string expected("Failed AssertionResult\n");
+  EXPECT_EQ(actual, expected);
+}
+
+TEST(AssertionSuccessTest, WhenAssertionResultIsTrue) {
+  xtest::testing::RedirectorContext stderr_redirector_context(
+      xtest::testing::RedirectorContextStream::kStderr);
+  stderr_redirector_context.ReplaceStreamWithContextBuffer();
+  xtest::internal::AssertionSuccess() << "AssertionSuccess";
+  stderr_redirector_context.RestoreStream();
+  EXPECT_EQ(stderr_redirector_context.M_output_buffer_[0], '\0');
+}
+
+TEST(AssertionFailureTest, WhenAssertionResultIsFalseButFatalIsFalse) {
+  xtest::testing::RedirectorContext stderr_redirector_context(
+      xtest::testing::RedirectorContextStream::kStderr);
+  stderr_redirector_context.ReplaceStreamWithContextBuffer();
+  xtest::internal::AssertionFailure(false) << "AssertionFailure";
+  stderr_redirector_context.RestoreStream();
+  std::string actual(stderr_redirector_context.M_output_buffer_);
+  std::string expected("AssertionFailure\n");
+  EXPECT_EQ(actual, expected);
+}
+
 #endif  // XTEST_TESTS_XTEST_ASSERTIONS_TEST_HH_
