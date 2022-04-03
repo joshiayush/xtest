@@ -63,11 +63,9 @@ void SignalHandler(int param);
 
 using TestSuiteAndTestNumberPair = std::pair<std::uint64_t, std::uint64_t>;
 
-// Returns the total number of test cases and tests registered.
-//
-// The returned pair has the total number of test cases as its first element and
-// the total number of tests as its second element.
-TestSuiteAndTestNumberPair GetTestSuiteAndTestNumber();
+std::uint64_t GetTestNumber();
+
+std::uint64_t GetTestSuiteNumber();
 
 // Returns the number of tests that failed during test execution.
 //

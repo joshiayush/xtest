@@ -217,25 +217,24 @@ std::string Message::GetString() const {
   return result;
 }
 
-// Returns the total number of test cases and tests registered.
-//
-// The returned pair has the total number of test cases as its first element
-// and the total number of tests as its second element.
-TestSuiteAndTestNumberPair GetTestSuiteAndTestNumber() {
-  if (XTEST_GLOBAL_INSTANCE_GET_(test_suite_count) != 0 &&
-      XTEST_GLOBAL_INSTANCE_GET_(test_count) != 0)
-    return TestSuiteAndTestNumberPair{
-        XTEST_GLOBAL_INSTANCE_GET_(test_suite_count),
-        XTEST_GLOBAL_INSTANCE_GET_(test_count)};
-  XTEST_GLOBAL_INSTANCE_SET_(test_suite_count, 0);
-  XTEST_GLOBAL_INSTANCE_SET_(test_count, 0);
-  for (const auto& testCase : XTestRegistryInstance.M_testRegistryTable) {
+std::uint64_t GetTestSuiteNumber() {
+  if (XTEST_GLOBAL_INSTANCE_GET_(test_suite_count) != 0)
+    return XTEST_GLOBAL_INSTANCE_GET_(test_suite_count);
+  XTEST_GLOBAL_INSTANCE_GET_(test_suite_count) = 0;
+  for (const XTestUnitTestPair& test_suite :
+       XTestRegistryInstance.M_testRegistryTable)
     ++XTEST_GLOBAL_INSTANCE_GET_(test_suite_count);
-    XTEST_GLOBAL_INSTANCE_GET_(test_count) += testCase.second.size();
-  }
-  return TestSuiteAndTestNumberPair{
-      XTEST_GLOBAL_INSTANCE_GET_(test_suite_count),
-      XTEST_GLOBAL_INSTANCE_GET_(test_count)};
+  return XTEST_GLOBAL_INSTANCE_GET_(test_suite_count);
+}
+
+std::uint64_t GetTestNumber() {
+  if (XTEST_GLOBAL_INSTANCE_GET_(test_count) != 0)
+    return XTEST_GLOBAL_INSTANCE_GET_(test_count);
+  XTEST_GLOBAL_INSTANCE_GET_(test_count) = 0;
+  for (const XTestUnitTestPair& test_suite :
+       XTestRegistryInstance.M_testRegistryTable)
+    XTEST_GLOBAL_INSTANCE_GET_(test_count) += test_suite.second.size();
+  return XTEST_GLOBAL_INSTANCE_GET_(test_count);
 }
 
 // Returns the `XTestUnitTest` instance of failed tests.
@@ -356,9 +355,8 @@ void PrettyUnitTestResultPrinter::PrintFailedTests() {
 void PrettyUnitTestResultPrinter::OnTestIterationStart() {
   internal::ColoredPrintf(internal::XTestColor::kGreen, "[%s] ",
                           GetStrFilledWith('=').c_str());
-  std::printf("Running %lu tests from %lu test suites.\n",
-              GetTestSuiteAndTestNumber().second,
-              GetTestSuiteAndTestNumber().first);
+  std::printf("Running %lu tests from %lu test suites.\n", GetTestNumber(),
+              GetTestSuiteNumber());
   std::fflush(stdout);
 }
 
@@ -367,17 +365,15 @@ void PrettyUnitTestResultPrinter::OnTestIterationStart() {
 void PrettyUnitTestResultPrinter::OnTestIterationEnd() {
   internal::ColoredPrintf(internal::XTestColor::kGreen, "[%s] ",
                           GetStrFilledWith('=').c_str());
-  std::printf("Ran %lu tests from %lu test suites.\n",
-              GetTestSuiteAndTestNumber().second,
-              GetTestSuiteAndTestNumber().first);
+  std::printf("Ran %lu tests from %lu test suites.\n", GetTestNumber(),
+              GetTestSuiteNumber());
 
   internal::ColoredPrintf(
       internal::XTestColor::kGreen, "[%s] ",
       GetStringAlignedTo("PASSED", XTEST_DEFAULT_SUMMARY_STATUS_STR_WIDTH_,
                          ALIGN_CENTER)
           .c_str());
-  std::printf("%lu test.\n",
-              GetTestSuiteAndTestNumber().second - GetFailedTestCount());
+  std::printf("%lu test.\n", GetTestNumber() - GetFailedTestCount());
 
   if (GetFailedTestCount() != 0)
     PrettyUnitTestResultPrinter::PrintFailedTests();
