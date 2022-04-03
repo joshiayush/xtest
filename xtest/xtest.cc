@@ -373,7 +373,8 @@ void PrettyUnitTestResultPrinter::OnTestIterationEnd() {
       GetStringAlignedTo("PASSED", XTEST_DEFAULT_SUMMARY_STATUS_STR_WIDTH_,
                          ALIGN_CENTER)
           .c_str());
-  std::printf("%lu test.\n", GetTestNumber() - GetFailedTestCount());
+  std::printf("%lu %s.\n", GetTestNumber() - GetFailedTestCount(),
+              GetTestNumber() == 1 ? "test" : "tests");
 
   if (GetFailedTestCount() != 0)
     PrettyUnitTestResultPrinter::PrintFailedTests();

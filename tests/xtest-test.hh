@@ -104,14 +104,15 @@ TEST(PrettyUnitTestResultPrinterTest, StaticMethodOnTestIterationEnd) {
   std::snprintf(expected, REDIRECTOR_BUFFER_SIZE,
                 "\x1b[0;32m[%s] \x1b[mRan %lu tests from %lu test "
                 "suites.\n\x1b[0;32m[%s] \x1b[m%lu "
-                "test.\n",
+                "%s.\n",
                 xtest::GetStrFilledWith('=').c_str(), xtest::GetTestNumber(),
                 xtest::GetTestSuiteNumber(),
                 xtest::GetStringAlignedTo(
                     "PASSED", XTEST_DEFAULT_SUMMARY_STATUS_STR_WIDTH_,
                     xtest::StringAlignValues::ALIGN_CENTER)
                     .c_str(),
-                xtest::GetTestNumber() - xtest::GetFailedTestCount());
+                xtest::GetTestNumber() - xtest::GetFailedTestCount(),
+                xtest::GetTestNumber() == 1 ? "test" : "tests");
 
   // Now here comes the trickiest part of this test suite, we are going to
   // simulate the behaviour of function
