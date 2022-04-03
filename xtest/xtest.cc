@@ -217,16 +217,7 @@ std::string Message::GetString() const {
   return result;
 }
 
-std::uint64_t GetTestSuiteNumber() {
-  if (XTEST_GLOBAL_INSTANCE_GET_(test_suite_count) != 0)
-    return XTEST_GLOBAL_INSTANCE_GET_(test_suite_count);
-  XTEST_GLOBAL_INSTANCE_GET_(test_suite_count) = 0;
-  for (const XTestUnitTestPair& test_suite :
-       XTestRegistryInstance.M_testRegistryTable)
-    ++XTEST_GLOBAL_INSTANCE_GET_(test_suite_count);
-  return XTEST_GLOBAL_INSTANCE_GET_(test_suite_count);
-}
-
+// Returns the total number of test functions.
 std::uint64_t GetTestNumber() {
   if (XTEST_GLOBAL_INSTANCE_GET_(test_count) != 0)
     return XTEST_GLOBAL_INSTANCE_GET_(test_count);
@@ -235,6 +226,17 @@ std::uint64_t GetTestNumber() {
        XTestRegistryInstance.M_testRegistryTable)
     XTEST_GLOBAL_INSTANCE_GET_(test_count) += test_suite.second.size();
   return XTEST_GLOBAL_INSTANCE_GET_(test_count);
+}
+
+// Returns the total number of test suites.
+std::uint64_t GetTestSuiteNumber() {
+  if (XTEST_GLOBAL_INSTANCE_GET_(test_suite_count) != 0)
+    return XTEST_GLOBAL_INSTANCE_GET_(test_suite_count);
+  XTEST_GLOBAL_INSTANCE_GET_(test_suite_count) = 0;
+  for (const XTestUnitTestPair& test_suite :
+       XTestRegistryInstance.M_testRegistryTable)
+    ++XTEST_GLOBAL_INSTANCE_GET_(test_suite_count);
+  return XTEST_GLOBAL_INSTANCE_GET_(test_suite_count);
 }
 
 // Returns the `XTestUnitTest` instance of failed tests.

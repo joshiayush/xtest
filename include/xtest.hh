@@ -63,8 +63,10 @@ void SignalHandler(int param);
 
 using TestSuiteAndTestNumberPair = std::pair<std::uint64_t, std::uint64_t>;
 
+// Returns the total number of test functions.
 std::uint64_t GetTestNumber();
 
+// Returns the total number of test suites.
 std::uint64_t GetTestSuiteNumber();
 
 // Returns the number of tests that failed during test execution.
