@@ -111,7 +111,11 @@ static const char kColorEncodedHelpMessage[] =
     "\n"
     "Test Execution:\n"
     "   @G--shuffle@D\n"
-    "     Randomize tests' order. (In development)\n";
+    "     Randomize tests' order. (In development)\n"
+    "\n"
+    "Others:\n"
+    "   @G--help@D\n"
+    "     Print this message.\n";
 
 // XTestIsInitialized() returns true if and only if the user has initialized
 // xtest.  Useful for catching the user mistake of not initializing xtest
