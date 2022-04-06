@@ -61,8 +61,6 @@ namespace impl {
 void SignalHandler(int param);
 }  // namespace impl
 
-using TestSuiteAndTestNumberPair = std::pair<std::uint64_t, std::uint64_t>;
-
 // Returns the total number of test functions.
 std::uint64_t GetTestNumber();
 
