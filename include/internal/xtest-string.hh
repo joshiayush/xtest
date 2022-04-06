@@ -52,4 +52,4 @@ class String {
 };
 }  // namespace xtest
 
-#endif
+#endif  // XTEST_INCLUDE_INTERNAL_XTEST_STRING_HH_
