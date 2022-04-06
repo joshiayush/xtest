@@ -53,7 +53,7 @@ RedirectorContext::RedirectorContext(const RedirectorContextStream& stream)
 // public methods.  This is the internal of `ReplaceStreamWithContextBuffer`
 // method; allowing us to replace the given standard stream with the context
 // buffer i.e., `M_output_buffer_`.
-void RedirectorContext::ReplaceStreamWithContextBuffer(FILE*& stream) {
+void RedirectorContext::ReplaceStreamWithContextBuffer(FILE* stream) {
   std::fflush(stream);
   switch (M_stream_) {
     case RedirectorContextStream::kStdout:
@@ -85,7 +85,7 @@ void RedirectorContext::ReplaceStreamWithContextBuffer() {
 // context buffer.  This method is marked as `private` and meant to be used
 // within the public methods.  This is the internal of `RestoreStream` method;
 // allowing us to restore the standard streams at any point in our code.
-void RedirectorContext::RestoreStream(FILE*& stream) {
+void RedirectorContext::RestoreStream(FILE* stream) {
   std::freopen(M_redirector_file_name_, M_redirector_file_open_mode_, stream);
   switch (M_stream_) {
     case RedirectorContextStream::kStdout:

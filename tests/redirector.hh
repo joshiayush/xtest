@@ -71,14 +71,14 @@ class RedirectorContext {
   // public methods.  This is the internal of `ReplaceStreamWithContextBuffer`
   // method; allowing us to replace the given standard stream with the context
   // buffer i.e., `M_output_buffer_`.
-  void ReplaceStreamWithContextBuffer(FILE*& stream);
+  void ReplaceStreamWithContextBuffer(FILE* stream);
 
   // This method is used to restore the standard stream that was replaced by
   // the context buffer.  This method is marked as `private` and meant to be
   // used within the public methods.  This is the internal of `RestoreStream`
   // method; allowing us to restore the standard streams at any point in our
   // code.
-  void RestoreStream(FILE*& stream);
+  void RestoreStream(FILE* stream);
 
  private:
   RedirectorContextStream M_stream_;
