@@ -30,6 +30,8 @@
 #ifndef XTEST_TESTS_XTEST_PORT_TEST_HH_
 #define XTEST_TESTS_XTEST_PORT_TEST_HH_
 
+#include <string>
+
 #include "internal/xtest-port.hh"
 #include "redirector.hh"
 #include "xtest.hh"
