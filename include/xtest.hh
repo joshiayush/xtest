@@ -38,18 +38,6 @@
 #include "xtest-message.hh"
 #include "xtest-registrar.hh"
 
-// When this flag is specified, the xtest's help message is printed on the
-// console.
-XTEST_FLAG_DECLARE_bool_(help);
-
-// When this flag is specified, tests' order is randomized on every iteration.
-XTEST_FLAG_DECLARE_bool_(shuffle);
-
-// This flag enables using colors in terminal output. Available values are "yes"
-// to enable colors, "no" (disable colors), or "auto" (the default) to let XTest
-// decide.
-XTEST_FLAG_DECLARE_string_(color);
-
 namespace xtest {
 namespace impl {
 // Calls `std::longjmp()` with `M_jumpOutOfTest` instance as its first argument.

@@ -32,6 +32,9 @@
 
 #include <chrono>  // NOLINT
 #include <cstdint>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -155,14 +158,32 @@ namespace posix {
 // Returns the integer value of the file descriptor associated with `stream`.
 // Otherwise, the value -1 shall be returned and `errno` set to indicate the
 // error.
-int32_t FileNo(FILE* stream);
+inline int32_t FileNo(FILE* stream) {
+#if XTEST_OS_WINDOWS
+  return _fileno(stream);
+#else
+  return fileno(stream);
+#endif
+}
 
 // Posix compatible function to test whether `fd` is an open file descriptor
 // referring to a terminal.
 //
 // Returns 1 if fd is an open file descriptor referring to a terminal; otherwise
 // 0 is returned, and `errno` is set to indicate the error.
-int32_t IsAtty(int32_t fd);
+inline int32_t IsAtty(int32_t fd) {
+#if XTEST_OS_WINDOWS
+  return _isatty(fd);
+#else
+  return isatty(fd);
+#endif
+}
+
+inline int32_t StrCaseCmp(const char* lhs, const char* rhs) {
+  return strcasecmp(lhs, rhs);
+}
+
+inline const char* GetEnv(const char* name) { return std::getenv(name); }
 }  // namespace posix
 }  // namespace xtest
 
@@ -246,5 +267,17 @@ XTEST_GLOBAL_DECLARE_uint64_(failure_count);
 XTEST_GLOBAL_DECLARE_uint64_(test_count);
 XTEST_GLOBAL_DECLARE_uint64_(test_suite_count);
 XTEST_GLOBAL_DECLARE_uint64_(failed_test_count);
+
+// When this flag is specified, the xtest's help message is printed on the
+// console.
+XTEST_FLAG_DECLARE_bool_(help);
+
+// When this flag is specified, tests' order is randomized on every iteration.
+XTEST_FLAG_DECLARE_bool_(shuffle);
+
+// This flag enables using colors in terminal output. Available values are "yes"
+// to enable colors, "no" (disable colors), or "auto" (the default) to let XTest
+// decide.
+XTEST_FLAG_DECLARE_string_(color);
 
 #endif  // XTEST_INCLUDE_INTERNAL_XTEST_PORT_HH_

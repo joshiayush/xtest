@@ -37,6 +37,7 @@
 
 #include "internal/xtest-port-arch.hh"
 #include "internal/xtest-port.hh"
+#include "internal/xtest-string.hh"
 
 #if XTEST_OS_WINDOWS
 #include <windows.h>
@@ -112,7 +113,41 @@ static std::string GetAnsiColorCode(const XTestColor& color) {
 //
 // Uses posix compatible functions `IsAtty()` and `FileNo()` to check if the
 // output stream is a TTY.
-bool ShouldUseColor() { return posix::IsAtty(posix::FileNo(stdout)) != 0; }
+bool ShouldUseColor(bool stdout_is_tty) {
+  std::string color = XTEST_FLAG_GET_(color);
+  const char* const xtest_color = color.c_str();
+
+  if (String::CaseInsensitiveCStringEquals(xtest_color, "auto")) {
+#if XTEST_OS_WINDOWS && !XTEST_OS_WINDOWS_MINGW
+    // On Windows the TERM variable is usually not set, but the
+    // console there does support colors.
+    return stdout_is_tty;
+#else
+    // On non-Windows platforms, we rely on the TERM variable.
+    const char* const term = posix::GetEnv("TERM");
+    const bool term_supports_color =
+        String::CStringEquals(term, "xterm") ||
+        String::CStringEquals(term, "xterm-color") ||
+        String::CStringEquals(term, "xterm-256color") ||
+        String::CStringEquals(term, "screen") ||
+        String::CStringEquals(term, "screen-256color") ||
+        String::CStringEquals(term, "tmux") ||
+        String::CStringEquals(term, "tmux-256color") ||
+        String::CStringEquals(term, "rxvt-unicode") ||
+        String::CStringEquals(term, "rxvt-unicode-256color") ||
+        String::CStringEquals(term, "linux") ||
+        String::CStringEquals(term, "cygwin");
+    return stdout_is_tty && term_supports_color;
+#endif  // XTEST_OS_WINDOWS
+  }
+
+  // We take "yes", "true", "t", and "1" as meaning "yes".  If the value is
+  // neither one of these nor "auto", we treat it as "no" to be conservative.
+  return String::CaseInsensitiveCStringEquals(xtest_color, "yes") ||
+         String::CaseInsensitiveCStringEquals(xtest_color, "true") ||
+         String::CaseInsensitiveCStringEquals(xtest_color, "t") ||
+         String::CStringEquals(xtest_color, "1");
+}
 
 // Prints text with colors in both Windows and Unix-like systems by setting the
 // console text attributes and emitting colors respectively.  If the output is
@@ -129,7 +164,7 @@ void ColoredPrintf(const XTestColor& color, const char* fmt, ...) {
 // intentionally redirect `ColoredPrintf()` function's output to a context
 // buffer in order to check it.
 #if defined(XTEST_TESTING_ENABLED)
-  if (!ShouldUseColor()) {
+  if (!ShouldUseColor(posix::IsAtty(posix::FileNo(stdout)) != 0)) {
     std::vprintf(fmt, args);
     va_end(args);
     return;

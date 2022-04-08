@@ -33,6 +33,8 @@
 #include <memory>
 #include <string>
 
+#include "internal/xtest-port.hh"
+
 namespace xtest {
 // Escapes control characters and quotes in a string and appends it to the given
 // buffer.
@@ -101,5 +103,32 @@ std::string String::Repr(std::string str) {
 // Checks if the given string starts with the given prefix.
 bool String::StartsWith(const std::string& str, const std::string& prefix) {
   return str.compare(0, prefix.size(), prefix) == 0;
+}
+
+// Compares two C strings.  Returns true if and only if they have the same
+// content.
+//
+// Unlike strcmp(), this function can handle NULL argument(s).  A NULL C string
+// is considered different to any non-NULL C string, including the empty string.
+bool String::CStringEquals(const char* lhs, const char* rhs) {
+  if (lhs == nullptr)
+    return rhs == nullptr;
+  if (rhs == nullptr)
+    return false;
+  return strcmp(lhs, rhs) == 0;
+}
+
+// Compares two C strings, ignoring case.  Returns true if and only if they have
+// the same content.
+//
+// Unlike strcasecmp(), this function can handle NULL argument(s).  A NULL C
+// string is considered different to any non-NULL C string, including the empty
+// string.
+bool String::CaseInsensitiveCStringEquals(const char* lhs, const char* rhs) {
+  if (lhs == nullptr)
+    return rhs == nullptr;
+  if (rhs == nullptr)
+    return false;
+  return posix::StrCaseCmp(lhs, rhs) == 0;
 }
 }  // namespace xtest

@@ -49,6 +49,22 @@ class String {
 
   // Checks if the given string starts with the given prefix.
   static bool StartsWith(const std::string &str, const std::string &prefix);
+
+  // Compares two C strings.  Returns true if and only if they have the same
+  // content.
+  //
+  // Unlike strcmp(), this function can handle NULL argument(s).  A NULL C
+  // string is considered different to any non-NULL C string, including the
+  // empty string.
+  static bool CStringEquals(const char *lhs, const char *rhs);
+
+  // Compares two C strings, ignoring case.  Returns true if and only if they
+  // have the same content.
+  //
+  // Unlike strcasecmp(), this function can handle NULL argument(s).  A NULL C
+  // string is considered different to any non-NULL C string, including the
+  // empty string.
+  static bool CaseInsensitiveCStringEquals(const char *lhs, const char *rhs);
 };
 }  // namespace xtest
 

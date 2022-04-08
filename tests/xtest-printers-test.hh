@@ -33,21 +33,25 @@
 #include <string>
 
 #include "internal/xtest-port-arch.hh"
+#include "internal/xtest-port.hh"
 #include "internal/xtest-printers.hh"
 #include "redirector.hh"
 #include "xtest.hh"
 
 TEST(ShouldUseColorTest, TestBeforeAndAfterRedirection) {
   // Test before redirecting `stdout`; `ShouldUseColor()` must return `true`.
-  EXPECT_TRUE(xtest::internal::ShouldUseColor());
+  EXPECT_TRUE(xtest::internal::ShouldUseColor(
+      xtest::posix::IsAtty(xtest::posix::FileNo(stdout)) != 0));
   xtest::testing::RedirectorContext stdout_redirector_context(
       xtest::testing::RedirectorContextStream::kStdout);
   stdout_redirector_context.ReplaceStreamWithContextBuffer();
   // Test after redirecting `stdout`; `ShouldUseColor()` must return `false`.
-  EXPECT_FALSE(xtest::internal::ShouldUseColor());
+  EXPECT_FALSE(xtest::internal::ShouldUseColor(
+      xtest::posix::IsAtty(xtest::posix::FileNo(stdout)) != 0));
   stdout_redirector_context.RestoreStream();
   // Test after restoring `stdout`; `ShouldUseColor()` must return `true`.
-  EXPECT_TRUE(xtest::internal::ShouldUseColor());
+  EXPECT_TRUE(xtest::internal::ShouldUseColor(
+      xtest::posix::IsAtty(xtest::posix::FileNo(stdout)) != 0));
 }
 
 TEST(ColoredPrintfTest, TestWhenDefaultIsUsedInBothWindowsAndUnixSystems) {

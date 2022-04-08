@@ -41,7 +41,7 @@ enum class XTestColor { kDefault, kRed, kGreen, kYellow };
 //
 // Uses posix compatible functions `IsAtty()` and `FileNo()` to check if the
 // output stream is a TTY.
-bool ShouldUseColor();
+bool ShouldUseColor(bool stdout_is_tty);
 
 // Prints text with colors in both Windows and Unix-like systems by setting the
 // console text attributes and emitting colors respectively.  If the output is
