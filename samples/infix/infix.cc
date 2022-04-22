@@ -117,7 +117,8 @@ Infix::Infix(const char* expr)
     : M_infix_expr(expr),
       M_top(-1),
       M_infix_to_postfix_stack_size(std::strlen(expr) + 1) {
-  M_infix_to_postfix_stack = new char[M_infix_to_postfix_stack_size];
+  M_infix_to_postfix_stack =
+      new (std::nothrow) char[M_infix_to_postfix_stack_size];
 }
 
 // Constructor for explicit value.  Assigns `expr` to `M_infix_expr` and
@@ -130,7 +131,8 @@ Infix::Infix(const std::string& expr)
     : M_infix_expr(expr),
       M_top(-1),
       M_infix_to_postfix_stack_size(expr.length() + 1) {
-  M_infix_to_postfix_stack = new char[M_infix_to_postfix_stack_size];
+  M_infix_to_postfix_stack =
+      new (std::nothrow) char[M_infix_to_postfix_stack_size];
 }
 
 // Deallocates `M_infix_to_postfix_stack` when an instance is destroyed.

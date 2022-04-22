@@ -124,7 +124,7 @@ TEST(PrettyUnitTestResultPrinterTest, StaticMethodOnTestIterationEnd) {
     // `REDIRECTOR_BUFFER_SIZE - std::strlen(expected)` is going to be the
     // amount of room left for failed tests output.
     char* failed_tests_output =
-        new char[REDIRECTOR_BUFFER_SIZE - std::strlen(expected)];
+        new (std::nothrow) char[REDIRECTOR_BUFFER_SIZE - std::strlen(expected)];
 
     // Create a string with the number of failed tests to later concatenate with
     // the `expected` string.
@@ -144,9 +144,9 @@ TEST(PrettyUnitTestResultPrinterTest, StaticMethodOnTestIterationEnd) {
         // `REDIRECTOR_BUFFER_SIZE - std::strlen(expected) -
         // std::strlen(failed_tests_output)` is going to be the amount of room
         // left for failed tests description.
-        char* failed_tests =
-            new char[REDIRECTOR_BUFFER_SIZE - std::strlen(expected) -
-                     std::strlen(failed_tests_output)];
+        char* failed_tests = new (
+            std::nothrow) char[REDIRECTOR_BUFFER_SIZE - std::strlen(expected) -
+                               std::strlen(failed_tests_output)];
 
         // When there are failed tests we want to see the name of there test
         // suite and there test name.
@@ -169,8 +169,8 @@ TEST(PrettyUnitTestResultPrinterTest, StaticMethodOnTestIterationEnd) {
     // std::strlen(failed_tests_output)` is going to be the amount of room left
     // for failed tests summary.
     char* summarize_failed_tests =
-        new char[REDIRECTOR_BUFFER_SIZE - std::strlen(expected) -
-                 std::strlen(failed_tests_output)];
+        new (std::nothrow) char[REDIRECTOR_BUFFER_SIZE - std::strlen(expected) -
+                                std::strlen(failed_tests_output)];
 
     // Create a summary string to see how many number of tests failed.
     std::snprintf(summarize_failed_tests,
