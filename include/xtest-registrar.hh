@@ -33,17 +33,17 @@
 #include <csetjmp>
 #include <cstdint>
 #include <iostream>
+#include <list>
 #include <map>
 #include <utility>
-#include <vector>
 
 #include "internal/xtest-port.hh"
 
 namespace xtest {
 struct TestRegistrar;
 
-using XTestUnitTest = std::map<const char*, std::vector<TestRegistrar*>>;
-using XTestUnitTestPair = std::pair<const char*, std::vector<TestRegistrar*>>;
+using XTestUnitTest = std::map<const char*, std::list<TestRegistrar*>>;
+using XTestUnitTestPair = std::pair<const char*, std::list<TestRegistrar*>>;
 
 // Creates a test suite and register it using TestRegistrar.
 //

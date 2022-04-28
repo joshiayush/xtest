@@ -39,10 +39,10 @@
 #include <iomanip>
 #include <iostream>
 #include <limits>
+#include <list>
 #include <sstream>
 #include <string>
 #include <utility>
-#include <vector>
 
 #include "internal/xtest-port.hh"
 #include "internal/xtest-printers.hh"
@@ -419,7 +419,7 @@ void PrettyUnitTestResultPrinter::OnEnvironmentsTearDownStart() {
 //
 // In case an assertion fails then this function marks that test suite as
 // `FAILED` while silently continuing executing rest of the test suites.
-static void RunRegisteredTestSuite(const std::vector<TestRegistrar*>& tests) {
+static void RunRegisteredTestSuite(const std::list<TestRegistrar*>& tests) {
   void (*SavedSignalHandler)(int);
   SavedSignalHandler = std::signal(SIGABRT, impl::SignalHandler);
   for (TestRegistrar* const& test : tests) {
