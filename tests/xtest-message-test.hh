@@ -64,12 +64,6 @@ TEST(MessageTest, WhenStreamedANullPointer) {
   EXPECT_EQ("(null)", msg.GetString());
 }
 
-TEST(MessageTest, WhenStreamedBasicNarrowIoManip) {
-  xtest::Message msg;
-  msg << std::endl;
-  EXPECT_EQ("\n", msg.GetString());
-}
-
 TEST(MessageTest, WhenStreamedBooleans) {
   xtest::Message msg;
   msg << true << " and " << false;
@@ -80,6 +74,40 @@ TEST(MessageTest, WhenStreamedMultipleNullCharacters) {
   xtest::Message msg;
   msg << '\0' << '\0' << '\0' << '\0';
   EXPECT_EQ(msg.GetString(), "\\0\\0\\0\\0");
+}
+
+// Tests that basic IO manipulators (endl, ends, and flush) can be
+// streamed to Message.
+TEST(MessageTest, StreamsBasicIoManip) {
+  EXPECT_EQ("Line 1.\nA NUL char \\0 in line 2.",
+            (xtest::Message()
+             << "Line 1." << std::endl
+             << "A NUL char " << std::ends << std::flush << " in line 2.")
+                .GetString());
+}
+
+// Tests that a Message object doesn't take up too much stack space.
+TEST(MessageTest, DoesNotTakeUpMuchStackSpace) {
+  EXPECT_LE(sizeof(xtest::Message), 16U);
+}
+
+// Tests streaming a non-char pointer.
+TEST(MessageTest, StreamsPointer) {
+  int n = 0;
+  int* p = &n;
+  EXPECT_NE("(null)", (xtest::Message() << p).GetString());
+}
+
+// Tests streaming a NULL non-char pointer.
+TEST(MessageTest, StreamsNullPointer) {
+  int* p = nullptr;
+  EXPECT_EQ("(null)", (xtest::Message() << p).GetString());
+}
+
+// Tests streaming a NULL C string.
+TEST(MessageTest, StreamsNullCString) {
+  char* p = nullptr;
+  EXPECT_EQ("(null)", (xtest::Message() << p).GetString());
 }
 
 #endif  // XTEST_TESTS_XTEST_MESSAGE_TEST_HH_
