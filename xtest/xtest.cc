@@ -557,7 +557,7 @@ void PostFlagParsing() {
 // Initializes xtest.  This must be called before calling `RUN_ALL_TESTS()`.
 //
 // In particular, it parses a command line for the flags that xtest
-// recognizes. Whenever a Google Test flag is seen, it is removed from argv,
+// recognizes. Whenever a Xtest Test flag is seen, it is removed from argv,
 // and *argc is decremented.  Calling the function for the second time has no
 // user-visible effect.
 void InitXTest(int32_t* argc, char** argv) {
