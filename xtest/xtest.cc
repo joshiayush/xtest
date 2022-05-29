@@ -113,6 +113,10 @@ static const char kColorEncodedHelpMessage[] =
     "   @G--shuffle@D\n"
     "     Randomize tests' order. (In development)\n"
     "\n"
+    "Test Output:\n"
+    "  @G--color=@Y(@Gyes@Y|@Gno@Y|@Gauto@Y)@D\n"
+    "      Enable/disable colored output. The default is @Gauto@D.\n"
+    "\n"
     "Others:\n"
     "   @G--help@D\n"
     "     Print this message.\n";
@@ -474,44 +478,63 @@ static uint8_t ValidFlagPreffixLength(const char* flag) {
 // Returns the value of the xtest command line flag.
 //
 // Parses the value after '=' character over the command line.  If
-// `defOptional` is given then the flag value is treated as a boolen true and
+// `def_optional` is given then the flag value is treated as a boolen true and
 // returend.
 static const std::string ParseFlagValue(const char* const flag,
-                                        const char* flagName,
-                                        bool defOptional) {
-  if (flag == nullptr || flagName == nullptr)
+                                        const char* flag_name,
+                                        bool def_optional) {
+  if (flag == nullptr || flag_name == nullptr)
     return std::string();
 
-  uint8_t preffixLen = ValidFlagPreffixLength(flag);
-  if (preffixLen == 0)
+  uint8_t preffix_len = ValidFlagPreffixLength(flag);
+  if (preffix_len == 0)
     return std::string();
 
-  const char* flagEnd = flag + (preffixLen + std::strlen(flagName) + 1);
-  if (defOptional && *flagEnd == '\0')
+  const char* flag_end = flag + (preffix_len + std::strlen(flag_name) + 1);
+  if (def_optional && *flag_end == '\0')
     return "true";
 
-  if (*flagEnd != '=')
+  if (*flag_end != '=')
     return std::string();
 
-  return ++flagEnd;
+  return ++flag_end;
 }
 
-// Parses the given flag i.e., `flagName` from the command line argument
+// Parses the given flag i.e., `flag_name` from the command line argument
 // string i.e., `flag`.
 //
-// Parses the given `flagName` from the string `flag` and sets the value in
+// Parses the given `flag_name` from the string `flag` and sets the value in
 // the address `value`.
 //
 // Note: This function is just an overload for the boolean type command line
 // flags like `--help`, `--debug`, etc in this case the address that the
 // `value` is holding will have a bool value set at the end of parsing.
-static bool ParseFlag(const char* const flag, const char* const flagName,
+static bool ParseFlag(const char* const flag, const char* const flag_name,
                       bool* value) {
-  const std::string valueStr = ParseFlagValue(flag, flagName, true);
-  const char* valueCStr = valueStr.c_str();
-  if (valueCStr == nullptr)
+  const std::string value_str = ParseFlagValue(flag, flag_name, true);
+  const char* value_cstr = value_str.c_str();
+  if (value_cstr == nullptr)
     return false;
-  *value = std::strcmp(valueCStr, "true") == 0;
+  *value = std::strcmp(value_cstr, "true") == 0;
+  return true;
+}
+
+// Parses a string for a string flag, in the form of "--flag=value".
+//
+// On success, stores the value of the flag in *value, and returns true.  On
+// failure, returns false without changing *value.
+template <typename String>
+static bool ParseFlag(const char* flag, const char* flag_name, String* value) {
+  // Gets the value of the flag as a string.
+  const std::string value_str = ParseFlagValue(flag, flag_name, false);
+  const char* const value_cstr = value_str.c_str();
+
+  // Aborts if the parsing failed.
+  if (value_cstr == nullptr)
+    return false;
+
+  // Sets *value to the value of the flag.
+  *value = value_cstr;
   return true;
 }
 
@@ -520,16 +543,17 @@ static bool ParseFlag(const char* const flag, const char* const flagName,
 // This function parses value of a command line flag and sets the value of the
 // global variable that represents that flag with the required type.
 static void ParseXTestFlag(const char* const flag) {
-#define XTEST_INTERNAL_PARSE_FLAG(flagName)   \
-  do {                                        \
-    auto value = XTEST_FLAG_GET_(flagName);   \
-    if (ParseFlag(flag, #flagName, &value)) { \
-      XTEST_FLAG_SET_(flagName, value);       \
-    }                                         \
+#define XTEST_INTERNAL_PARSE_FLAG(flag_name)   \
+  do {                                         \
+    auto value = XTEST_FLAG_GET_(flag_name);   \
+    if (ParseFlag(flag, #flag_name, &value)) { \
+      XTEST_FLAG_SET_(flag_name, value);       \
+    }                                          \
   } while (false)
 
   XTEST_INTERNAL_PARSE_FLAG(help);
   XTEST_INTERNAL_PARSE_FLAG(shuffle);
+  XTEST_INTERNAL_PARSE_FLAG(color);
 #undef XTEST_INTERNAL_PARSE_FLAG
 }
 
@@ -539,8 +563,8 @@ static void ParseXTestFlag(const char* const flag) {
 // library.
 void ParseXTestFlags(int32_t* argc, char** argv) {
   for (int32_t i = 1; i < *argc; ++i) {
-    const std::string argString = internal::StreamableToString(argv[i]);
-    ParseXTestFlag(argString.c_str());
+    const std::string arg_string = internal::StreamableToString(argv[i]);
+    ParseXTestFlag(arg_string.c_str());
   }
 }
 
