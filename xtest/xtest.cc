@@ -511,12 +511,16 @@ static const std::string ParseFlagValue(const char* const flag,
 // `value` is holding will have a bool value set at the end of parsing.
 static bool ParseFlag(const char* const flag, const char* const flag_name,
                       bool* value) {
+  // Gets the value of the flag as a string.
   const std::string value_str = ParseFlagValue(flag, flag_name, true);
   const char* value_cstr = value_str.c_str();
+
+  // Aborts if the parsing failed.
   if (value_cstr == nullptr)
     return false;
-  *value = std::strcmp(value_cstr, "true") == 0;
-  return true;
+
+  // Sets *value to the value of the flag.
+  return (*value = (std::strcmp(value_cstr, "true") == 0));
 }
 
 // Parses a string for a string flag, in the form of "--flag=value".
@@ -548,6 +552,7 @@ static void ParseXTestFlag(const char* const flag) {
     auto value = XTEST_FLAG_GET_(flag_name);   \
     if (ParseFlag(flag, #flag_name, &value)) { \
       XTEST_FLAG_SET_(flag_name, value);       \
+      return;                                  \
     }                                          \
   } while (false)
 
