@@ -490,7 +490,7 @@ static const std::string ParseFlagValue(const char* const flag,
   if (preffix_len == 0)
     return std::string();
 
-  const char* flag_end = flag + (preffix_len + std::strlen(flag_name) + 1);
+  const char* flag_end = flag + (preffix_len + std::strlen(flag_name));
   if (def_optional && *flag_end == '\0')
     return "true";
 
@@ -556,9 +556,11 @@ static void ParseXTestFlag(const char* const flag) {
     }                                          \
   } while (false)
 
+  // Order is important to fix issue #3
+  // (https://github.com/joshiayush/xtest/issues/3).
   XTEST_INTERNAL_PARSE_FLAG(help);
-  XTEST_INTERNAL_PARSE_FLAG(shuffle);
   XTEST_INTERNAL_PARSE_FLAG(color);
+  XTEST_INTERNAL_PARSE_FLAG(shuffle);
 #undef XTEST_INTERNAL_PARSE_FLAG
 }
 
