@@ -110,15 +110,18 @@ static const char kColorEncodedHelpMessage[] =
     "following command line flags to control its behaviour:\n"
     "\n"
     "Test Execution:\n"
-    "   @G--shuffle@D\n"
+    "   @G--" XTEST_FLAG_PREFIX_
+    "shuffle@D\n"
     "     Randomize tests' order. (In development)\n"
     "\n"
     "Test Output:\n"
-    "  @G--color=@Y(@Gyes@Y|@Gno@Y|@Gauto@Y)@D\n"
+    "  @G--" XTEST_FLAG_PREFIX_
+    "color=@Y(@Gyes@Y|@Gno@Y|@Gauto@Y)@D\n"
     "      Enable/disable colored output. The default is @Gauto@D.\n"
     "\n"
     "Others:\n"
-    "   @G--help@D\n"
+    "   @G--" XTEST_FLAG_PREFIX_
+    "help@D\n"
     "     Print this message.\n";
 
 // XTestIsInitialized() returns true if and only if the user has initialized
@@ -175,25 +178,25 @@ std::string GetStringAlignedTo(const std::string& str,
 
   std::stringstream sstream;
   std::size_t whiteSpacesNum = newStrWidth - strlen;
-  std::size_t suffixlen, preffixlen;
+  std::size_t suffixlen, prefixlen;
 
   switch (alignSide) {
     case ALIGN_LEFT:
       suffixlen = (whiteSpacesNum / 5);
-      preffixlen = whiteSpacesNum - suffixlen;
+      prefixlen = whiteSpacesNum - suffixlen;
       break;
     case ALIGN_CENTER:
       suffixlen = whiteSpacesNum / 2;
-      preffixlen = whiteSpacesNum - suffixlen;
+      prefixlen = whiteSpacesNum - suffixlen;
       break;
     case ALIGN_RIGHT:
-      preffixlen = (whiteSpacesNum / 5);
-      suffixlen = whiteSpacesNum - preffixlen;
+      prefixlen = (whiteSpacesNum / 5);
+      suffixlen = whiteSpacesNum - prefixlen;
       break;
   }
 
   sstream << GetStrFilledWith(' ', suffixlen) << str
-          << GetStrFilledWith(' ', preffixlen);
+          << GetStrFilledWith(' ', prefixlen);
   return sstream.str();
 }
 
@@ -463,11 +466,11 @@ uint64_t RunRegisteredTests() {
   return XTEST_GLOBAL_INSTANCE_GET_(failure_count);
 }
 
-// Checks if the string given is preffixed by valid characters or not.
+// Checks if the string given is prefixed by valid characters or not.
 //
 // This function is maily used to validate command line flags given to the
 // main executable.
-static uint8_t ValidFlagPreffixLength(const char* flag) {
+static uint8_t ValidFlagPrefixLength(const char* flag) {
   if (std::strncmp(flag, "--", 2) == 0)
     return 2;
   if (std::strncmp(flag, "-", 1) == 0)
@@ -486,14 +489,28 @@ static const std::string ParseFlagValue(const char* const flag,
   if (flag == nullptr || flag_name == nullptr)
     return std::string();
 
-  uint8_t preffix_len = ValidFlagPreffixLength(flag);
-  if (preffix_len == 0)
+  // Find the number of '-' used as a prefix in the flag name.
+  uint8_t prefix_len = ValidFlagPrefixLength(flag);
+  if (prefix_len == 0)
     return std::string();
 
-  const char* flag_end = flag + (preffix_len + std::strlen(flag_name));
+  // If the flag is not prefixed with '--' or '-' `XTEST_FLAG_PREFIX_` then it
+  // is not a valid flag.
+  const std::string flag_str_without_prefix =
+      std::string(XTEST_FLAG_PREFIX_) + flag_name;
+  const std::size_t flag_str_without_prefix_len =
+      flag_str_without_prefix.size();
+
+  // Skips the flag name.
+  const char* flag_end = flag + (prefix_len + flag_str_without_prefix_len);
+
+  // When def_optional is true, it's OK to not have a "=value" part.
   if (def_optional && *flag_end == '\0')
     return "true";
 
+  // If `def_optional` is true and there are more characters after the flag
+  // name, or if `def_optional` is false, there must be a '=' after the flag
+  // name.
   if (*flag_end != '=')
     return std::string();
 

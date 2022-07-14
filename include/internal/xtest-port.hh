@@ -188,7 +188,7 @@ inline const char* GetEnv(const char* name) { return std::getenv(name); }
 }  // namespace xtest
 
 #define XTEST_NAME_ "Xtest"
-#define XTEST_FLAG_PREFIX_STRING_ "xtest_"
+#define XTEST_FLAG_PREFIX_ "xtest_"
 
 #define XTEST_FLAG_(flagName) flag_xtest_##flagName
 #define XTEST_FLAG_GET_(flagName) ::xtest::XTEST_FLAG_(flagName)
