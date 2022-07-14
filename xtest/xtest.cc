@@ -57,6 +57,10 @@ XTEST_FLAG_DEFINE_bool_(shuffle, false,
                         "True if and only if " XTEST_NAME_
                         " should randomize tests' order on every run.");
 
+// Prints the list of all tests with there suite names.
+XTEST_FLAG_DEFINE_bool_(list_tests, false,
+                        "List all tests without running them.");
+
 // This flag enables using colors in terminal output. Available values are "yes"
 // to enable colors, "no" (disable colors), or "auto" (the default) to let XTest
 // decide.
@@ -104,25 +108,6 @@ TimeInMillis Timer::Elapsed() {
       .count();
 }
 }  // namespace internal
-
-static const char kColorEncodedHelpMessage[] =
-    "This program contains tests written using xtest.  You can use the\n"
-    "following command line flags to control its behaviour:\n"
-    "\n"
-    "Test Execution:\n"
-    "   @G--" XTEST_FLAG_PREFIX_
-    "shuffle@D\n"
-    "     Randomize tests' order. (In development)\n"
-    "\n"
-    "Test Output:\n"
-    "  @G--" XTEST_FLAG_PREFIX_
-    "color=@Y(@Gyes@Y|@Gno@Y|@Gauto@Y)@D\n"
-    "      Enable/disable colored output. The default is @Gauto@D.\n"
-    "\n"
-    "Others:\n"
-    "   @G--" XTEST_FLAG_PREFIX_
-    "help@D\n"
-    "     Print this message.\n";
 
 // XTestIsInitialized() returns true if and only if the user has initialized
 // xtest.  Useful for catching the user mistake of not initializing xtest
@@ -418,6 +403,25 @@ void PrettyUnitTestResultPrinter::OnEnvironmentsTearDownStart() {
   std::fflush(stdout);
 }
 
+// Lists the tests with their suite names on the console when called.
+static void ListTestsWithSuiteName() {
+  for (const XTestUnitTestPair& test_suite :
+       XTestRegistryInstance.M_testRegistryTable) {
+    bool printed_test_suite_name = false;
+    for (const TestRegistrar* const& test : test_suite.second) {
+      if (!printed_test_suite_name) {
+        // We only print the suite name once.
+        printed_test_suite_name = true;
+        std::printf("%s.", test_suite.first);
+        std::printf("\n");
+      }
+      std::printf("  %s", test->M_testName);
+      std::printf("\n");
+    }
+  }
+  std::fflush(stdout);
+}
+
 // Runs the registered test suite.
 //
 // This function runs the registered test suite in the
@@ -455,6 +459,11 @@ static void RunRegisteredTestSuite(const std::list<TestRegistrar*>& tests) {
 // `xtest::XTestRegistryInstance.M_testRegistryTable` instance while also
 // handling the abort signals raised by `ASSERT_*` assertions.
 uint64_t RunRegisteredTests() {
+  if (XTEST_FLAG_GET_(list_tests)) {
+    ListTestsWithSuiteName();
+    return XTEST_GLOBAL_INSTANCE_GET_(failure_count);
+  }
+
   PrettyUnitTestResultPrinter::OnTestExecutionStart();
   for (const XTestUnitTestPair& testSuite :
        XTestRegistryInstance.M_testRegistryTable) {
@@ -533,7 +542,7 @@ static bool ParseFlag(const char* const flag, const char* const flag_name,
   const char* value_cstr = value_str.c_str();
 
   // Aborts if the parsing failed.
-  if (value_cstr == nullptr)
+  if (*value_cstr == '\0')
     return false;
 
   // Sets *value to the value of the flag.
@@ -551,13 +560,38 @@ static bool ParseFlag(const char* flag, const char* flag_name, String* value) {
   const char* const value_cstr = value_str.c_str();
 
   // Aborts if the parsing failed.
-  if (value_cstr == nullptr)
+  if (*value_cstr == '\0')
     return false;
 
   // Sets *value to the value of the flag.
   *value = value_cstr;
   return true;
 }
+
+static const char kColorEncodedHelpMessage[] =
+    "This program contains tests written using xtest.  You can use the\n"
+    "following command line flags to control its behaviour:\n"
+    "\n"
+    "Test Selection:\n"
+    "  @G--" XTEST_FLAG_PREFIX_
+    "list_tests@D\n"
+    "     List the names of all tests instead of running them. The name\n"
+    "     of TEST(Foo, Bar) is \"Foo.Bar\".\n"
+    "\n"
+    "Test Execution:\n"
+    "   @G--" XTEST_FLAG_PREFIX_
+    "shuffle@D\n"
+    "     Randomize tests' order. (In development)\n"
+    "\n"
+    "Test Output:\n"
+    "  @G--" XTEST_FLAG_PREFIX_
+    "color=@Y(@Gyes@Y|@Gno@Y|@Gauto@Y)@D\n"
+    "      Enable/disable colored output. The default is @Gauto@D.\n"
+    "\n"
+    "Others:\n"
+    "   @G--" XTEST_FLAG_PREFIX_
+    "help@D\n"
+    "      Print this message.\n";
 
 // Parses a single xtest command line flag at a time.
 //
@@ -577,6 +611,7 @@ static void ParseXTestFlag(const char* const flag) {
   // (https://github.com/joshiayush/xtest/issues/3).
   XTEST_INTERNAL_PARSE_FLAG(help);
   XTEST_INTERNAL_PARSE_FLAG(color);
+  XTEST_INTERNAL_PARSE_FLAG(list_tests);
   XTEST_INTERNAL_PARSE_FLAG(shuffle);
 #undef XTEST_INTERNAL_PARSE_FLAG
 }

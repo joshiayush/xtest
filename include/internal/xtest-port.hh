@@ -275,6 +275,9 @@ XTEST_FLAG_DECLARE_bool_(help);
 // When this flag is specified, tests' order is randomized on every iteration.
 XTEST_FLAG_DECLARE_bool_(shuffle);
 
+// Prints the list of all tests with there suite names.
+XTEST_FLAG_DECLARE_bool_(list_tests);
+
 // This flag enables using colors in terminal output. Available values are "yes"
 // to enable colors, "no" (disable colors), or "auto" (the default) to let XTest
 // decide.
