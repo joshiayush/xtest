@@ -41,9 +41,15 @@ file(GLOB_RECURSE XTEST_SRC_FILES "xtest/*.cc")
 
 option(BUILD_TESTS "Builds the tests for library xtest itself." OFF)
 option(BUILD_SAMPLES "Builds the samples for library xtest." OFF)
+option(XTEST_TESTING_DISABLED "Disables building tests written for xtest." OFF)
 
 add_library(${PROJECT_NAME} SHARED ${XTEST_SRC_FILES})
 set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PROJECT_VERSION} SOVERSION 1)
+
+if (XTEST_TESTING_DISABLED OR NOT BUILD_TESTS)
+	# Macro `XTEST_TESTING_DISABLED` is used to disable building tests for xtest.
+	add_compile_definitions(XTEST_TESTING_DISABLED)
+endif()
 
 install(TARGETS ${PROJECT_NAME} LIBRARY DESTINATION ${CMAKE_SOURCE_DIR}/build)
 
