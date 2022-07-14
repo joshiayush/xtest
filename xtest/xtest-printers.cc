@@ -156,14 +156,14 @@ void ColoredPrintf(const XTestColor& color, const char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
 
-// The purpose why we use `XTEST_TESTING_ENABLED` macro to add the following
+// The purpose why we use `XTEST_TESTING_DISABLED` macro to add the following
 // code is because we need to test `ColoredPrintf()` function's output with
 // escape sequences and different console text attributes which is only possible
 // if we disable `ShouldUseColor()` function's result, because
 // `ShouldUseColor()` will always return `false` in testing because we
 // intentionally redirect `ColoredPrintf()` function's output to a context
 // buffer in order to check it.
-#if defined(XTEST_TESTING_ENABLED)
+#if defined(XTEST_TESTING_DISABLED)
   if (!ShouldUseColor(posix::IsAtty(posix::FileNo(stdout)) != 0)) {
     std::vprintf(fmt, args);
     va_end(args);
