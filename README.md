@@ -62,6 +62,8 @@
 
 **xtest** is a C++ testing framework inspired by [`gtest`][_gtest]. This is just a minimal implementation of a C++ unit testing framework which gives all the required facilities for unit testing a software without going template crazy and causing compilation issues.
 
+A better and more robust version of this library is [`GoogleTest`][_gtest] which is developed and maintained by Google.  It is a official Google product and is used by many notable projects.
+
 <div align="right">
   <a href="#top">
   
