@@ -48,7 +48,7 @@ std::string FormatFileLocation(const char* file, const uint64_t& line) {
 // Logs the file and line number to the stderr.
 XTestLog::XTestLog(const XTestLogSeverity& severity, const char* file,
                    const uint64_t& line)
-    : _M_severity(severity) {
+    : severity_(severity) {
   const char* const marker = severity == XTEST_INFO      ? "[  INFO ]"
                              : severity == XTEST_WARNING ? "[WARNING]"
                              : severity == XTEST_ERROR   ? "[ ERROR ]"
@@ -59,7 +59,7 @@ XTestLog::XTestLog(const XTestLogSeverity& severity, const char* file,
 // Flushes the buffers and, if severity is XTEST_FATAL, aborts the program.
 XTestLog::~XTestLog() {
   GetStream() << std::endl;
-  if (_M_severity == XTEST_FATAL)
+  if (severity_ == XTEST_FATAL)
     std::abort();
 }
 }  // namespace internal

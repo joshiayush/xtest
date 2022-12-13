@@ -86,15 +86,15 @@ XTEST_STATIC_DECLARE_vector_(argvs, std::string,
 
 namespace xtest {
 namespace impl {
-// Calls std::longjmp() with M_jumpOutOfTest instance as its first
+// Calls std::longjmp() with jump_out_of_test_ instance as its first
 // argument.
 //
 // This function calls the std::longjmp() function with the std::jmp_buf
-// instance M_jumpOutOfTest as its first argument when the SIGABRT is raised
+// instance jump_out_of_test_ as its first argument when the SIGABRT is raised
 // inside of the function run_registered_test() that runs the registered test
 // suites.
 void SignalHandler(int param) {
-  std::longjmp(XTestRegistryInstance.M_jumpOutOfTest, 1);
+  std::longjmp(XTestRegistryInstance.jump_out_of_test_, 1);
 }
 }  // namespace impl
 
@@ -149,39 +149,39 @@ std::string GetStrFilledWith(const char& chr, std::size_t width) {
 // ```
 //
 // In order to align the letter `FAILED` to the center we use this function
-// with a 'alignSide' of 'ALIGN_CENTER'.
+// with a 'align_side' of 'ALIGN_CENTER'.
 //
-// If not given this function will use the default values for `newStrWidth`
-// and `alignSide` i.e., `XTEST_DEFAULT_SUMMARY_STATUS_STR_WIDTH_` and
+// If not given this function will use the default values for `new_str_width`
+// and `align_side` i.e., `XTEST_DEFAULT_SUMMARY_STATUS_STR_WIDTH_` and
 // `ALIGN_CENTER` respectively.
 std::string GetStringAlignedTo(const std::string& str,
-                               const std::size_t& newStrWidth,
-                               const StringAlignValues& alignSide) {
+                               const std::size_t& new_str_width,
+                               const StringAlignValues& align_side) {
   std::size_t strlen = str.length();
-  if (strlen >= newStrWidth)
+  if (strlen >= new_str_width)
     return str.c_str();
 
   std::stringstream sstream;
-  std::size_t whiteSpacesNum = newStrWidth - strlen;
-  std::size_t suffixlen, prefixlen;
+  std::size_t white_space_num = new_str_width - strlen;
+  std::size_t suffix_len, prefix_len;
 
-  switch (alignSide) {
+  switch (align_side) {
     case ALIGN_LEFT:
-      suffixlen = (whiteSpacesNum / 5);
-      prefixlen = whiteSpacesNum - suffixlen;
+      suffix_len = (white_space_num / 5);
+      prefix_len = white_space_num - suffix_len;
       break;
     case ALIGN_CENTER:
-      suffixlen = whiteSpacesNum / 2;
-      prefixlen = whiteSpacesNum - suffixlen;
+      suffix_len = white_space_num / 2;
+      prefix_len = white_space_num - suffix_len;
       break;
     case ALIGN_RIGHT:
-      prefixlen = (whiteSpacesNum / 5);
-      suffixlen = whiteSpacesNum - prefixlen;
+      prefix_len = (white_space_num / 5);
+      suffix_len = white_space_num - prefix_len;
       break;
   }
 
-  sstream << GetStrFilledWith(' ', suffixlen) << str
-          << GetStrFilledWith(' ', prefixlen);
+  sstream << GetStrFilledWith(' ', suffix_len) << str
+          << GetStrFilledWith(' ', prefix_len);
   return sstream.str();
 }
 
@@ -190,10 +190,10 @@ std::string GetStringAlignedTo(const std::string& str,
 // We allocate the stringstream separately because otherwise each use of
 // ASSERT_* or EXPECT_* in a procedure adds over 200 bytes to the procedure's
 // stack frame leading to huge the stack space.
-Message::Message() : _M_sstream(new (std::nothrow) std::stringstream) {
+Message::Message() : sstream_(new(std::nothrow) std::stringstream) {
   // By default, we want there to be enough precision when printing a double
   // to a Message.
-  *_M_sstream << std::setprecision(std::numeric_limits<double>::digits10 + 2);
+  *sstream_ << std::setprecision(std::numeric_limits<double>::digits10 + 2);
 }
 
 // Gets the text streamed to this object so far as an std::string.  Each '\0'
@@ -201,7 +201,7 @@ Message::Message() : _M_sstream(new (std::nothrow) std::stringstream) {
 //
 // INTERNAL IMPLEMENTATION - DO NOT USE IN A USER PROGRAM.
 std::string Message::GetString() const {
-  const std::string& str = _M_sstream->str();
+  const std::string& str = sstream_->str();
   const char* const start = str.c_str();
   const char* const end = start + str.length();
 
@@ -219,7 +219,7 @@ std::uint64_t GetTestNumber() {
     return XTEST_GLOBAL_INSTANCE_GET_(test_count);
   XTEST_GLOBAL_INSTANCE_GET_(test_count) = 0;
   for (const XTestUnitTestPair& test_suite :
-       XTestRegistryInstance.M_testRegistryTable)
+       XTestRegistryInstance.test_registry_table_)
     XTEST_GLOBAL_INSTANCE_GET_(test_count) += test_suite.second.size();
   return XTEST_GLOBAL_INSTANCE_GET_(test_count);
 }
@@ -230,22 +230,22 @@ std::uint64_t GetTestSuiteNumber() {
     return XTEST_GLOBAL_INSTANCE_GET_(test_suite_count);
   XTEST_GLOBAL_INSTANCE_GET_(test_suite_count) = 0;
   for (const XTestUnitTestPair& test_suite :
-       XTestRegistryInstance.M_testRegistryTable)
+       XTestRegistryInstance.test_registry_table_)
     ++XTEST_GLOBAL_INSTANCE_GET_(test_suite_count);
   return XTEST_GLOBAL_INSTANCE_GET_(test_suite_count);
 }
 
 // Returns the `XTestUnitTest` instance of failed tests.
 //
-// Iterates over the `XTestRegistryInstance.M_testRegistryTable` instance and
-// adds the pair who's `M_testResult` equals to `TestResult::FAILED` in the
+// Iterates over the `XTestRegistryInstance.test_registry_table_` instance and
+// adds the pair who's `test_result_` equals to `TestResult::FAILED` in the
 // `failed_tests` container.
 XTestUnitTest GetFailedTests() {
   XTestUnitTest failed_tests;
   for (const XTestUnitTestPair& testCase :
-       XTestRegistryInstance.M_testRegistryTable) {
+       XTestRegistryInstance.test_registry_table_) {
     for (const auto& test : testCase.second) {
-      if (test->M_testResult != TestResult::FAILED)
+      if (test->test_result_ != TestResult::FAILED)
         continue;
       failed_tests[testCase.first].push_back(test);
     }
@@ -291,11 +291,12 @@ void PrettyUnitTestResultPrinter::OnTestExecutionEnd() {
 // Prints out the information related to the number of tests a test suite
 // shares.
 void PrettyUnitTestResultPrinter::OnTestStart(
-    const XTestUnitTestPair& testSuite) {
+    const XTestUnitTestPair& test_suite) {
   std::printf("\n");
   internal::ColoredPrintf(internal::XTestColor::kGreen, "[%s] ",
                           GetStrFilledWith('-').c_str());
-  std::printf("%lu tests from %s\n", testSuite.second.size(), testSuite.first);
+  std::printf("%lu tests from %s\n", test_suite.second.size(),
+              test_suite.first);
   std::fflush(stdout);
 }
 
@@ -304,13 +305,13 @@ void PrettyUnitTestResultPrinter::OnTestStart(
 // `PrettyUnitTestResultPrinter::OnTestStart()` but should be ran after
 // executing all the tests of a test suite.
 void PrettyUnitTestResultPrinter::OnTestEnd(
-    const XTestUnitTestPair& testSuite) {
+    const XTestUnitTestPair& test_suite) {
   internal::ColoredPrintf(internal::XTestColor::kGreen, "[%s] ",
                           GetStrFilledWith('-').c_str());
-  std::printf("%lu tests from %s", testSuite.second.size(), testSuite.first);
+  std::printf("%lu tests from %s", test_suite.second.size(), test_suite.first);
   TimeInMillis elapsedTime = 0;
-  for (const TestRegistrar* const& test : testSuite.second)
-    elapsedTime += test->M_elapsedTime;
+  for (const TestRegistrar* const& test : test_suite.second)
+    elapsedTime += test->elapsed_time_;
   std::printf(" (%lu ms total)", elapsedTime);
   std::printf("\n");
   std::fflush(stdout);
@@ -336,8 +337,8 @@ void PrettyUnitTestResultPrinter::PrintFailedTests() {
           GetStringAlignedTo("FAILED", XTEST_DEFAULT_SUMMARY_STATUS_STR_WIDTH_,
                              ALIGN_CENTER)
               .c_str());
-      PrettyUnitTestResultPrinter::PrintTestName(test->M_suiteName,
-                                                 test->M_testName);
+      PrettyUnitTestResultPrinter::PrintTestName(test->suite_name_,
+                                                 test->test_name_);
       std::printf("\n");
     }
   }
@@ -406,7 +407,7 @@ void PrettyUnitTestResultPrinter::OnEnvironmentsTearDownStart() {
 // Lists the tests with their suite names on the console when called.
 static void ListTestsWithSuiteName() {
   for (const XTestUnitTestPair& test_suite :
-       XTestRegistryInstance.M_testRegistryTable) {
+       XTestRegistryInstance.test_registry_table_) {
     bool printed_test_suite_name = false;
     for (const TestRegistrar* const& test : test_suite.second) {
       if (!printed_test_suite_name) {
@@ -415,7 +416,7 @@ static void ListTestsWithSuiteName() {
         std::printf("%s.", test_suite.first);
         std::printf("\n");
       }
-      std::printf("  %s", test->M_testName);
+      std::printf("  %s", test->test_name_);
       std::printf("\n");
     }
   }
@@ -425,7 +426,7 @@ static void ListTestsWithSuiteName() {
 // Runs the registered test suite.
 //
 // This function runs the registered test suite in the
-// `xtest::XTestRegistryInstance.M_testRegistryTable` instance while also
+// `xtest::XTestRegistryInstance.test_registry_table_` instance while also
 // handling the abort signals raised by `ASSERT_*` assertions.
 //
 // In case an assertion fails then this function marks that test suite as
@@ -434,29 +435,29 @@ static void RunRegisteredTestSuite(const std::list<TestRegistrar*>& tests) {
   void (*SavedSignalHandler)(int);
   SavedSignalHandler = std::signal(SIGABRT, impl::SignalHandler);
   for (TestRegistrar* const& test : tests) {
-    if (test->M_testFunc == nullptr)
+    if (test->test_func_ == nullptr)
       continue;
     internal::Timer timer;
     // We are setting a jump here to later mark the test result as `FAILED` in
-    // case the `test->M_testFunc` raised an abort signal result of an
+    // case the `test->test_func_` raised an abort signal result of an
     // `ASSERT_*` assertion.  This step is reduntant but it is done to make
     // readers understand that the `abort` signal will be caught here and the
     // test suite will be exited.
-    if (setjmp(XTestRegistryInstance.M_jumpOutOfTest)) {
-      test->M_testResult = TestResult::FAILED;
+    if (setjmp(XTestRegistryInstance.jump_out_of_test_)) {
+      test->test_result_ = TestResult::FAILED;
     } else {
-      test->M_testFunc(test);
-      if (test->M_testResult == TestResult::UNKNOWN)
-        test->M_testResult = TestResult::PASSED;
+      test->test_func_(test);
+      if (test->test_result_ == TestResult::UNKNOWN)
+        test->test_result_ = TestResult::PASSED;
     }
-    test->M_elapsedTime = timer.Elapsed();
+    test->elapsed_time_ = timer.Elapsed();
   }
 }
 
 // Runs all the registered test suites and returns the failure count.
 //
 // This function runs all the registered test suites in the
-// `xtest::XTestRegistryInstance.M_testRegistryTable` instance while also
+// `xtest::XTestRegistryInstance.test_registry_table_` instance while also
 // handling the abort signals raised by `ASSERT_*` assertions.
 uint64_t RunRegisteredTests() {
   if (XTEST_FLAG_GET_(list_tests)) {
@@ -465,11 +466,11 @@ uint64_t RunRegisteredTests() {
   }
 
   PrettyUnitTestResultPrinter::OnTestExecutionStart();
-  for (const XTestUnitTestPair& testSuite :
-       XTestRegistryInstance.M_testRegistryTable) {
-    PrettyUnitTestResultPrinter::OnTestStart(testSuite);
-    RunRegisteredTestSuite(testSuite.second);
-    PrettyUnitTestResultPrinter::OnTestEnd(testSuite);
+  for (const XTestUnitTestPair& test_suite :
+       XTestRegistryInstance.test_registry_table_) {
+    PrettyUnitTestResultPrinter::OnTestStart(test_suite);
+    RunRegisteredTestSuite(test_suite.second);
+    PrettyUnitTestResultPrinter::OnTestEnd(test_suite);
   }
   PrettyUnitTestResultPrinter::OnTestExecutionEnd();
   return XTEST_GLOBAL_INSTANCE_GET_(failure_count);

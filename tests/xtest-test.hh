@@ -54,8 +54,8 @@ TEST(PrettyUnitTestResultPrinterTest, StaticMethodPrintTestName) {
   xtest::testing::RedirectorContext stdout_redirector_context(
       xtest::testing::RedirectorContextStream::kStdout);
   stdout_redirector_context.ReplaceStreamWithContextBuffer();
-  xtest::PrettyUnitTestResultPrinter::PrintTestName(currentTest->M_suiteName,
-                                                    currentTest->M_testName);
+  xtest::PrettyUnitTestResultPrinter::PrintTestName(current_test->suite_name_,
+                                                    current_test->test_name_);
   stdout_redirector_context.RestoreStream();
   const std::string actual(stdout_redirector_context.M_output_buffer_);
   const std::string expected(
@@ -155,7 +155,7 @@ TEST(PrettyUnitTestResultPrinterTest, StaticMethodOnTestIterationEnd) {
                           std::strlen(failed_tests_output),
                       "\x1b[0;31m[%s] \x1b[m%s.%s\n",
                       xtest::GetStringAlignedTo("FAILED").c_str(),
-                      test->M_suiteName, test->M_testName);
+                      test->suite_name_, test->test_name_);
 
         // Concatenate `failed_tests` string with `failed_tests_output` to see a
         // complete description of tests that failed.

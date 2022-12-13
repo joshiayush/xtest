@@ -40,12 +40,13 @@
 
 namespace xtest {
 namespace impl {
-// Calls `std::longjmp()` with `M_jumpOutOfTest` instance as its first argument.
+// Calls `std::longjmp()` with `jump_out_of_test_` instance as its first
+// argument.
 //
 // This function calls the `std::longjmp()` function with the `std::jmp_buf`
-// instance `M_jumpOutOfTest` as its first argument when the `SIGABRT` is raised
-// inside of the function `RunRegisteredTests()` that runs the registered test
-// suites.
+// instance `jump_out_of_test_` as its first argument when the `SIGABRT` is
+// raised inside of the function `RunRegisteredTests()` that runs the registered
+// test suites.
 void SignalHandler(int param);
 }  // namespace impl
 
@@ -63,8 +64,8 @@ std::uint64_t GetFailedTestCount();
 
 // Returns the `UnitTest` instance of failed tests.
 //
-// Iterates over the `GTestRegistryInst.M_testRegistryTable` instance and adds
-// the pair who's `M_testResult` equals to `TestResult::FAILED` in the
+// Iterates over the `GTestRegistryInst.test_registry_table_` instance and adds
+// the pair who's `test_result_` equals to `TestResult::FAILED` in the
 // `failed_tests` container.
 XTestUnitTest GetFailedTests();
 
@@ -88,7 +89,7 @@ class PrettyUnitTestResultPrinter {
 
   // Prints out the information related to the number of tests a test suite
   // shares.
-  static void OnTestStart(const XTestUnitTestPair& testSuite);
+  static void OnTestStart(const XTestUnitTestPair& test_suite);
 
   // Prints the number of test suites and tests to run.  Should only be called
   // before starting iteration over the registered test suites.
@@ -108,7 +109,7 @@ class PrettyUnitTestResultPrinter {
   // shares.  This function is very much similar to
   // `PrettyUnitTestResultPrinter::OnTestStart()` but should be ran after
   // executing all the tests of a test suite.
-  static void OnTestEnd(const XTestUnitTestPair& testSuite);
+  static void OnTestEnd(const XTestUnitTestPair& test_suite);
 
   // Prints number of test suites and tests ran.  Should only be called after
   // iterating over all the registered test suites.

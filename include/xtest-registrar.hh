@@ -51,16 +51,17 @@ using XTestUnitTestPair = std::pair<const char*, std::list<TestRegistrar*>>;
 // Declaration for registering your test suite for automatic test execution and
 // definition that contains your test suite body.
 //
-// For the best usage of this macro avoid giving same suiteName and testName to
-// different test suites, otherwise compiler will complain regarding the
+// For the best usage of this macro avoid giving same suite_name and test_name
+// to different test suites, otherwise compiler will complain regarding the
 // multiple definitions and declarations of the same function.
-#define TEST(suiteName, testName)                                              \
-  void TESTFUNCTION__##suiteName##testName(xtest::TestRegistrar* currentTest); \
-  namespace {                                                                  \
-  xtest::TestRegistrar TESTREGISTRAR__##suiteName##testName(                   \
-      #suiteName, #testName, TESTFUNCTION__##suiteName##testName);             \
-  }                                                                            \
-  void TESTFUNCTION__##suiteName##testName(xtest::TestRegistrar* currentTest)
+#define TEST(suite_name, test_name)                                    \
+  void TESTFUNCTION__##suite_name##test_name(                          \
+      xtest::TestRegistrar* current_test);                             \
+  namespace {                                                          \
+  xtest::TestRegistrar TESTREGISTRAR__##suite_name##test_name(         \
+      #suite_name, #test_name, TESTFUNCTION__##suite_name##test_name); \
+  }                                                                    \
+  void TESTFUNCTION__##suite_name##test_name(xtest::TestRegistrar* current_test)
 
 typedef internal::TimeInMillis TimeInMillis;
 
@@ -68,7 +69,7 @@ typedef internal::TimeInMillis TimeInMillis;
 //
 // This typedef is required to pass the test suite to TestRegistrar constructor
 // to register as a test suite entry for automatic test execution.
-typedef void (*TestFunction)(TestRegistrar* currentTest);
+typedef void (*TestFunction)(TestRegistrar* current_test);
 
 enum class TestResult { UNKNOWN, PASSED, FAILED };
 
@@ -76,16 +77,16 @@ class TestRegistrar {
  public:
   // Constructs a new TestRegistrar instance.  Also links test functions from
   // similar test suites together.
-  TestRegistrar(const char* suiteName, const char* testName,
-                TestFunction testFunc);
+  TestRegistrar(const char* suite_name, const char* test_name,
+                TestFunction test_func);
 
  public:
-  const char* M_testName;   // Test name.
-  const char* M_suiteName;  // Test suite name.
+  const char* test_name_;   // Test name.
+  const char* suite_name_;  // Test suite name.
 
-  TestFunction M_testFunc;     // Test function to execute.
-  TestResult M_testResult;     // Result of the test suite.
-  TimeInMillis M_elapsedTime;  // Elapsed time in milliseconds.
+  TestFunction test_func_;     // Test function to execute.
+  TestResult test_result_;     // Result of the test suite.
+  TimeInMillis elapsed_time_;  // Elapsed time in milliseconds.
 };
 
 // Constructs a `map` object that links test suites to their test cases.
@@ -98,12 +99,12 @@ class TestRegistrar {
 // environment information for the function `xtest::RunRegisteredTests()`.
 struct TestRegistry {
  public:
-  XTestUnitTest M_testRegistryTable;
+  XTestUnitTest test_registry_table_;
 
-  // M_jumpOutOfTest instance stores the environment information for function
+  // jump_out_of_test_ instance stores the environment information for function
   // run_registered_tests() to later make a long jump using function
   // std::longjmp to register the test result as TestResult::FAILED.
-  std::jmp_buf M_jumpOutOfTest;
+  std::jmp_buf jump_out_of_test_;
 };
 
 // `XTestUnitTest` instance that links nodes of different test suites.

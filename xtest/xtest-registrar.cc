@@ -41,12 +41,12 @@ TestRegistry XTestRegistryInstance = {{}, 0};
 
 // Constructs a new TestRegistrar instance.  Also links test functions from
 // similar test suites together.
-TestRegistrar::TestRegistrar(const char* suiteName, const char* testName,
-                             TestFunction testFunc)
-    : M_suiteName(suiteName),
-      M_testFunc(testFunc),
-      M_testName(testName),
-      M_testResult(TestResult::UNKNOWN) {
-  XTestRegistryInstance.M_testRegistryTable[M_suiteName].push_back(this);
+TestRegistrar::TestRegistrar(const char* suite_name, const char* test_name,
+                             TestFunction test_func)
+    : suite_name_(suite_name),
+      test_func_(test_func),
+      test_name_(test_name),
+      test_result_(TestResult::UNKNOWN) {
+  XTestRegistryInstance.test_registry_table_[suite_name_].push_back(this);
 }
 }  // namespace xtest

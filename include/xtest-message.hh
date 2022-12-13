@@ -70,19 +70,19 @@ class Message {
   Message();
 
   // Copy constructor.
-  Message(const Message& msg) : _M_sstream(new std::stringstream) {  // NOLINT
-    *_M_sstream << msg.GetString();
+  Message(const Message& msg) : sstream_(new std::stringstream) {  // NOLINT
+    *sstream_ << msg.GetString();
   }
 
   // Constructs a Message from a C-string.
-  explicit Message(const char* str) : _M_sstream(new std::stringstream) {
-    *_M_sstream << str;
+  explicit Message(const char* str) : sstream_(new std::stringstream) {
+    *sstream_ << str;
   }
 
   // Streams a non-pointer value to this object.
   template <typename T>
   inline Message& operator<<(const T& val) {
-    *_M_sstream << val;
+    *sstream_ << val;
     return *this;
   }
 
@@ -100,9 +100,9 @@ class Message {
   template <typename T>
   inline Message& operator<<(T* const& pointer) {  // NOLINT
     if (pointer == nullptr)
-      *_M_sstream << "(null)";
+      *sstream_ << "(null)";
     else
-      *_M_sstream << pointer;
+      *sstream_ << pointer;
     return *this;
   }
 
@@ -112,7 +112,7 @@ class Message {
   // this definition, streaming endl or other basic IO manipulators to Message
   // will confuse the compiler.
   Message& operator<<(BasicNarrowIoManip val) {
-    *_M_sstream << val;
+    *sstream_ << val;
     return *this;
   }
 
@@ -127,7 +127,7 @@ class Message {
 
  private:
   // We'll hold the text streamed to this object here.
-  const std::unique_ptr<std::stringstream> _M_sstream;
+  const std::unique_ptr<std::stringstream> sstream_;
 
   // We declare (but don't implement) this to prevent the compiler from
   // implementing the assignment operator.

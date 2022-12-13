@@ -98,7 +98,7 @@ class PrettyAssertionResultPrinter {
     std::fflush(stderr);
 
     // Mark the current test as `xtest::TestResult::FAILED` on failure.
-    assertion_context.current_test()->M_testResult =
+    assertion_context.current_test()->test_result_ =
         ::xtest::TestResult::FAILED;
     // Add this test in the global test failure counter.
     ++XTEST_GLOBAL_INSTANCE_GET_(failure_count);
@@ -164,7 +164,7 @@ AssertionResult AssertionFailure(const bool& is_fatal);
       internal::PrettyAssertionResultPrinter::OnTestAssertionStart(            \
           assertion_context.current_test());                                   \
       if ((actual) == (boolean)) {                                             \
-        assertion_context.current_test()->M_testResult =                       \
+        assertion_context.current_test()->test_result_ =                       \
             ::xtest::TestResult::PASSED;                                       \
       } else {                                                                 \
         internal::PrettyAssertionResultPrinter::OnTestAssertionFailure(        \
@@ -184,7 +184,7 @@ AssertionResult AssertionFailure(const bool& is_fatal);
       internal::PrettyAssertionResultPrinter::OnTestAssertionStart(            \
           assertion_context.current_test());                                   \
       if ((actual) == (boolean)) {                                             \
-        assertion_context.current_test()->M_testResult =                       \
+        assertion_context.current_test()->test_result_ =                       \
             ::xtest::TestResult::PASSED;                                       \
       } else {                                                                 \
         internal::PrettyAssertionResultPrinter::OnTestAssertionFailure(        \
@@ -204,19 +204,19 @@ XTEST_IMPL_CHECK_HELPER_(False, false)
 
 #undef XTEST_IMPL_CHECK_HELPER_
 
-#define XTEST_ASSERT_TRUE_(actual, fatal)                                   \
-  ::xtest::BoolTrueHelper::Check(                                           \
-      #actual, actual,                                                      \
-      ::xtest::internal::AssertionContext(__FILE__, __LINE__, currentTest), \
+#define XTEST_ASSERT_TRUE_(actual, fatal)                                    \
+  ::xtest::BoolTrueHelper::Check(                                            \
+      #actual, actual,                                                       \
+      ::xtest::internal::AssertionContext(__FILE__, __LINE__, current_test), \
       fatal)
 
 #define EXPECT_TRUE(actual) XTEST_ASSERT_TRUE_(actual, false)
 #define ASSERT_TRUE(actual) XTEST_ASSERT_TRUE_(actual, true)
 
-#define XTEST_ASSERT_FALSE_(actual, fatal)                                  \
-  ::xtest::BoolFalseHelper::Check(                                          \
-      #actual, actual,                                                      \
-      ::xtest::internal::AssertionContext(__FILE__, __LINE__, currentTest), \
+#define XTEST_ASSERT_FALSE_(actual, fatal)                                   \
+  ::xtest::BoolFalseHelper::Check(                                           \
+      #actual, actual,                                                       \
+      ::xtest::internal::AssertionContext(__FILE__, __LINE__, current_test), \
       fatal)
 
 #define EXPECT_FALSE(actual) XTEST_ASSERT_FALSE_(actual, false)
@@ -309,7 +309,7 @@ XTEST_IMPL_CHECK_HELPER_(False, false)
       internal::PrettyAssertionResultPrinter::OnTestAssertionStart(            \
           assertion_context.current_test());                                   \
       if (lhs opr rhs) {                                                       \
-        assertion_context.current_test()->M_testResult =                       \
+        assertion_context.current_test()->test_result_ =                       \
             ::xtest::TestResult::PASSED;                                       \
       } else {                                                                 \
         internal::PrettyAssertionResultPrinter::OnTestAssertionFailure(        \
@@ -337,55 +337,55 @@ XTEST_IMPL_CMP_HELPER_(GT, >)
 
 #undef XTEST_IMPL_CMP_HELPER_
 
-#define XTEST_ASSERT_EQ_(val1, val2, fatal)                                 \
-  ::xtest::EQHelper::Compare(                                               \
-      #val1, #val2, val1, val2,                                             \
-      ::xtest::internal::AssertionContext(__FILE__, __LINE__, currentTest), \
+#define XTEST_ASSERT_EQ_(val1, val2, fatal)                                  \
+  ::xtest::EQHelper::Compare(                                                \
+      #val1, #val2, val1, val2,                                              \
+      ::xtest::internal::AssertionContext(__FILE__, __LINE__, current_test), \
       fatal)
 
 #define EXPECT_EQ(val1, val2) XTEST_ASSERT_EQ_(val1, val2, false)
 #define ASSERT_EQ(val1, val2) XTEST_ASSERT_EQ_(val1, val2, true)
 
-#define XTEST_ASSERT_NE_(val1, val2, fatal)                                 \
-  ::xtest::NEHelper::Compare(                                               \
-      #val1, #val2, val1, val2,                                             \
-      ::xtest::internal::AssertionContext(__FILE__, __LINE__, currentTest), \
+#define XTEST_ASSERT_NE_(val1, val2, fatal)                                  \
+  ::xtest::NEHelper::Compare(                                                \
+      #val1, #val2, val1, val2,                                              \
+      ::xtest::internal::AssertionContext(__FILE__, __LINE__, current_test), \
       fatal)
 
 #define EXPECT_NE(val1, val2) XTEST_ASSERT_NE_(val1, val2, false)
 #define ASSERT_NE(val1, val2) XTEST_ASSERT_NE_(val1, val2, true)
 
-#define XTEST_ASSERT_LE_(val1, val2, fatal)                                 \
-  ::xtest::LEHelper::Compare(                                               \
-      #val1, #val2, val1, val2,                                             \
-      ::xtest::internal::AssertionContext(__FILE__, __LINE__, currentTest), \
+#define XTEST_ASSERT_LE_(val1, val2, fatal)                                  \
+  ::xtest::LEHelper::Compare(                                                \
+      #val1, #val2, val1, val2,                                              \
+      ::xtest::internal::AssertionContext(__FILE__, __LINE__, current_test), \
       fatal)
 
 #define EXPECT_LE(val1, val2) XTEST_ASSERT_LE_(val1, val2, false)
 #define ASSERT_LE(val1, val2) XTEST_ASSERT_LE_(val1, val2, true)
 
-#define XTEST_ASSERT_LT_(val1, val2, fatal)                                 \
-  ::xtest::LTHelper::Compare(                                               \
-      #val1, #val2, val1, val2,                                             \
-      ::xtest::internal::AssertionContext(__FILE__, __LINE__, currentTest), \
+#define XTEST_ASSERT_LT_(val1, val2, fatal)                                  \
+  ::xtest::LTHelper::Compare(                                                \
+      #val1, #val2, val1, val2,                                              \
+      ::xtest::internal::AssertionContext(__FILE__, __LINE__, current_test), \
       fatal)
 
 #define EXPECT_LT(val1, val2) XTEST_ASSERT_LT_(val1, val2, false)
 #define ASSERT_LT(val1, val2) XTEST_ASSERT_LT_(val1, val2, true)
 
-#define XTEST_ASSERT_GE_(val1, val2, fatal)                                 \
-  ::xtest::GEHelper::Compare(                                               \
-      #val1, #val2, val1, val2,                                             \
-      ::xtest::internal::AssertionContext(__FILE__, __LINE__, currentTest), \
+#define XTEST_ASSERT_GE_(val1, val2, fatal)                                  \
+  ::xtest::GEHelper::Compare(                                                \
+      #val1, #val2, val1, val2,                                              \
+      ::xtest::internal::AssertionContext(__FILE__, __LINE__, current_test), \
       fatal)
 
 #define EXPECT_GE(val1, val2) XTEST_ASSERT_GE_(val1, val2, false)
 #define ASSERT_GE(val1, val2) XTEST_ASSERT_GE_(val1, val2, true)
 
-#define XTEST_ASSERT_GT_(val1, val2, fatal)                                 \
-  ::xtest::GTHelper::Compare(                                               \
-      #val1, #val2, val1, val2,                                             \
-      ::xtest::internal::AssertionContext(__FILE__, __LINE__, currentTest), \
+#define XTEST_ASSERT_GT_(val1, val2, fatal)                                  \
+  ::xtest::GTHelper::Compare(                                                \
+      #val1, #val2, val1, val2,                                              \
+      ::xtest::internal::AssertionContext(__FILE__, __LINE__, current_test), \
       fatal)
 
 #define EXPECT_GT(val1, val2) XTEST_ASSERT_GT_(val1, val2, false)

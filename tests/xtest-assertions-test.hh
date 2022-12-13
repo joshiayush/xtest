@@ -55,10 +55,10 @@ TEST(AssertionContextTest, ReturnsFileNameLineNumberAndPointerToCurrentTest) {
   const uint64_t line = 42;
   xtest::internal::AssertionContext context(
       file, line,
-      currentTest);  // `currentTest` is in the scope of the test function.
+      current_test);  // `current_test` is in the scope of the test function.
   EXPECT_EQ(file, context.file());
   EXPECT_EQ(line, context.line());
-  EXPECT_EQ(currentTest, context.current_test());
+  EXPECT_EQ(current_test, context.current_test());
 }
 
 TEST(PrettyAssertionResultPrinterTest, OnTestAssertionStartTest) {
@@ -66,7 +66,7 @@ TEST(PrettyAssertionResultPrinterTest, OnTestAssertionStartTest) {
       xtest::testing::RedirectorContextStream::kStdout);
   stdout_redirector_context.ReplaceStreamWithContextBuffer();
   xtest::internal::PrettyAssertionResultPrinter::OnTestAssertionStart(
-      currentTest);
+      current_test);
   stdout_redirector_context.RestoreStream();
   std::string actual(stdout_redirector_context.M_output_buffer_);
   std::string expected(
@@ -80,8 +80,8 @@ TEST(PrettyAssertionResultPrinterTest,
   xtest::testing::RedirectorContext stdout_redirector_context(
       xtest::testing::RedirectorContextStream::kStdout);
   stdout_redirector_context.ReplaceStreamWithContextBuffer();
-  currentTest->M_testResult = xtest::TestResult::PASSED;
-  xtest::internal::PrettyAssertionResultPrinter::OnTestAssertionEnd(currentTest,
+  current_test->test_result_ = xtest::TestResult::PASSED;
+  xtest::internal::PrettyAssertionResultPrinter::OnTestAssertionEnd(current_test,
                                                                     100);
   stdout_redirector_context.RestoreStream();
   std::string actual(stdout_redirector_context.M_output_buffer_);
@@ -98,8 +98,8 @@ TEST(PrettyAssertionResultPrinterTest,
   xtest::testing::RedirectorContext stdout_redirector_context(
       xtest::testing::RedirectorContextStream::kStdout);
   stdout_redirector_context.ReplaceStreamWithContextBuffer();
-  currentTest->M_testResult = xtest::TestResult::FAILED;
-  xtest::internal::PrettyAssertionResultPrinter::OnTestAssertionEnd(currentTest,
+  current_test->test_result_ = xtest::TestResult::FAILED;
+  xtest::internal::PrettyAssertionResultPrinter::OnTestAssertionEnd(current_test,
                                                                     100);
   stdout_redirector_context.RestoreStream();
   std::string actual(stdout_redirector_context.M_output_buffer_);
@@ -117,7 +117,7 @@ TEST(PrettyAssertionResultPrinterTest, OnTestAssertionFailureTest) {
   stdout_redirector_context.ReplaceStreamWithContextBuffer();
   xtest::internal::PrettyAssertionResultPrinter::OnTestAssertionFailure(
       "lhs_expression", "rhs_expression", "lhs_expression", "rhs_expression",
-      xtest::internal::AssertionContext(__FILE__, 120, currentTest));
+      xtest::internal::AssertionContext(__FILE__, 120, current_test));
   stdout_redirector_context.RestoreStream();
   std::string actual(stdout_redirector_context.M_output_buffer_);
   std::string expected(__FILE__

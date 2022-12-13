@@ -71,7 +71,7 @@ void PrettyAssertionResultPrinter::OnTestAssertionStart(
                 ::xtest::GetStringAlignedTo(
                     "RUN", XTEST_DEFAULT_SUMMARY_STATUS_STR_WIDTH_, ALIGN_LEFT)
                     .c_str());
-  std::printf("%s.%s", test->M_suiteName, test->M_testName);
+  std::printf("%s.%s", test->suite_name_, test->test_name_);
   std::printf("\n");
   std::fflush(stdout);
 }
@@ -80,7 +80,7 @@ void PrettyAssertionResultPrinter::OnTestAssertionStart(
 // assertion result.
 void PrettyAssertionResultPrinter::OnTestAssertionEnd(
     const TestRegistrar* const& test, const TimeInMillis& elapsed_time) {
-  if (test->M_testResult == ::xtest::TestResult::PASSED)
+  if (test->test_result_ == ::xtest::TestResult::PASSED)
     ColoredPrintf(
         XTestColor::kGreen, "[%s] ",
         ::xtest::GetStringAlignedTo(
@@ -92,7 +92,7 @@ void PrettyAssertionResultPrinter::OnTestAssertionEnd(
         ::xtest::GetStringAlignedTo(
             "FAILED", XTEST_DEFAULT_SUMMARY_STATUS_STR_WIDTH_, ALIGN_CENTER)
             .c_str());
-  std::printf("%s.%s (%lu ms)", test->M_suiteName, test->M_testName,
+  std::printf("%s.%s (%lu ms)", test->suite_name_, test->test_name_,
               elapsed_time);
   std::printf("\n");
   std::fflush(stdout);

@@ -82,7 +82,7 @@ class XTestLog {
   std::ostream& GetStream() { return std::cerr; }
 
  private:
-  const XTestLogSeverity _M_severity;
+  const XTestLogSeverity severity_;
 
   XTEST_DISALLOW_COPY_AND_ASSIGN_(XTestLog);
 };
@@ -141,15 +141,15 @@ enum StringAlignValues { ALIGN_RIGHT, ALIGN_LEFT, ALIGN_CENTER };
 // ```
 //
 // In order to align the letter `FAILED` to the center we use this function with
-// a 'alignSide' of 'ALIGN_CENTER'.
+// a 'align_side' of 'ALIGN_CENTER'.
 //
-// If not given this function will use the default values for `newStrWidth` and
-// `alignSide` i.e., `XTEST_DEFAULT_SUMMARY_STATUS_STR_WIDTH_` and
+// If not given this function will use the default values for `new_str_width`
+// and `align_side` i.e., `XTEST_DEFAULT_SUMMARY_STATUS_STR_WIDTH_` and
 // `ALIGN_CENTER` respectively.
 std::string GetStringAlignedTo(
     const std::string& str,
-    const std::size_t& newStrWidth = XTEST_DEFAULT_SUMMARY_STATUS_STR_WIDTH_,
-    const StringAlignValues& alignSide = ALIGN_CENTER);
+    const std::size_t& new_str_width = XTEST_DEFAULT_SUMMARY_STATUS_STR_WIDTH_,
+    const StringAlignValues& align_side = ALIGN_CENTER);
 
 namespace posix {
 // Posix compatible function to return the file number associated with the given
