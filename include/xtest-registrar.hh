@@ -37,6 +37,7 @@
 #include <map>
 #include <utility>
 
+#include "internal/xtest-internal.hh"
 #include "internal/xtest-port.hh"
 
 namespace xtest {
@@ -55,6 +56,10 @@ using XTestUnitTestPair = std::pair<const char*, std::list<TestRegistrar*>>;
 // to different test suites, otherwise compiler will complain regarding the
 // multiple definitions and declarations of the same function.
 #define TEST(suite_name, test_name)                                    \
+  static_assert(sizeof(XTEST_STRINGIFY_(suite_name)) > 1,              \
+                "suite_name must not be empty!");                      \
+  static_assert(sizeof(XTEST_STRINGIFY_(test_name)) > 1,               \
+                "test_name must not be empty!");                       \
   void TESTFUNCTION__##suite_name##test_name(                          \
       xtest::TestRegistrar* current_test);                             \
   namespace {                                                          \
